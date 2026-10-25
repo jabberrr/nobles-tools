@@ -21,7 +21,7 @@ jobs:
       SCHOOL: noble-and-greenough-school
       OUT: NoblesKit/Tests/NoblesKitTests/Fixtures
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download responses
         run: |

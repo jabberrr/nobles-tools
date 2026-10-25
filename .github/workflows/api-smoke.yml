@@ -47,7 +47,7 @@ jobs:
           done
           test -s menu-lunch.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: menu-responses
@@ -61,7 +61,7 @@ jobs:
     env:
       SITE: https://nobilis.nobles.edu/Athletics
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           sparse-checkout: .github/scripts
 
@@ -77,7 +77,7 @@ jobs:
           echo "games: $(grep -c 'class="ath-row' schedule.html)"
           grep -o 'data-[a-z]*="[^"]*"' schedule.html | grep -E '^data-(date|team|opponent|homeaway|start|result)=' | head -18
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: athletics-responses
