@@ -75,9 +75,16 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 - Research found **no official live, in-game score source** for Nobles. The Nobles athletics portal (`nobilis.nobles.edu/Athletics/`, home-built PHP), the ISL site (islsports.org, on rSchoolToday/Arbiter) and MaxPreps all post **finals only**, after games.
   - MaxPreps' ToS forbids scraping.
   - ScoreStream has sporadic fan-reported live scores but no public API.
-- Feed used: `https://nobilis.nobles.edu/WebServices/gameschedule.php?eventtypes=ContestResults` (results) and `...?eventtypes=AllGameSchedule` (schedule). The path is case-sensitive: lowercase `webservices` gets a 301.
-  - Undocumented XML, found in a student app's source. Event elements include `activity`, `opponent`, `eventDate`, `startTime` and `Result`.
-  - **Status 2026-10-25: returns HTTP 500 to plain GETs.** The provider fails gracefully and the widget shows cached data or an empty state. Check `api-smoke.yml` output before changing anything here.
+- Sources used by `NoblesAthleticsProvider` (verified 2026-10-25, no auth needed):
+  - **Results:** `https://nobilis.nobles.edu/Athletics/endpoints/latest_results.php?page=1`. Nobles' "Latest Results" page loads this JSON, which returns the 100 most recent results, newest first. Fields: `event_id`, `team_name`, `athletic_opponent`, `game_score_us`, `game_score_opponent`, `formatted_start_date` (M/d/yyyy, no time), `outcome` (W/L/T), `score`.
+    - Trust `outcome`, don't compute it: cross country "15-59" is listed as an L.
+    - Scores are strings or null. Middle school rows often have an outcome with no real score (`"0"`/null, `score: ""`).
+    - The opponent can be the string `"None"`.
+    - Results lag games by about a week.
+  - **Upcoming:** the "Upcoming Schedule" sidebar on `https://nobilis.nobles.edu/Athletics/` (HTML) covers about the next 6 days. Each `<div class="ath-row ath-click">` carries `data-date` (MM.dd.yy), `data-team`, `data-opponent` (HTML-escaped), `data-homeaway`, `data-loc`, `data-start`/`data-end` ("4:00 PM"), `data-result` and `data-type`. `calendar.php` has the full season but mixes in practices and weighs 800 KB.
+  - Team strings look like "<Sport> [Boys|Girls] <Level>", e.g. "Volleyball Girls JV A", "Soccer Boys 3rd", "Cross Country Middle School".
+- Dead: the old XML web service `.../WebServices/gameschedule.php?eventtypes=ContestResults` returns HTTP 500. It was found in a 2022 student app.
+- These are undocumented internal endpoints and could change without notice. `api-smoke.yml` checks them weekly. If they break, re-run `capture-fixtures.yml` and adapt the parser.
 
 ### School calendar (estimates)
 - Nobles' full calendar requires a family login, so the built-in `SchoolCalendar.nobles2026_27` is **estimated**. Users can edit it in Settings → School Calendar.
@@ -115,7 +122,7 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 ## Open questions and next steps
 
 - Get the real 2026–27 calendar (quarter ends, breaks) and update `NoblesCalendar.swift`. Consider supporting an iCal URL import.
-- Watch the athletics feed (HTTP 500 at last check). If it stays down, consider asking Nobles Athletics for an official feed or permission to read `LatestResults.php`.
+- The athletics endpoints are unofficial. Ask Nobles Athletics (athletic_info@nobles.edu) for an official feed or blessing. For a longer upcoming window, consider parsing `calendar.php` games (skip `.is-practice`).
 - Confirm meal service end times with the dining hall.
 
 ## Session log

@@ -33,7 +33,7 @@ swift test --package-path NoblesKit
 - **Menus:** Flik Independent School Dining, served by Nutrislice
   (`https://nobleandgreenough.api.flikisdining.com/menu/api/weeks/school/noble-and-greenough-school/menu-type/{breakfast|lunch|dinner}/YYYY/MM/DD/`).
   Menu types are discovered from `/menu/api/schools/`, with the slug names above as a fallback.
-- **Scores:** Nobles Athletics' public results feed (`https://nobilis.nobles.edu/webservices/gameschedule.php`). It is undocumented and has **final scores only**. No official live in-game score source exists for Nobles (see `CONTEXT.md`).
+- **Scores:** Nobles Athletics (`https://nobilis.nobles.edu/Athletics/`). Results come from the JSON behind its Latest Results page, and upcoming games from its Upcoming Schedule. Both are undocumented and have **final scores only**. No official live, in-game score source exists for Nobles (see `CONTEXT.md`).
 - **School calendar:** Nobles' full calendar is only available after logging in, so the built-in 2026–27 quarter, semester and break dates are **estimates**. Graduation (June 4, 2027) is the only date with high confidence. You can correct the dates in the app under **Settings → School Calendar**.
 
 The **Live API smoke test** workflow checks the menu and athletics endpoints every week and can be run manually from the Actions tab.

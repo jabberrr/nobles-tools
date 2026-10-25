@@ -51,23 +51,32 @@ public enum GameStatus: Codable, Hashable, Sendable {
     case cancelled
 }
 
+/// A final result as Nobles Athletics reports it.
 public struct GameScore: Codable, Hashable, Sendable {
-    public var nobles: Int
-    public var opponent: Int
-
-    public init(nobles: Int, opponent: Int) {
-        self.nobles = nobles
-        self.opponent = opponent
-    }
-
-    public enum Outcome: String, Sendable {
+    public enum Outcome: String, Codable, Sendable {
         case win = "W"
         case loss = "L"
         case tie = "T"
     }
 
-    public var outcome: Outcome {
-        nobles > opponent ? .win : nobles < opponent ? .loss : .tie
+    /// Taken from the source rather than computed: in sports like cross country the
+    /// lower score wins.
+    public var outcome: Outcome
+    /// Points for each side; `nil` when only the outcome was posted (common for
+    /// middle school games and meets).
+    public var nobles: Int?
+    public var opponent: Int?
+
+    public init(outcome: Outcome, nobles: Int? = nil, opponent: Int? = nil) {
+        self.outcome = outcome
+        self.nobles = nobles
+        self.opponent = opponent
+    }
+
+    /// "3–0" (Nobles first), or `nil` when no score was posted.
+    public var scoreline: String? {
+        guard let nobles, let opponent else { return nil }
+        return "\(nobles)–\(opponent)"
     }
 }
 
