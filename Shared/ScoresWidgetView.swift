@@ -42,16 +42,16 @@ struct ScoresWidgetView: View {
 
     private var today: LocalDate { LocalDate(now) }
 
-    /// Games in progress, then results, newest first.
+    /// Games in progress, then results (and games awaiting one), newest first.
     private var results: [Game] {
         guard let scoreboard else { return [] }
-        return scoreboard.live + scoreboard.recent.sorted { $0.start > $1.start }
+        return scoreboard.live + scoreboard.recent
     }
 
     /// Upcoming games, soonest first; empty when the design hides them.
     private var upcoming: [Game] {
         guard let scoreboard, configuration.showsUpcoming else { return [] }
-        return scoreboard.upcoming.sorted { $0.start < $1.start }
+        return scoreboard.upcoming
     }
 
     /// "Updated 3h ago" when the scoreboard is an older cached copy.

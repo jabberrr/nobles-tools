@@ -1,7 +1,10 @@
-# Xcode (the project is generated from project.yml by XcodeGen)
+# Xcode (the project, Info.plists and entitlements are generated from project.yml by XcodeGen)
 *.xcodeproj
+App/Info.plist
+App/*.entitlements
+Widgets/Info.plist
+Widgets/*.entitlements
 *.xcworkspace
-!NoblesKit/.swiftpm/xcode/package.xcworkspace
 xcuserdata/
 DerivedData/
 build/
