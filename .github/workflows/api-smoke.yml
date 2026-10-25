@@ -1,0 +1,82 @@
+name: Live API smoke test
+
+# Hits the real data sources from a GitHub runner and prints a summary of their
+# shape, so upstream changes surface here before users see broken widgets.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 11 * * 1" # Mondays, 11:17 UTC
+  push:
+    paths:
+      - ".github/workflows/api-smoke.yml"
+
+jobs:
+  menus:
+    name: Flik / Nutrislice menus
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BASE: https://nobleandgreenough.api.flikisdining.com/menu/api
+      SCHOOL: noble-and-greenough-school
+    steps:
+      - name: List schools and menu types
+        run: |
+          curl -fsS --retry 3 "$BASE/schools/" -o schools.json
+          jq -c '.[] | {name, slug, menu_types: [.active_menu_types[]? | {id, name, slug}]}' schools.json
+
+      - name: Fetch next week's menus
+        run: |
+          D=$(TZ=America/New_York date -d "next monday" +%Y/%m/%d)
+          SLUGS=$(jq -r --arg s "$SCHOOL" '[.[] | select(.slug == $s) | .active_menu_types[]?.slug] + ["breakfast", "lunch", "dinner"] | unique | .[]' schools.json)
+          for slug in $SLUGS; do
+            echo "::group::menu-type $slug ($D)"
+            if curl -fsS --retry 3 "$BASE/weeks/school/$SCHOOL/menu-type/$slug/$D/" -o "menu-$slug.json"; then
+              jq -c '{top_keys: keys, start_date, days: [.days[] | {date, items: (.menu_items | length)}]}' "menu-$slug.json"
+              echo "-- item keys:";       jq -c '[.days[].menu_items[] | keys] | add | unique' "menu-$slug.json"
+              echo "-- food keys:";       jq -c '[.days[].menu_items[].food | objects | keys] | add | unique' "menu-$slug.json"
+              echo "-- section titles:";  jq -c '[.days[].menu_items[] | select(.is_section_title or .is_station_header) | .text] | unique' "menu-$slug.json"
+              echo "-- food categories:"; jq -c '[.days[].menu_items[].food | objects | .food_category] | unique' "menu-$slug.json"
+              echo "-- first non-empty day:"
+              jq -c 'first(.days[] | select(.menu_items | length > 0)) | .menu_items[]
+                | {position, is_section_title, is_station_header, text,
+                   food: (.food | if . then {name, food_category} else null end)}' "menu-$slug.json"
+            else
+              echo "::warning::menu type '$slug' is not available"
+            fi
+            echo "::endgroup::"
+          done
+          test -s menu-lunch.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: menu-responses
+          path: "*.json"
+          if-no-files-found: ignore
+
+  athletics:
+    name: Nobles Athletics results feed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FEED: https://nobilis.nobles.edu/webservices/gameschedule.php
+    steps:
+      - name: Fetch results and schedule
+        run: |
+          for type in ContestResults AllGameSchedule; do
+            echo "::group::$type"
+            curl -fsS --retry 3 "$FEED?eventtypes=$type" -o "$type.xml"
+            echo "bytes: $(wc -c < "$type.xml")"
+            echo "-- element names:"
+            grep -o '<[A-Za-z_][A-Za-z0-9_]*' "$type.xml" | sort | uniq -c | sort -rn | head -40
+            echo "-- first 3000 bytes:"
+            head -c 3000 "$type.xml"; echo
+            echo "::endgroup::"
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: athletics-responses
+          path: "*.xml"
+          if-no-files-found: ignore
