@@ -4,7 +4,7 @@ An iOS app for designing Home Screen and Lock Screen widgets for Noble and Green
 
 | Widget | Shows | Sizes |
 | --- | --- | --- |
-| **Dining Menu** | Breakfast, lunch, dinner, or whichever meal is next, from the Flik dining menus. Styles: Everything, Just Entrées, No Salads or Soups, Just… (stations you pick), Everything Except… | Small, Medium, Large, Lock Screen rectangular & inline |
+| **Dining Menu** | Lunch, dinner, or whichever meal is next, from the Flik dining menus. Styles: Everything, Just Entrées, No Salads or Soups, Just… (stations you pick), Everything Except… | Small, Medium, Large, Lock Screen rectangular & inline |
 | **Countdown** | Days left in the current quarter, semester or school year, counted as school days, weekdays or calendar days. Number, ring or bar style. | Small, Medium, Large, Lock Screen circular, rectangular & inline |
 | **Scores** | Recent Nobles results and upcoming games, filtered by sport. | Small, Medium, Large, Lock Screen rectangular |
 
@@ -31,8 +31,8 @@ swift test --package-path NoblesKit
 ## Data sources
 
 - **Menus:** Flik Independent School Dining, served by Nutrislice
-  (`https://nobleandgreenough.api.flikisdining.com/menu/api/weeks/school/noble-and-greenough-school/menu-type/{breakfast|lunch|dinner}/YYYY/MM/DD/`).
-  Menu types are discovered from `/menu/api/schools/`, with the slug names above as a fallback.
+  (`https://nobleandgreenough.api.flikisdining.com/menu/api/weeks/school/noble-and-greenough-school/menu-type/{lunch|dinner}/YYYY/MM/DD/`).
+  Nobles publishes only lunch and dinner; there is no breakfast menu (`menu-type/breakfast` returns 404). Menu types are discovered from `/menu/api/schools/`, so a breakfast menu would appear automatically if Flik ever adds one.
 - **Scores:** Nobles Athletics (`https://nobilis.nobles.edu/Athletics/`). Results come from the JSON behind its Latest Results page, and upcoming games from its Upcoming Schedule. Both are undocumented and have **final scores only**. No official live, in-game score source exists for Nobles (see `CONTEXT.md`).
 - **School calendar:** Nobles' full calendar is only available after logging in, so the built-in 2026–27 quarter, semester and break dates are **estimates**. Graduation (June 4, 2027) is the only date with high confidence. You can correct the dates in the app under **Settings → School Calendar**.
 
