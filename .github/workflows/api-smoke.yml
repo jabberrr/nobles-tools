@@ -47,6 +47,14 @@ jobs:
           done
           test -s menu-lunch.json
 
+      - name: Print responses (fixture capture)
+        run: |
+          for f in schools.json menu-*.json; do
+            echo "=== BEGIN $f"
+            jq -c 'walk(if type == "object" then del(.station_logo, .station_mobile_image, .image, .image_thumbnail, .hoverpic_url, .image_url, .file_url) else . end)' "$f"
+            echo "=== END $f"
+          done
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -61,22 +69,30 @@ jobs:
     env:
       FEED: https://nobilis.nobles.edu/WebServices/gameschedule.php
     steps:
-      - name: Fetch results and schedule
+      - name: Probe results feeds and pages
         run: |
-          for type in ContestResults AllGameSchedule; do
-            echo "::group::$type"
-            curl -fsSL --retry 3 "$FEED?eventtypes=$type" -o "$type.xml"
-            echo "bytes: $(wc -c < "$type.xml")"
-            echo "-- element names:"
-            grep -o '<[A-Za-z_][A-Za-z0-9_]*' "$type.xml" | sort | uniq -c | sort -rn | head -40
-            echo "-- first 3000 bytes:"
-            head -c 6000 "$type.xml"; echo
+          probe() {
+            local name=$1 url=$2
+            echo "::group::$name"
+            code=$(curl -sSL --retry 2 -o "$name" -w '%{http_code}' "$url" || true)
+            echo "$url -> HTTP $code, $(wc -c < "$name" 2>/dev/null || echo 0) bytes"
+            echo "-- elements:"; grep -o '<[A-Za-z_][A-Za-z0-9_]*' "$name" | sort | uniq -c | sort -rn | head -25
+            echo "-- links:"; grep -oiE '(href|src)="[^"]+"' "$name" | sort -u | head -80
+            echo "-- body:"; head -c 5000 "$name"; echo
             echo "::endgroup::"
-          done
+          }
+          probe results.xml       "$FEED?eventtypes=ContestResults"
+          probe schedule.xml      "$FEED?eventtypes=AllGameSchedule"
+          probe results-pin.xml   "$FEED?eventtypes=ContestResults&iosPIN=&PeopleID="
+          probe latest.html       "https://nobilis.nobles.edu/Athletics/LatestResults.php"
+          probe index.html        "https://nobilis.nobles.edu/Athletics/"
+          probe calendar.html     "https://nobilis.nobles.edu/Athletics/calendar.php"
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: athletics-responses
-          path: "*.xml"
+          path: |
+            *.xml
+            *.html
           if-no-files-found: ignore
