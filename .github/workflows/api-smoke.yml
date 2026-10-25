@@ -47,14 +47,6 @@ jobs:
           done
           test -s menu-lunch.json
 
-      - name: Print responses (fixture capture)
-        run: |
-          for f in schools.json menu-*.json; do
-            echo "=== BEGIN $f"
-            jq -c 'walk(if type == "object" then del(.station_logo, .station_mobile_image, .image, .image_thumbnail, .hoverpic_url, .image_url, .file_url) else . end)' "$f"
-            echo "=== END $f"
-          done
-
       - uses: actions/upload-artifact@v4
         if: always()
         with:
