@@ -37,7 +37,7 @@ extension Binding where Value == DateSpan {
             set: { date in
                 var span = wrappedValue
                 span.start = LocalDate(date)
-                span.end = max(span.end, span.start)
+                span.end = Swift.max(span.end, span.start)
                 wrappedValue = span
             }
         )
@@ -49,7 +49,7 @@ extension Binding where Value == DateSpan {
             get: { wrappedValue.end.pickerDate },
             set: { date in
                 var span = wrappedValue
-                span.end = max(LocalDate(date), span.start)
+                span.end = Swift.max(LocalDate(date), span.start)
                 wrappedValue = span
             }
         )
