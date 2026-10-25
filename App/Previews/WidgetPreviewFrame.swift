@@ -7,36 +7,35 @@ import NoblesKit
 struct WidgetPreviewFrame<Content: View>: View {
     let family: WidgetFamily
     let theme: Theme
-    let content: Content
+    /// The widget's content, given the theme's colors as resolved for this family and appearance.
+    @ViewBuilder let content: (ThemeColors) -> Content
 
-    init(family: WidgetFamily, theme: Theme, @ViewBuilder content: () -> Content) {
-        self.family = family
-        self.theme = theme
-        self.content = content()
-    }
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
+        let colors = ThemeColors(theme: theme, colorScheme: colorScheme, family: family)
+        let themed = content(colors).widgetTheme(theme, colors: colors)
         if family.isAccessory {
-            lockScreen
+            lockScreen(themed)
         } else {
-            homeScreen
+            homeScreen(themed, colors: colors)
         }
     }
 
-    private var homeScreen: some View {
+    private func homeScreen(_ widget: some View, colors: ThemeColors) -> some View {
         let size = family.widgetPointSize
-        return content
+        return widget
             .padding(PreviewMetrics.contentMargin)
             .frame(width: size.width, height: size.height)
-            .background { WidgetBackground(theme: theme, family: family) }
+            .background { WidgetBackground(theme: theme, colors: colors) }
             .clipShape(RoundedRectangle(cornerRadius: PreviewMetrics.cornerRadius, style: .continuous))
             .shadow(color: .black.opacity(0.14), radius: 10, y: 4)
     }
 
     /// Lock Screen widgets are monochrome over the wallpaper, so they sit on a dark backdrop here.
-    private var lockScreen: some View {
+    private func lockScreen(_ widget: some View) -> some View {
         let size = family.widgetPointSize
-        return content
+        return widget
             .lineLimit(family == .accessoryInline ? 1 : nil)
             .frame(width: size.width, height: size.height)
             .environment(\.colorScheme, .dark)

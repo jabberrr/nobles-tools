@@ -27,33 +27,52 @@ All kinds share a `Theme`: palette, font style and background style.
 ## Repository map
 
 ```
-project.yml                 XcodeGen spec. NoblesTools.xcodeproj is generated and gitignored.
+CLAUDE.md                   Imports this file, so Claude Code loads it automatically.
+project.yml                 XcodeGen spec. The .xcodeproj, Info.plists and entitlements are generated and gitignored.
 NoblesKit/                  Swift package, Foundation-only (no SwiftUI). Builds on iOS, macOS and Linux.
   Sources/NoblesKit/
-    Core/                   LocalDate (school-time-zone dates), HTTPClient, AppGroup, ResponseCache
-    Designs/                WidgetDesign, WidgetContent, Theme/Palette, DesignStore (app-group UserDefaults)
-    Menu/                   Meal/MenuFilter/DailyMenu models, Nutrislice decoding, filtering, MenuService
-    Calendar/               SchoolCalendar/Term/Countdown models, built-in 2026–27 calendar, countdown math
-    Scores/                 Game/Scoreboard models, NoblesAthleticsProvider, ScoresService
-  Tests/NoblesKitTests/     swift-testing tests. Fixtures/real-*.json are REAL captured API responses.
-Shared/                     SwiftUI widget views + theme mapping, compiled into BOTH app and widget targets
-App/                        App target: design list, design editor with live previews, settings (calendar editor)
-Widgets/                    Widget extension: WidgetBundle, 3 AppIntentConfiguration widgets, intents/entities
+    Core/                   LocalDate/DateSpan (school-time-zone days), HTTPClient, AppGroup, ResponseCache
+                            (last-good responses, pruned after 30 days), CachingFetcher (network → cache
+                            fallback), LenientDecoding, TextMatching (accent/case-insensitive matching),
+                            HTMLScanning (tag/attribute scanning plus entity decoding, no dependencies)
+    Designs/                WidgetDesign/WidgetContent/Theme/Palette, DesignStore (app-group UserDefaults)
+    Menu/                   Models, NutrisliceModels (lenient DTOs), MenuGrouping (rows → stations),
+                            MenuFiltering (styles + highlights), MenuTypes (discovery), MenuService, preview data
+    Calendar/               SchoolCalendar/Term/Countdown models, NoblesCalendar (built-in 2026–27), countdown math
+    Scores/                 Game/GameFeed/Scoreboard models, NoblesAthleticsProvider (AthleticsResults JSON +
+                            AthleticsSchedule HTML + AthleticsParsing), ScoresService, preview data
+  Tests/NoblesKitTests/     swift-testing tests. Fixtures/real-* are REAL captured responses; synthetic-* are hand-written.
+Shared/                     SwiftUI widget views, theme mapping and formatting, compiled into BOTH app and widget
+App/                        App target: DesignLibrary (state), design list, editor with live previews,
+                            PreviewData (loads real data once for previews), Settings (calendar editor)
+Widgets/                    Widget extension: WidgetBundle, three AppIntentConfiguration widgets and their
+                            timeline providers, Intents/ (configuration intents and design entities)
 .github/workflows/
-  ci.yml                    Linux `swift test` (swift:6.1 container) + macOS XcodeGen → xcodebuild + `swift test`
-  api-smoke.yml             Weekly live check of the menu API + athletics feed (prints response shapes)
-  capture-fixtures.yml      Manual: commits real menu API responses into NoblesKit test fixtures
+  ci.yml                    Linux `swift test` (swift:6.1 container); macOS: XcodeGen → `swift test` → xcodebuild
+  api-smoke.yml             Weekly live check of the menu API and the athletics sources (prints response shapes)
+  capture-fixtures.yml      Manual: commits real menu and athletics responses into NoblesKit test fixtures
+.github/scripts/            Helpers for those workflows (extract-schedule.py cuts the schedule sidebar out)
 ```
 
 Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools.widgets`; app group `group.com.jabberrr.noblestools` (`AppGroup.identifier`); URL scheme `noblestools://design/<uuid>`, which opens that design's editor.
 
 ## Architecture
 
-- **NoblesKit holds all the logic.** It does networking, decoding, filtering, calendar math and persistence. Keep it free of SwiftUI and WidgetKit so it stays testable on Linux. Use `#if canImport(FoundationNetworking)` and `#if canImport(FoundationXML)` for Linux, and guard Darwin-only APIs with `#if canImport(Darwin)`.
-- **Shared/ views are the single rendering path.** The widget and the app's live preview use the same views. The preview wraps them in a frame of the real widget size and injects `\.widgetFamily`.
-- **Persistence:** `DesignStore` stores JSON in app-group `UserDefaults`, under versioned keys. It is a `Sendable` struct, so widget timeline providers use it directly. The app wraps it in a `@MainActor @Observable` `DesignLibrary`, which saves on change and calls `WidgetCenter.shared.reloadAllTimelines()`.
-- **Widget configuration:** each widget has an `AppIntent` with one optional design parameter. There is one concrete `AppEntity` type per kind, because AppIntents metadata can't handle generic entities. If no design is chosen, the widget uses the first saved design of that kind, else `WidgetDesign.makeDefault(kind)`.
-- **Offline:** `ResponseCache` keeps the last good raw response per URL in the app-group container. Services fall back to it on network errors.
+- **NoblesKit holds all the logic.** It does networking, decoding, filtering, calendar math and persistence. Keep it free of SwiftUI and WidgetKit so it stays testable on Linux. Use `#if canImport(FoundationNetworking)` for Linux, and guard Darwin-only APIs with `#if canImport(Darwin)`.
+- **Shared/ views are the single rendering path.** The widget and the app's live preview use the same views.
+  - The widget size is a `family:` parameter, because `\.widgetFamily` can't be set outside WidgetKit.
+  - Theme colors are resolved once and passed in: by `WidgetChrome` in the widget, and by `WidgetPreviewFrame`/`DesignPreview` in the app. `WidgetChrome` also applies `containerBackground` and the deep link.
+- **Persistence:** `DesignStore` stores JSON in app-group `UserDefaults`, under versioned keys (`designs.v1`, `designs.seeded.v1`, `calendar.v1`).
+  - It is a `Sendable` struct, so widget timeline providers use it directly.
+  - Every configuration field decodes with a default, and the design list decodes lossily. Old or partially unreadable data never wipes a user's designs.
+  - The app wraps the store in a `@MainActor @Observable` `DesignLibrary`. It saves 500 ms after the last edit, and immediately when the app leaves the foreground. It then reloads only the affected widget kind (`WidgetCenter.reloadTimelines(ofKind: kind.timelineKind)`).
+- **Widget configuration:** each widget has an `AppIntent` with one optional design parameter. There is one concrete `AppEntity` type per kind, because AppIntents metadata can't handle generic entities. If no design is chosen, or the chosen one was deleted, the widget uses the first saved design of that kind, else `WidgetDesign.makeDefault(kind)`.
+- **Timelines:**
+  - Menu: entries at now and at the next meal hand-off (`upcomingMenus(limit: 2)`), plus each school midnight for "Today"/"Tomorrow" labels; it reloads at the hand-off, at most 6 h out.
+  - Countdown: one entry per school midnight.
+  - Scores: refreshes every 2 h, or every 60 min on game days.
+- **Offline:** `ResponseCache` keeps the last good raw response per URL in the app-group container. Services fall back to it on network errors, and report the cache time so widgets can show "Updated 3h ago".
+- **App previews:** `PreviewData` fetches each data source once and filters locally per design, so toggling settings never re-fetches. It falls back to sample data, labelled as such, when offline.
 - **Dates:** use `LocalDate` and `Calendar.school` (America/New_York) for anything that is a school day or a meal time. Never use the device time zone for school logic.
 
 ## Data sources (verified facts)
@@ -103,7 +122,9 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
   docker run --rm -v "$PWD/NoblesKit:/pkg" -w /pkg swift:6.1-noble swift test
   ```
   The App, Widgets and Shared targets (SwiftUI/WidgetKit/AppIntents) only compile in CI on macOS.
-- CI builds with `xcodebuild -scheme NoblesTools -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`.
+- CI builds with `xcodebuild -scheme NoblesTools -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`. As of 2026-10-25 the `macos-15` runner's latest stable Xcode is **26.3, with the iOS 26.2 SDK**. A full CI run takes about 3 minutes.
+- **Watching CI from the sandbox:** the repo is public, so `curl https://api.github.com/repos/jabberrr/nobles-tools/actions/runs/<id>` works. Poll it in a background `until` loop rather than sleeping. Read failure logs with `mcp__github__get_job_logs`.
+- **Intermediate commits:** add `[skip ci]` to the commit message when pushing work-in-progress that isn't meant to build yet. It skips every push-triggered workflow.
 
 ## Environment gotchas (Claude Code cloud sessions)
 
@@ -115,7 +136,9 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 
 - Swift 6 language mode everywhere; iOS 17 deployment target. Don't use iOS 18+ APIs without an `if #available` guard.
 - In AppIntents types, use computed static properties (`static var title: LocalizedStringResource { "…" }`). Stored `static var` is a Swift 6 concurrency error.
-- Tests use swift-testing (`import Testing`, `@Test`, `#expect`). Never touch the network in tests: inject a fake `HTTPClient`.
+- **New persisted fields must decode with a default** (`container.decode(.key, or: default)` from `LenientDecoding.swift`), so designs saved by older builds keep loading.
+- Inside `extension Binding`, a bare `max(...)` or `min(...)` resolves as a dynamic member lookup. Write `Swift.max`. CI caught this once.
+- Tests use swift-testing (`import Testing`, `@Test`, `#expect`). Never touch the network in tests: inject a fake `HTTPClient` (`Tests/NoblesKitTests/Support/FakeHTTPClient.swift`). Prefer the `real-*` fixtures.
 - Model enums expose `displayName` (and `symbolName` where useful) for UI. Keep UI strings in the models only when they are shared between app and widget.
 - Don't commit the generated `.xcodeproj`. Change `project.yml` instead.
 

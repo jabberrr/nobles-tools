@@ -2,19 +2,22 @@ import Foundation
 
 /// Games sorted into what a scores widget shows, after a design's filters.
 public struct Scoreboard: Hashable, Sendable {
-    /// In progress, soonest start first.
+    /// In progress, soonest start first. The Nobles source has no live scores, so this is always
+    /// empty for now; it's kept so a future live source fits.
     public var live: [Game]
     /// Finished, postponed or cancelled games, plus scheduled games that should have started but
     /// have no result yet ("Awaiting result"); newest first.
     public var recent: [Game]
     /// Scheduled games that haven't started, soonest first. Empty when the design hides them.
     public var upcoming: [Game]
+    /// When the games were fetched (see `GameFeed.fetchedAt`).
     public var fetchedAt: Date
 
     public var isEmpty: Bool { live.isEmpty && recent.isEmpty && upcoming.isEmpty }
 
     /// Applies `configuration`'s sport and varsity filters to `games` and sorts them by status.
-    public init(games: [Game], configuration: ScoresConfiguration, now: Date) {
+    /// `fetchedAt` defaults to `now`.
+    public init(games: [Game], configuration: ScoresConfiguration, now: Date, fetchedAt: Date? = nil) {
         let today = LocalDate(now)
         let shown = games.filter(configuration.includes)
         live = shown.filter(\.isLive).sorted(by: Game.startsEarlier)
@@ -22,18 +25,22 @@ public struct Scoreboard: Hashable, Sendable {
         upcoming = configuration.showsUpcoming
             ? shown.filter { $0.status == .scheduled && !$0.hasStarted(now: now) }.sorted(by: Game.startsEarlier)
             : []
-        fetchedAt = now
+        self.fetchedAt = fetchedAt ?? now
+    }
+
+    /// The scoreboard for `feed`'s games, fetched when the feed was.
+    public init(feed: GameFeed, configuration: ScoresConfiguration, now: Date) {
+        self.init(games: feed.games, configuration: configuration, now: now, fetchedAt: feed.fetchedAt)
     }
 }
 
 extension ScoresConfiguration {
-    /// Whether `game` passes the sport and varsity filters. A sport matches when the game's sport
-    /// contains a chosen name, ignoring case ("Soccer" covers boys' and girls'). Varsity-only keeps
-    /// games whose level is "Varsity" or unknown.
+    /// Whether `game` passes the sport and varsity filters. A sport matches when it equals a chosen
+    /// name ignoring case, so "Cross Country" (middle school) doesn't pick up "Boys Cross Country".
+    /// Varsity-only keeps games whose level is "Varsity" or unknown.
     func includes(_ game: Game) -> Bool {
         let chosen = sports.map(\.matchKey).filter { !$0.isEmpty }
-        let sport = game.sport.matchKey
-        let sportMatches = chosen.isEmpty || chosen.contains { sport.contains($0) }
+        let sportMatches = chosen.isEmpty || chosen.contains(game.sport.matchKey)
         let levelMatches = !varsityOnly || game.level.map { $0.matchKey == "varsity" } ?? true
         return sportMatches && levelMatches
     }

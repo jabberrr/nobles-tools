@@ -36,13 +36,20 @@ struct MenuFilteringTests {
         #expect(filtered.allItems.map(\.name) == ["Cheeseburger", "Roast Chicken"])
     }
 
-    @Test func entreesOnlyFallsBackToTheFirstStation() {
-        let menu = DailyMenu(date: monday, meal: .breakfast, sections: [
-            MenuSection(title: "Bakery", items: []),
-            MenuSection(title: "Hot Breakfast", items: [MenuItem(id: 1, name: "Scrambled Eggs")]),
-            MenuSection(title: "Fruit", items: [MenuItem(id: 2, name: "Melon")]),
-        ])
-        #expect(titles(menu, .entreesOnly) == ["Hot Breakfast"])
+    @Test func entreesOnlyIsEmptyWithoutEntrees() {
+        let menu = DailyMenu(
+            date: monday,
+            meal: .lunch,
+            sections: [
+                MenuSection(title: "Soup Station", items: [MenuItem(id: 1, name: "Minestrone")]),
+                MenuSection(title: "Dessert", items: [MenuItem(id: 2, name: "Brownies", category: "dessert")]),
+            ],
+            notes: ["Early dismissal"]
+        )
+        let filtered = menu.filtered(by: .entreesOnly)
+
+        #expect(filtered.sections.isEmpty)
+        #expect(filtered.notes == ["Early dismissal"])
     }
 
     @Test func withoutSaladsAndSoupsDropsStationsAndDishes() async throws {
@@ -106,5 +113,32 @@ struct MenuFilteringTests {
         let filtered = menu.filtered(by: filter)
         #expect(filtered.notes == ["Early dismissal"])
         #expect(filtered.sections.allSatisfy { !$0.items.isEmpty })
+    }
+
+    // MARK: Highlights
+
+    @Test func highlightsPutTheRealEntreesFirst() async throws {
+        let lunch = try await MenuFixtures.realMenu(.lunch, on: monday)
+
+        #expect(lunch.highlights.map(\.name) == [
+            "Revved Up Macaroni & Cheese",
+            "Tomato, Kale, Red Bean & Pasta Toss, Chive Oil",
+            "Cream of Broccoli & Cheddar Soup",
+            "Warm Bread Sticks",
+            "Roasted Green Beans with Shallots",
+            "Mini Caprese Salad, Arugula & Balsamic Glaze",
+        ])
+    }
+
+    @Test func highlightsRankEntreeStationsThenEntreeDishesThenTheRest() {
+        let fries = MenuItem(id: 1, name: "Fries", category: "side")
+        let menu = DailyMenu(date: monday, meal: .lunch, sections: [
+            MenuSection(title: "Grill", items: [fries, MenuItem(id: 2, name: "Cheeseburger", category: "entree")]),
+            MenuSection(title: "Main Plate", items: [MenuItem(id: 3, name: "Roast Chicken")]),
+            MenuSection(title: "Dessert", items: [MenuItem(id: 4, name: "Brownies"), fries]),
+        ])
+
+        #expect(menu.highlights.map(\.name) == ["Roast Chicken", "Cheeseburger", "Fries", "Brownies"])
+        #expect(DailyMenu(date: monday, meal: .lunch, sections: []).highlights.isEmpty)
     }
 }

@@ -4,9 +4,13 @@ import NoblesKit
 
 struct MenuWidget: Widget {
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "MenuWidget", intent: MenuWidgetIntent.self, provider: MenuProvider()) { entry in
-            WidgetChrome(design: entry.design) { family in
-                MenuWidgetView(design: entry.design, family: family, upcoming: entry.upcoming, now: entry.date)
+        AppIntentConfiguration(
+            kind: WidgetKind.menu.timelineKind,
+            intent: MenuWidgetIntent.self,
+            provider: MenuTimelineProvider()
+        ) { entry in
+            WidgetChrome(design: entry.design) { family, colors in
+                MenuWidgetView(design: entry.design, family: family, colors: colors, upcoming: entry.upcoming, now: entry.date)
             }
         }
         .configurationDisplayName(WidgetKind.menu.displayName)
@@ -27,9 +31,11 @@ struct MenuEntry: TimelineEntry {
     }
 }
 
-struct MenuProvider: AppIntentTimelineProvider {
+struct MenuTimelineProvider: AppIntentTimelineProvider {
     /// Check back at least this often, in case the dining hall edits the menu.
     private static let maximumAge: TimeInterval = 6 * 60 * 60
+    /// Never reload sooner than this, so a menu that has only just ended can't cause a reload loop.
+    private static let minimumAge: TimeInterval = 5 * 60
     private static let retryInterval: TimeInterval = 30 * 60
 
     func placeholder(in context: Context) -> MenuEntry {
@@ -44,37 +50,39 @@ struct MenuProvider: AppIntentTimelineProvider {
         return await timeline(for: configuration, in: context).entries.first ?? .sample(design: design)
     }
 
+    /// The menu now, and the one that replaces it when its meal ends, so the widget moves on at
+    /// the right time even if WidgetKit is late to reload.
     func timeline(for configuration: MenuWidgetIntent, in context: Context) async -> Timeline<MenuEntry> {
         let design = DesignStore().resolvedDesign(id: configuration.design?.id, kind: .menu)
         let selection = design.menuConfiguration?.meal ?? .lunch
         let now = Date.now
-        do {
-            // MenuService falls back to its cached copy when offline, so this throws only when
-            // there's nothing to show at all.
-            let upcoming = try await MenuService().upcomingMenu(for: selection, now: now)
-            let refresh = max(
-                min(upcoming.validUntil, now.addingTimeInterval(Self.maximumAge)),
-                now.addingTimeInterval(5 * 60)
-            )
-            let entries = Self.entryDates(from: now, until: refresh).map {
-                MenuEntry(date: $0, design: design, upcoming: upcoming)
-            }
-            return Timeline(entries: entries, policy: .after(refresh))
-        } catch {
+        // MenuService falls back to its cached copy when offline, so this fails only when there's
+        // nothing to show at all.
+        guard let menus = try? await MenuService().upcomingMenus(for: selection, now: now, limit: 2),
+              let current = menus.first
+        else {
             let entry = MenuEntry(date: now, design: design, upcoming: nil)
-            return Timeline(entries: [entry], policy: .after(now.addingTimeInterval(Self.retryInterval)))
+            return Timeline(entries: [entry], policy: .after(now + Self.retryInterval))
         }
+        let refresh = min(max(current.validUntil, now + Self.minimumAge), now + Self.maximumAge)
+        return Timeline(entries: Self.entries(for: menus, design: design, now: now), policy: .after(refresh))
     }
 
-    /// `now`, plus each midnight (school time) before `end`, so "Tomorrow" becomes "Today" on time.
-    private static func entryDates(from now: Date, until end: Date) -> [Date] {
-        var dates = [now]
+    /// An entry now, one as each menu takes over from the one before, and one at each midnight
+    /// (school time) until the last menu ends, so "Tomorrow" becomes "Today" on time. Each shows
+    /// the menu that's current at its date.
+    private static func entries(for menus: [UpcomingMenu], design: WidgetDesign, now: Date) -> [MenuEntry] {
+        guard let last = menus.last else { return [] }
+        var dates: Set<Date> = [now]
+        dates.formUnion(menus.dropLast().map(\.validUntil))
         var day = LocalDate(now).adding(days: 1)
-        while day.startOfDay() < end {
-            dates.append(day.startOfDay())
+        while day.startOfDay() < last.validUntil {
+            dates.insert(day.startOfDay())
             day = day.adding(days: 1)
         }
-        return dates
+        return dates.sorted().map { date in
+            MenuEntry(date: date, design: design, upcoming: menus.first { date < $0.validUntil } ?? last)
+        }
     }
 }
 

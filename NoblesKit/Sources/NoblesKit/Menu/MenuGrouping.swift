@@ -89,12 +89,6 @@ extension NutrisliceItem {
     /// `fallbackID` (negative, so it can't clash) is used only if the row has no `id`.
     func menuItem(fallbackID: Int) -> MenuItem? {
         guard let name = food?.name ?? text else { return nil }
-        return MenuItem(
-            id: id ?? fallbackID,
-            name: name,
-            description: food?.description,
-            category: food?.category ?? category,
-            calories: food?.calories.flatMap { Int(exactly: $0.rounded()) }
-        )
+        return MenuItem(id: id ?? fallbackID, name: name, category: food?.category ?? category)
     }
 }

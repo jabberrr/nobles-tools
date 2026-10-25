@@ -3,7 +3,8 @@ import WidgetKit
 import NoblesKit
 
 /// The user's designs and school calendar, kept in sync with the app group so widgets see every
-/// change. Edits save after a short pause, so typing a name doesn't reload widgets per keystroke.
+/// change. Edits save after a short pause, so typing a name doesn't reload widgets per keystroke,
+/// and each save reloads only the widgets whose designs or dates changed.
 @MainActor @Observable
 final class DesignLibrary {
     private(set) var designs: [WidgetDesign]
@@ -13,6 +14,8 @@ final class DesignLibrary {
     private let store: DesignStore
     @ObservationIgnored private var pendingDesignSave: Task<Void, Never>?
     @ObservationIgnored private var pendingCalendarSave: Task<Void, Never>?
+    /// Kinds whose designs changed since the last save; their widgets reload when it happens.
+    @ObservationIgnored private var changedKinds: Set<WidgetKind> = []
 
     private static let saveDelay = Duration.milliseconds(500)
 
@@ -39,20 +42,22 @@ final class DesignLibrary {
         var design = WidgetDesign.makeDefault(kind)
         design.name = uniqueName(for: design.name)
         designs.append(design)
-        saveDesigns()
+        saveDesigns(changing: kind)
         return design
     }
 
     /// Replaces the design with the same ID. Saved after a short pause.
     func update(_ design: WidgetDesign) {
         guard let index = designs.firstIndex(where: { $0.id == design.id }), designs[index] != design else { return }
+        changedKinds.formUnion([designs[index].kind, design.kind])
         designs[index] = design
         scheduleDesignSave()
     }
 
     func delete(id: UUID) {
+        guard let design = design(id: id) else { return }
         designs.removeAll { $0.id == id }
-        saveDesigns()
+        saveDesigns(changing: design.kind)
     }
 
     /// Deletes rows of one kind's section in the design list.
@@ -60,15 +65,16 @@ final class DesignLibrary {
         let section = designs(of: kind)
         let ids = Set(offsets.map { section[$0].id })
         designs.removeAll { ids.contains($0.id) }
-        saveDesigns()
+        saveDesigns(changing: kind)
     }
 
-    /// Reorders rows within one kind's section in the design list.
+    /// Reorders rows within one kind's section in the design list. The first design of a kind is
+    /// the one widgets show when none is picked, so this reloads that kind's widgets too.
     func move(_ kind: WidgetKind, from source: IndexSet, to destination: Int) {
         var section = designs(of: kind)
         section.move(fromOffsets: source, toOffset: destination)
         designs = WidgetKind.allCases.flatMap { $0 == kind ? section : designs(of: $0) }
-        saveDesigns()
+        saveDesigns(changing: kind)
     }
 
     private func uniqueName(for base: String) -> String {
@@ -94,13 +100,14 @@ final class DesignLibrary {
         }
     }
 
-    /// Goes back to the built-in calendar.
+    /// Goes back to the built-in calendar, dropping any edit still waiting to be saved.
     func resetCalendar() {
         pendingCalendarSave?.cancel()
+        pendingCalendarSave = nil
         store.saveCalendar(nil)
         calendar = store.calendar()
         hasCustomCalendar = false
-        WidgetCenter.shared.reloadAllTimelines()
+        reloadWidgets(of: .countdown)
     }
 
     // MARK: Saving
@@ -120,17 +127,30 @@ final class DesignLibrary {
         }
     }
 
+    /// Saves now, with `kind` among the kinds whose widgets reload.
+    private func saveDesigns(changing kind: WidgetKind) {
+        changedKinds.insert(kind)
+        saveDesigns()
+    }
+
     private func saveDesigns() {
         pendingDesignSave?.cancel()
         pendingDesignSave = nil
         store.save(designs)
-        WidgetCenter.shared.reloadAllTimelines()
+        for kind in changedKinds {
+            reloadWidgets(of: kind)
+        }
+        changedKinds = []
     }
 
     private func saveCalendar() {
         pendingCalendarSave?.cancel()
         pendingCalendarSave = nil
         store.saveCalendar(calendar)
-        WidgetCenter.shared.reloadAllTimelines()
+        reloadWidgets(of: .countdown)
+    }
+
+    private func reloadWidgets(of kind: WidgetKind) {
+        WidgetCenter.shared.reloadTimelines(ofKind: kind.timelineKind)
     }
 }

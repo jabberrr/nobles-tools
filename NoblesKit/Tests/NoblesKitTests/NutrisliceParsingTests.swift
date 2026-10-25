@@ -35,7 +35,7 @@ struct NutrisliceParsingTests {
         let sides = try #require(menu.sections.first { $0.title == "Sides" })
 
         #expect(sides.items.map(\.name) == ["Sweet Potato Fries", "Cilantro Steamed Carrots, Chili Oil"])
-        #expect(sides.items[0] == MenuItem(id: 430782744, name: "Sweet Potato Fries", calories: 330))
+        #expect(sides.items[0] == MenuItem(id: 430782744, name: "Sweet Potato Fries"))
     }
 
     @Test func dropsStationsWithoutDishes() async throws {
@@ -50,8 +50,6 @@ struct NutrisliceParsingTests {
 
         #expect(menu.isEmpty)
         #expect(menu.notes == ["No Dinner Services"])
-        let service = MenuService(http: FakeHTTPClient(try MenuFixtures.realResponses()), cache: nil)
-        #expect(try await service.menu(on: LocalDate(2026, 10, 30), meal: .dinner) == nil)
     }
 
     @Test func groupsRealDinner() async throws {
@@ -84,7 +82,7 @@ struct NutrisliceParsingTests {
         #expect(sections(menu)["Sides"] == ["Sweet Potato Fries", "Garlic Knots", "Cranberry Sauce", "Steamed Green Beans"])
 
         let sides = menu.sections[1].items
-        #expect(sides[0] == MenuItem(id: 9004, name: "Sweet Potato Fries", calories: 330))
+        #expect(sides[0] == MenuItem(id: 9004, name: "Sweet Potato Fries"))
         #expect(sides[1].id == 9005)
         #expect(sides[2].id < 0)
     }
@@ -95,7 +93,7 @@ struct NutrisliceParsingTests {
         #expect(menu.sections.map(\.title) == ["Entree", "Side", "", "Soup", "Salad Bar", "Dessert"])
         #expect(sections(menu)["Side"] == ["Mashed Potatoes", "Herb Stuffing"])
         #expect(menu.sections[0].items == [
-            MenuItem(id: 9101, name: "Roast Turkey", description: "Herb-brined, carved to order", category: "entree"),
+            MenuItem(id: 9101, name: "Roast Turkey", category: "entree"),
         ])
     }
 

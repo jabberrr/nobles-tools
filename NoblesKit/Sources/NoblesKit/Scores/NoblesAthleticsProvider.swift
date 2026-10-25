@@ -23,12 +23,8 @@ public struct NoblesAthleticsProvider: ScoresProvider {
 
     /// Results and scheduled games starting from `start` through `end`. A scheduled game that
     /// already has a result appears once, as the result. Throws only if neither source loads.
-    public func games(from start: Date, to end: Date) async throws -> [Game] {
-        try await fetchGames(from: start, to: end).games
-    }
-
-    /// `games(from:to:)`, with the older save date of any source served from the cache.
-    public func fetchGames(from start: Date, to end: Date) async throws -> (games: [Game], cachedAt: Date?) {
+    /// The feed is stamped `now`, or when the oldest cached copy it used was saved.
+    public func games(from start: Date, to end: Date, now: Date) async throws -> GameFeed {
         async let loadingResults = load(Self.resultsURL, parse: AthleticsResult.games)
         async let loadingSchedule = load(Self.scheduleURL, parse: AthleticsSchedule.games)
         let (results, schedule) = await (loadingResults, loadingSchedule)
@@ -37,7 +33,10 @@ public struct NoblesAthleticsProvider: ScoresProvider {
             throw error
         }
         let games = Self.merged(results: (try? results.get().value) ?? [], schedule: (try? schedule.get().value) ?? [])
-        return (games.filter { start <= $0.start && $0.start <= end }, loaded.compactMap(\.cachedAt).min())
+        return GameFeed(
+            games: games.filter { start <= $0.start && $0.start <= end },
+            fetchedAt: loaded.compactMap(\.cachedAt).min() ?? now
+        )
     }
 
     private func load(_ url: URL, parse: @Sendable (Data) throws -> [Game]) async -> Result<CachingFetcher.Fetched<[Game]>, any Error> {

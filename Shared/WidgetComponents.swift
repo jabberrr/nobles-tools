@@ -29,38 +29,38 @@ struct WidgetMessage: View {
     }
 }
 
-/// Shows as many of `items` as fit vertically, then a "+N more" line for the rest.
+/// Lays out the longest run of `items` from the start that fits vertically, then a "+N more"
+/// line for the rest.
 ///
 /// Rows keep their natural text size instead of clipping mid-line: `ViewThatFits` tries a
-/// handful of row counts, from `capacity` (the most that could ever fit) down to one.
-struct FittingList<Item, Row: View>: View {
+/// handful of counts, from `capacity` (the most that could ever fit) down to one.
+struct FittingPrefix<Item, Content: View>: View {
     let items: [Item]
-    /// The most rows this space could hold; keeps the candidate counts close together.
+    /// The most items this space could hold; keeps the candidate counts close together.
     let capacity: Int
     var spacing: CGFloat = 4
     /// Color of the "+N more" line, or `nil` to leave it out.
     var overflowColor: Color? = nil
-    @ViewBuilder let row: (Item) -> Row
+    /// Lays out the items that are shown.
+    @ViewBuilder let content: ([Item]) -> Content
 
     var body: some View {
         let counts = Self.candidateCounts(total: items.count, capacity: capacity)
         ViewThatFits(in: .vertical) {
-            rows(counts[0])
-            rows(counts[1])
-            rows(counts[2])
-            rows(counts[3])
-            rows(counts[4])
-            rows(counts[5])
-            rows(counts[6])
-            rows(counts[7])
+            prefix(counts[0])
+            prefix(counts[1])
+            prefix(counts[2])
+            prefix(counts[3])
+            prefix(counts[4])
+            prefix(counts[5])
+            prefix(counts[6])
+            prefix(counts[7])
         }
     }
 
-    private func rows(_ count: Int) -> some View {
+    private func prefix(_ count: Int) -> some View {
         VStack(alignment: .leading, spacing: spacing) {
-            ForEach(Array(items.prefix(count).enumerated()), id: \.offset) { _, item in
-                row(item)
-            }
+            content(Array(items.prefix(count)))
             if let overflowColor, count < items.count {
                 Text("+\(items.count - count) more")
                     .font(.caption2.weight(.medium))
@@ -75,5 +75,57 @@ struct FittingList<Item, Row: View>: View {
         let top = max(1, min(total, capacity))
         let step = max(1, (top + 7) / 8)
         return (0..<8).map { max(1, top - $0 * step) }
+    }
+}
+
+/// A `FittingPrefix` that stacks its items in a single column.
+struct FittingList<Item, Row: View>: View {
+    let items: [Item]
+    let capacity: Int
+    var spacing: CGFloat = 4
+    var overflowColor: Color? = nil
+    @ViewBuilder let row: (Item) -> Row
+
+    var body: some View {
+        FittingPrefix(items: items, capacity: capacity, spacing: spacing, overflowColor: overflowColor) { shown in
+            ForEach(Array(shown.enumerated()), id: \.offset) { _, item in
+                row(item)
+            }
+        }
+    }
+}
+
+/// A circular progress track, filled clockwise from the top.
+struct ProgressRing: View {
+    let progress: Double
+    var lineWidth: CGFloat = 8
+    let colors: ThemeColors
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(colors.track, lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: CGFloat(progress))
+                .stroke(colors.accent, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .padding(lineWidth / 2)
+    }
+}
+
+/// A horizontal capsule progress bar.
+struct ProgressBar: View {
+    let progress: Double
+    let colors: ThemeColors
+
+    var body: some View {
+        GeometryReader { proxy in
+            let filled = progress > 0 ? max(proxy.size.height, proxy.size.width * CGFloat(progress)) : 0
+            ZStack(alignment: .leading) {
+                Capsule().fill(colors.track)
+                Capsule().fill(colors.accent).frame(width: filled)
+            }
+        }
     }
 }

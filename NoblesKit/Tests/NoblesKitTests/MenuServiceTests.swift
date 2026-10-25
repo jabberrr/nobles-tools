@@ -42,9 +42,8 @@ struct MenuServiceTests {
         let http = FakeHTTPClient(try responses())
         let service = MenuService(http: http, cache: nil)
 
-        #expect(try await service.availableMeals() == [.lunch, .dinner])
+        #expect(await service.availableMeals() == [.lunch, .dinner])
         #expect(try await service.week(containing: captured, meal: .breakfast).isEmpty)
-        #expect(try await service.menu(on: captured, meal: .breakfast) == nil)
         #expect(await http.requests.allSatisfy { !$0.absoluteString.contains("breakfast") })
     }
 
@@ -57,10 +56,21 @@ struct MenuServiceTests {
         let http = FakeHTTPClient([MenuFixtures.endpoint.schoolsURL: .data(Data(schools.utf8))])
         let service = MenuService(http: http, cache: nil)
 
-        #expect(try await service.availableMeals() == [.breakfast, .lunch])
+        #expect(await service.availableMeals() == [.breakfast, .lunch])
         _ = try? await service.week(containing: captured, meal: .lunch)
         let lunchMenuURL = MenuFixtures.endpoint.weekURL(menuType: "lunch-menu", date: captured)
         #expect(await http.requestCount(for: lunchMenuURL) == 1)
+    }
+
+    @Test func prefersMenuTypesNamedExactlyForTheMeal() throws {
+        let schools = #"""
+        [{"slug": "noble-and-greenough-school", "active_menu_types": [
+            {"name": "Staff Lunch", "slug": "staff-lunch"}, {"name": "LUNCH", "slug": "main"},
+            {"name": "Dinner Specials", "slug": "dinner-specials"}, {"name": "Supper", "slug": "Dinner"}]}]
+        """#
+        let types = try #require(MenuTypes(schoolsResponse: Data(schools.utf8), schoolSlug: "noble-and-greenough-school"))
+
+        #expect(types.slugs == ["lunch": "main", "dinner": "Dinner"])
     }
 
     @Test(arguments: [
@@ -70,7 +80,7 @@ struct MenuServiceTests {
     ])
     func fallsBackToKnownMealsWhenDiscoveryFails(schools: FakeHTTPClient.Response) async throws {
         let service = MenuService(http: FakeHTTPClient([MenuFixtures.endpoint.schoolsURL: schools]), cache: nil)
-        #expect(try await service.availableMeals() == [.lunch, .dinner])
+        #expect(await service.availableMeals() == [.lunch, .dinner])
     }
 
     @Test func cachesMenuTypesForAWeek() async throws {
@@ -80,14 +90,14 @@ struct MenuServiceTests {
         let http = FakeHTTPClient(try responses())
         let schoolsURL = MenuFixtures.endpoint.schoolsURL
 
-        _ = try await MenuService(http: http, cache: cache).availableMeals()
-        _ = try await MenuService(http: http, cache: cache).availableMeals()
+        _ = await MenuService(http: http, cache: cache).availableMeals()
+        _ = await MenuService(http: http, cache: cache).availableMeals()
         #expect(await http.requestCount(for: schoolsURL) == 1)
 
         let service = MenuService(http: http, cache: cache)
         let cached = try #require(await cache.data(for: service.menuTypesCacheKey))
         await cache.store(cached.data, for: service.menuTypesCacheKey, savedAt: .now - 8 * 24 * 60 * 60)
-        _ = try await service.availableMeals()
+        _ = await service.availableMeals()
         #expect(await http.requestCount(for: schoolsURL) == 2)
     }
 
@@ -202,6 +212,77 @@ struct MenuServiceTests {
 
         #expect(upcoming.meal == .lunch)
         #expect(upcoming.date == LocalDate(2026, 10, 27))
+    }
+
+    // MARK: Upcoming menus
+
+    @Test func fixedMealListContinuesAcrossTheWeekend() async throws {
+        let http = FakeHTTPClient(try responses())
+        let service = MenuService(http: http, cache: nil)
+        let friday = LocalDate(2026, 10, 30)
+        let menus = try await service.upcomingMenus(for: .lunch, now: at(friday, 11))
+
+        #expect(menus.map(\.date) == [friday, next])
+        #expect(menus.map(\.validUntil) == [at(friday, 13, 30), at(next, 13, 30)])
+        #expect(menus.last?.menu?.allItems.map(\.name) == ["Chicken Parmesan"])
+        #expect(await http.requestCount(for: MenuFixtures.weekURL(.lunch, monday: captured)) == 1)
+        #expect(await http.requestCount(for: MenuFixtures.weekURL(.lunch, monday: next)) == 1)
+    }
+
+    @Test func nextMealListHandsLunchOverToDinner() async throws {
+        let service = MenuService(http: FakeHTTPClient(try responses()), cache: nil)
+        let menus = try await service.upcomingMenus(for: .upcoming, now: at(captured, 11), limit: 3)
+        let tuesday = LocalDate(2026, 10, 27)
+
+        #expect(menus.map(\.meal) == [.lunch, .dinner, .lunch])
+        #expect(menus.map(\.date) == [captured, captured, tuesday])
+        #expect(menus.map(\.validUntil) == [at(captured, 13, 30), at(captured, 19), at(tuesday, 13, 30)])
+    }
+
+    @Test func eachListedMenuIsWhatShowsWhenThePreviousEnds() async throws {
+        let service = MenuService(http: FakeHTTPClient(try responses()), cache: nil)
+        let now = at(LocalDate(2026, 10, 29), 12)
+        let menus = try await service.upcomingMenus(for: .upcoming, now: now, limit: 5)
+
+        // Thursday lunch and dinner, Friday lunch (Friday has no dinner), then Monday's meals.
+        #expect(menus.map(\.date) == [LocalDate(2026, 10, 29), LocalDate(2026, 10, 29), LocalDate(2026, 10, 30), next, next])
+        #expect(try await service.upcomingMenu(for: .upcoming, now: now) == menus[0])
+        for (previous, menu) in zip(menus, menus.dropFirst()) {
+            #expect(try await service.upcomingMenu(for: .upcoming, now: previous.validUntil) == menu)
+        }
+    }
+
+    @Test(arguments: [-1, 0, 1, 4])
+    func listRespectsTheLimitButIsNeverEmpty(limit: Int) async throws {
+        let service = MenuService(http: FakeHTTPClient(try responses()), cache: nil)
+        let menus = try await service.upcomingMenus(for: .lunch, now: at(captured, 11), limit: limit)
+
+        #expect(menus.count == max(limit, 1))
+        #expect(menus.allSatisfy { $0.menu != nil })
+    }
+
+    @Test func listOfAnUnavailableMealHoldsPlaceholders() async throws {
+        let service = MenuService(http: FakeHTTPClient(try responses()), cache: nil)
+        let menus = try await service.upcomingMenus(for: .breakfast, now: at(captured, 9))
+
+        #expect(menus.map(\.date) == [LocalDate(2026, 10, 27), LocalDate(2026, 10, 28)])
+        #expect(menus.allSatisfy { $0.menu == nil })
+    }
+
+    @Test func listEndsBeforeAMenuThatFailsToLoad() async throws {
+        let saturday = LocalDate(2026, 10, 31)
+        let http = FakeHTTPClient([
+            MenuFixtures.weekURL(.lunch, monday: captured): .data(try MenuFixtures.week(monday: captured, dishes: [saturday: "Pancakes"])),
+            MenuFixtures.weekURL(.lunch, monday: next): .failure(Offline()),
+        ])
+        let service = MenuService(http: http, cache: nil)
+        let menus = try await service.upcomingMenus(for: .lunch, now: at(saturday, 11))
+
+        // After Saturday's lunch the search only reaches weeks that fail, so it would throw.
+        #expect(menus.map(\.date) == [saturday])
+        await #expect(throws: Offline.self) {
+            try await service.upcomingMenu(for: .lunch, now: at(saturday, 13, 30))
+        }
     }
 
     // MARK: Caching

@@ -14,16 +14,17 @@ struct MenuTypes: Codable, Hashable, Sendable {
     }
 
     /// Reads a `{base}/schools/` response: each meal maps to the school's first active menu type
-    /// whose name or slug contains the meal's name. `nil` if the school isn't listed or no meal matches.
+    /// whose name or slug is the meal's name (ignoring case), else the first that contains it, so
+    /// a "Staff Lunch" type is used only when there's no "Lunch". `nil` if the school isn't listed
+    /// or no meal matches.
     init?(schoolsResponse data: Data, schoolSlug: String) {
         guard let schools = try? JSONDecoder().decode([Lossy<NutrisliceSchool>].self, from: data),
               let school = schools.lazy.compactMap(\.value).first(where: { $0.slug == schoolSlug })
         else { return nil }
         var slugs: [String: String] = [:]
         for meal in Meal.allCases {
-            let match = school.menuTypes.first { type in
-                [type.name, type.slug].contains { $0?.matchKey.contains(meal.rawValue) == true }
-            }
+            let match = school.menuTypes.first { $0.isNamed(meal, exactly: true) }
+                ?? school.menuTypes.first { $0.isNamed(meal, exactly: false) }
             slugs[meal.rawValue] = match?.slug
         }
         guard !slugs.isEmpty else { return nil }
@@ -35,6 +36,16 @@ struct MenuTypes: Codable, Hashable, Sendable {
 
     /// `nil` when the school doesn't publish `meal`.
     func slug(for meal: Meal) -> String? { slugs[meal.rawValue] }
+}
+
+private extension NutrisliceMenuType {
+    /// Whether the name or slug is `meal`'s name (or, unless `exactly`, contains it), ignoring case.
+    func isNamed(_ meal: Meal, exactly: Bool) -> Bool {
+        [name, slug].contains { text in
+            guard let key = text?.matchKey else { return false }
+            return exactly ? key == meal.rawValue : key.contains(meal.rawValue)
+        }
+    }
 }
 
 extension MenuService {

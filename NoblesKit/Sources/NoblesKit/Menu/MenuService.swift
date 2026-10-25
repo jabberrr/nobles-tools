@@ -22,7 +22,7 @@ public struct MenuService: Sendable {
 
     /// The meals the school publishes, in serving order, discovered from its menu types and
     /// refreshed weekly. Lunch and dinner when discovery fails.
-    public func availableMeals() async throws -> [Meal] {
+    public func availableMeals() async -> [Meal] {
         await menuTypes().meals
     }
 
@@ -31,11 +31,6 @@ public struct MenuService: Sendable {
     public func week(containing date: LocalDate, meal: Meal) async throws -> [DailyMenu] {
         guard let slug = await menuTypes().slug(for: meal) else { return [] }
         return try await week(containing: date, meal: meal, slug: slug)
-    }
-
-    /// `meal` on `date`, or `nil` if nothing is published.
-    public func menu(on date: LocalDate, meal: Meal) async throws -> DailyMenu? {
-        try await week(containing: date, meal: meal).first { $0.date == date && !$0.isEmpty }
     }
 
     /// What a menu widget should show at `now`:
@@ -47,26 +42,21 @@ public struct MenuService: Sendable {
     /// When nothing is published (or the meal isn't offered), returns the next day the meal could
     /// be served with `menu == nil`, valid until the midnight after it so the widget checks again.
     public func upcomingMenu(for selection: MealSelection, now: Date = .now) async throws -> UpcomingMenu {
-        let types = await menuTypes()
-        let meals = (selection.meal.map { [$0] } ?? Meal.allCases).filter { types.slug(for: $0) != nil }
-        let today = LocalDate.today(now: now)
-        var loader = WeekLoader(service: self, types: types)
+        try await upcomingMenus(for: selection, now: now, limit: 1)[0]
+    }
 
-        if !meals.isEmpty {
-            let firstDay = meals.contains { now < $0.serviceEnd(on: today) } ? today : today.adding(days: 1)
-            for date in (0..<Self.searchDays).map(firstDay.adding(days:)) {
-                for meal in meals where now < meal.serviceEnd(on: date) {
-                    if let menu = await loader.menu(on: date, meal: meal) {
-                        return UpcomingMenu(meal: meal, date: date, menu: menu, validUntil: meal.serviceEnd(on: date))
-                    }
-                }
-            }
-            try loader.rethrowIfNothingLoaded()
+    /// The menu to show at `now`, followed by the menus that replace it as each one's service
+    /// ends: every element is what `upcomingMenu(for:now:)` returns at the previous one's
+    /// `validUntil`. Never empty, and at most `limit` long. Weeks are fetched once for the whole
+    /// list; if a later menu can't be loaded the list ends before it, so only the first throws.
+    public func upcomingMenus(for selection: MealSelection, now: Date = .now, limit: Int = 2) async throws -> [UpcomingMenu] {
+        var loader = WeekLoader(service: self, types: await menuTypes())
+        var menus = [try await upcomingMenu(for: selection, now: now, loader: &loader)]
+        while menus.count < limit,
+              let next = try? await upcomingMenu(for: selection, now: menus[menus.count - 1].validUntil, loader: &loader) {
+            menus.append(next)
         }
-
-        let meal = selection.meal ?? .lunch
-        let date = now < meal.serviceEnd(on: today) ? today : today.adding(days: 1)
-        return UpcomingMenu(meal: meal, date: date, menu: nil, validUntil: date.adding(days: 1).startOfDay())
+        return menus
     }
 
     /// Distinct station titles for `meal` (every published meal when `nil`) over the week
@@ -96,10 +86,34 @@ public struct MenuService: Sendable {
         let url = endpoint.weekURL(menuType: slug, date: date.mondayOfWeek)
         return try await fetcher.fetch(url) { try NutrisliceWeek.decoded(from: $0).dailyMenus(meal: meal) }.value
     }
+
+    /// One `upcomingMenu(for:now:)` search, reusing the weeks `loader` already has.
+    private func upcomingMenu(for selection: MealSelection, now: Date, loader: inout WeekLoader) async throws -> UpcomingMenu {
+        let meals = (selection.meal.map { [$0] } ?? Meal.allCases).filter { loader.types.slug(for: $0) != nil }
+        let today = LocalDate.today(now: now)
+        loader.startSearch()
+
+        if !meals.isEmpty {
+            let firstDay = meals.contains { now < $0.serviceEnd(on: today) } ? today : today.adding(days: 1)
+            for date in (0..<Self.searchDays).map(firstDay.adding(days:)) {
+                for meal in meals where now < meal.serviceEnd(on: date) {
+                    if let menu = await loader.menu(on: date, meal: meal) {
+                        return UpcomingMenu(meal: meal, date: date, menu: menu, validUntil: meal.serviceEnd(on: date))
+                    }
+                }
+            }
+            try loader.rethrowIfNothingLoaded()
+        }
+
+        let meal = selection.meal ?? .lunch
+        let date = now < meal.serviceEnd(on: today) ? today : today.adding(days: 1)
+        return UpcomingMenu(meal: meal, date: date, menu: nil, validUntil: date.adding(days: 1).startOfDay())
+    }
 }
 
-/// Loads each (meal, week) at most once during a search. A failed week counts as empty, and the
-/// first failure is kept for `rethrowIfNothingLoaded()`.
+/// Loads each (meal, week) at most once, across one or more searches. A failed week counts as
+/// empty, and `rethrowIfNothingLoaded()` throws the first failure when none of the weeks used
+/// since `startSearch()` loaded.
 private struct WeekLoader {
     private struct Key: Hashable {
         var meal: Meal
@@ -108,7 +122,7 @@ private struct WeekLoader {
 
     let service: MenuService
     let types: MenuTypes
-    private var weeks: [Key: [DailyMenu]] = [:]
+    private var weeks: [Key: Result<[DailyMenu], any Error>] = [:]
     private var loadedAny = false
     private var firstError: (any Error)?
 
@@ -117,20 +131,34 @@ private struct WeekLoader {
         self.types = types
     }
 
+    /// Begins a new search: `rethrowIfNothingLoaded()` then considers only weeks used from here on.
+    mutating func startSearch() {
+        loadedAny = false
+        firstError = nil
+    }
+
     mutating func week(containing date: LocalDate, meal: Meal) async -> [DailyMenu] {
+        guard let slug = types.slug(for: meal) else { return [] }
         let key = Key(meal: meal, monday: date.mondayOfWeek)
-        if let week = weeks[key] { return week }
-        var week: [DailyMenu] = []
-        if let slug = types.slug(for: meal) {
+        let result: Result<[DailyMenu], any Error>
+        if let loaded = weeks[key] {
+            result = loaded
+        } else {
             do {
-                week = try await service.week(containing: date, meal: meal, slug: slug)
-                loadedAny = true
+                result = .success(try await service.week(containing: date, meal: meal, slug: slug))
             } catch {
-                firstError = firstError ?? error
+                result = .failure(error)
             }
+            weeks[key] = result
         }
-        weeks[key] = week
-        return week
+        switch result {
+        case .success(let week):
+            loadedAny = true
+            return week
+        case .failure(let error):
+            firstError = firstError ?? error
+            return []
+        }
     }
 
     mutating func menu(on date: LocalDate, meal: Meal) async -> DailyMenu? {

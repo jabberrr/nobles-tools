@@ -93,8 +93,10 @@ struct NoblesAthleticsTests {
         #expect(games.contains { $0.sport == "Pickleball" && $0.level == nil && $0.opponent == "" })
     }
 
-    @Test func readsOnlyGameRows() throws {
+    @Test func readsOnlyGameRowsInTheSidebar() throws {
         let html = """
+        <div class="ath-row" data-date="11.01.26" data-type="Game" data-team="Outside Before"></div>
+        <aside class="home-sidebar">
         <div class="ath-rowline"><div class="ath-key">Date</div></div>
         <div class="ath-row ath-click is-practice" data-date="11.02.26" data-type="Practice" data-team="Soccer Boys Varsity"></div>
         <DIV class="ath-row" data-date="11.03.26" data-team="Hockey Boys  JV" data-opponent="St. Sebastian&#x2019;s"
@@ -103,6 +105,8 @@ struct NoblesAthleticsTests {
         <div class="ath-row ath-click" data-date="11.04.26" data-type="Game" data-team="Squash Girls Varsity"
             data-start="3:30 PM" data-result="See recap"></div>
         <div class="ath-row" data-team="No Date"></div>
+        </aside>
+        <div class="ath-row" data-date="11.05.26" data-type="Game" data-team="Outside After"></div>
         """
         let games = try AthleticsSchedule.games(from: Data(html.utf8))
 
@@ -119,6 +123,18 @@ struct NoblesAthleticsTests {
         #expect(throws: ScoresServiceError.unrecognizedResponse) {
             try AthleticsSchedule.games(from: Data("<html><body>Maintenance</body></html>".utf8))
         }
+    }
+
+    @Test func emptySidebarMeansNoGames() throws {
+        let html = """
+        <html><body><main>Go Bulldogs!</main>
+        <aside class="home-sidebar">
+          <h3 class="section-title">Upcoming Schedule</h3>
+          <div class="ath-schedule"></div>
+        </aside>
+        </body></html>
+        """
+        #expect(try AthleticsSchedule.games(from: Data(html.utf8)).isEmpty)
     }
 
     @Test func decodesHTMLEntities() {
@@ -180,17 +196,19 @@ struct NoblesAthleticsTests {
     }
 
     private let season = (start: LocalDate(2026, 9, 1).startOfDay(), end: LocalDate(2026, 12, 1).startOfDay())
+    private let now = LocalDate(2026, 10, 25).at(hour: 9)
+
+    private func onlineSources() throws -> FakeHTTPClient {
+        http(results: .data(try Fixture.data("real-athletics-results.json")), schedule: .data(try Fixture.data("real-athletics-schedule.html")))
+    }
 
     @Test func mergesBothSourcesWithinTheWindow() async throws {
-        let provider = NoblesAthleticsProvider(
-            http: http(results: .data(try Fixture.data("real-athletics-results.json")), schedule: .data(try Fixture.data("real-athletics-schedule.html"))),
-            cache: nil
-        )
+        let provider = NoblesAthleticsProvider(http: try onlineSources(), cache: nil)
 
         #expect(provider.sourceName == "Nobles Athletics")
-        #expect(try await provider.games(from: season.start, to: season.end).count == 130)
-        let lastWeek = try await provider.games(from: LocalDate(2026, 10, 17).startOfDay(), to: LocalDate(2026, 10, 27).startOfDay())
-        #expect(lastWeek.count == 10)
+        #expect(try await provider.games(from: season.start, to: season.end, now: now).games.count == 130)
+        let lastWeek = try await provider.games(from: LocalDate(2026, 10, 17).startOfDay(), to: LocalDate(2026, 10, 27).startOfDay(), now: now)
+        #expect(lastWeek.games.count == 10)
     }
 
     @Test func resultsReplaceTheirScheduledGames() {
@@ -225,7 +243,10 @@ struct NoblesAthleticsTests {
             http: http(results: .failure(HTTPError.status(500)), schedule: .data(try Fixture.data("real-athletics-schedule.html"))),
             cache: nil
         )
-        #expect(try await provider.games(from: season.start, to: season.end).count == 30)
+        let feed = try await provider.games(from: season.start, to: season.end, now: now)
+
+        #expect(feed.games.count == 30)
+        #expect(feed.fetchedAt == now)
     }
 
     @Test func throwsWhenBothSourcesFail() async {
@@ -234,7 +255,7 @@ struct NoblesAthleticsTests {
             cache: nil
         )
         await #expect(throws: HTTPError.status(500)) {
-            try await provider.games(from: season.start, to: season.end)
+            try await provider.games(from: season.start, to: season.end, now: now)
         }
     }
 
@@ -242,20 +263,28 @@ struct NoblesAthleticsTests {
         let directory = temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let cache = ResponseCache(directory: directory)
-        let online = NoblesAthleticsProvider(
-            http: http(results: .data(try Fixture.data("real-athletics-results.json")), schedule: .data(try Fixture.data("real-athletics-schedule.html"))),
-            cache: cache
-        )
-        let fresh = try await online.fetchGames(from: season.start, to: season.end)
-        #expect(fresh.cachedAt == nil)
+        let fresh = try await NoblesAthleticsProvider(http: try onlineSources(), cache: cache).games(from: season.start, to: season.end, now: now)
+        #expect(fresh.fetchedAt == now)
 
-        let yesterday = Date.now - 24 * 60 * 60
-        await cache.store(try Fixture.data("real-athletics-results.json"), for: NoblesAthleticsProvider.resultsURL.absoluteString, savedAt: yesterday)
         let offline = NoblesAthleticsProvider(http: http(results: .failure(Offline()), schedule: .failure(Offline())), cache: cache)
-        let cached = try await offline.fetchGames(from: season.start, to: season.end)
+        #expect(try await offline.games(from: season.start, to: season.end, now: now).games == fresh.games)
+    }
 
-        #expect(cached.games == fresh.games)
-        #expect(abs(try #require(cached.cachedAt).timeIntervalSince(yesterday)) < 1)
+    @Test func feedIsAsOldAsItsOldestCachedSource() async throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let cache = ResponseCache(directory: directory)
+        let (hourAgo, dayAgo) = (Date.now - 60 * 60, Date.now - 24 * 60 * 60)
+        await cache.store(try Fixture.data("real-athletics-results.json"), for: NoblesAthleticsProvider.resultsURL.absoluteString, savedAt: hourAgo)
+        await cache.store(try Fixture.data("real-athletics-schedule.html"), for: NoblesAthleticsProvider.scheduleURL.absoluteString, savedAt: dayAgo)
+        func fetchedAt(schedule: FakeHTTPClient.Response) async throws -> Date {
+            let provider = NoblesAthleticsProvider(http: http(results: .failure(Offline()), schedule: schedule), cache: cache)
+            return try await provider.games(from: season.start, to: season.end, now: now).fetchedAt
+        }
+
+        // Both sources from the cache, then only the results (the schedule loads fresh).
+        #expect(abs(try await fetchedAt(schedule: .failure(Offline())).timeIntervalSince(dayAgo)) < 1)
+        #expect(abs(try await fetchedAt(schedule: .data(try Fixture.data("real-athletics-schedule.html"))).timeIntervalSince(hourAgo)) < 1)
     }
 
     @Test func scoreboardReportsWhenCachedGamesWereFetched() async throws {
@@ -267,8 +296,10 @@ struct NoblesAthleticsTests {
         let provider = NoblesAthleticsProvider(http: http(results: .failure(Offline()), schedule: .failure(Offline())), cache: cache)
 
         let now = LocalDate(2026, 10, 21).at(hour: 9)
-        let board = try await ScoresService(provider: provider).scoreboard(for: ScoresConfiguration(), now: now)
+        let service = ScoresService(provider: provider)
+        let board = try await service.scoreboard(for: ScoresConfiguration(), now: now)
         #expect(board.recent.first?.opponent == "Concord Academy")
         #expect(abs(board.fetchedAt.timeIntervalSince(savedAt)) < 1)
+        #expect(try await service.feed(now: now).fetchedAt == board.fetchedAt)
     }
 }

@@ -52,15 +52,17 @@ extension Countdown {
         }
     }
 
-    /// One line for the inline Lock Screen widget, e.g. "42 school days left in Q2".
+    /// One short line for the inline Lock Screen widget, e.g. "42 school days left in Q2". The
+    /// year needs no name: "150 school days left".
     var sentence: String {
         let unit = SchoolFormat.unit(counting, count: remaining)
         let isYear = term.kind == .year
+        let name = term.compactName
         switch phase {
-        case .upcoming: return "\(isYear ? "School" : term.compactName) starts \(SchoolFormat.shortDate(term.span.start))"
-        case .inProgress: return "\(remaining) \(unit) left in \(term.compactName)"
-        case .lastDay: return "Last day of \(term.compactName)!"
-        case .finished: return isYear ? "School's out!" : "\(term.compactName) is done"
+        case .upcoming: return "\(isYear ? "School" : name) starts \(SchoolFormat.shortDate(term.span.start))"
+        case .inProgress: return isYear ? "\(remaining) \(unit) left" : "\(remaining) \(unit) left in \(name)"
+        case .lastDay: return isYear ? "Last day of school!" : "Last day of \(name)!"
+        case .finished: return isYear ? "School's out!" : "\(name) is done"
         }
     }
 
@@ -69,16 +71,16 @@ extension Countdown {
 }
 
 extension Term {
-    /// A short name for tight spaces: "Quarter 2" becomes "Q2"; the year reads "the year".
+    /// A short name for tight spaces: "Quarter 2" becomes "Q2", "Fall Semester" becomes "Fall",
+    /// and the year is "Year". Names in another form are kept as they are.
     var compactName: String {
         switch kind {
         case .quarter:
-            guard name.hasPrefix("Quarter ") else { return name }
-            return "Q" + name.dropFirst("Quarter ".count)
+            name.hasPrefix("Quarter ") ? "Q" + name.dropFirst("Quarter ".count) : name
         case .semester:
-            return name
+            name.hasSuffix(" Semester") ? String(name.dropLast(" Semester".count)) : name
         case .year:
-            return "the year"
+            "Year"
         }
     }
 }

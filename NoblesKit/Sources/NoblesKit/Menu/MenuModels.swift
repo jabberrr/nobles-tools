@@ -120,21 +120,22 @@ public enum MenuFilter: Codable, Hashable, Sendable {
 public struct MenuConfiguration: Codable, Hashable, Sendable {
     public var meal: MealSelection
     public var filter: MenuFilter
-    /// Show food descriptions under item names (larger sizes only).
-    public var showsDescriptions: Bool
     /// Group items under their station names.
     public var showsSectionHeaders: Bool
 
-    public init(
-        meal: MealSelection = .lunch,
-        filter: MenuFilter = .everything,
-        showsDescriptions: Bool = false,
-        showsSectionHeaders: Bool = true
-    ) {
+    public init(meal: MealSelection = .lunch, filter: MenuFilter = .everything, showsSectionHeaders: Bool = true) {
         self.meal = meal
         self.filter = filter
-        self.showsDescriptions = showsDescriptions
         self.showsSectionHeaders = showsSectionHeaders
+    }
+
+    /// Missing fields take their defaults, so settings saved by other versions still load.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = MenuConfiguration()
+        meal = try container.decode(.meal, or: defaults.meal)
+        filter = try container.decode(.filter, or: defaults.filter)
+        showsSectionHeaders = try container.decode(.showsSectionHeaders, or: defaults.showsSectionHeaders)
     }
 }
 
@@ -175,17 +176,13 @@ public struct MenuSection: Codable, Hashable, Identifiable, Sendable {
 public struct MenuItem: Codable, Hashable, Identifiable, Sendable {
     public var id: Int
     public var name: String
-    public var description: String?
     /// Nutrislice food category, e.g. "entree", "side", "soup".
     public var category: String?
-    public var calories: Int?
 
-    public init(id: Int, name: String, description: String? = nil, category: String? = nil, calories: Int? = nil) {
+    public init(id: Int, name: String, category: String? = nil) {
         self.id = id
         self.name = name
-        self.description = description
         self.category = category
-        self.calories = calories
     }
 }
 

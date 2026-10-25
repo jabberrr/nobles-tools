@@ -26,17 +26,24 @@ enum PreviewContent<Value> {
 }
 
 /// Live data behind the app's design previews, shared by the list thumbnails and the editor.
-/// Falls back to sample data when a source can't be reached, so previews always render.
+///
+/// Each source is fetched once, and again once it's stale. Designs filter the shared copy
+/// themselves, so changing a design's settings redraws its previews at once, without a fetch or
+/// a loading state. When a source can't be reached, previews fall back to sample data so they
+/// always render.
 @MainActor @Observable
 final class PreviewData {
     enum Request: Hashable {
+        /// The upcoming menu for one meal selection, which every design for it filters.
         case menu(MealSelection)
-        case scores(ScoresConfiguration)
+        /// The games every scores design filters.
+        case scores
+        /// The meals the dining hall publishes.
         case meals
     }
 
     private(set) var menus: [MealSelection: PreviewContent<UpcomingMenu>] = [:]
-    private(set) var scoreboards: [ScoresConfiguration: PreviewContent<Scoreboard>] = [:]
+    private(set) var feed: PreviewContent<GameFeed> = .loading
     /// The meals the dining hall publishes: lunch and dinner until the real list loads.
     private(set) var availableMeals: [Meal] = [.lunch, .dinner]
 
@@ -47,50 +54,54 @@ final class PreviewData {
     private let menuService = MenuService()
     private let scoresService = ScoresService.nobles
 
-    /// Scores with every filter off, for listing the sports a design can pick from.
-    static let allSports = ScoresConfiguration(sports: [], varsityOnly: false, showsUpcoming: true)
+    /// The sample scoreboard's games, shown while the feed loads or when it can't be reached.
+    static var sampleFeed: GameFeed {
+        let sample = Scoreboard.sample
+        return GameFeed(games: sample.live + sample.recent + sample.upcoming, fetchedAt: .now)
+    }
 
     func menu(for selection: MealSelection) -> PreviewContent<UpcomingMenu> {
         menus[selection] ?? .loading
     }
 
-    func scoreboard(for configuration: ScoresConfiguration) -> PreviewContent<Scoreboard> {
-        scoreboards[configuration] ?? .loading
+    /// Whether `design`'s previews are showing sample data because the real data couldn't load.
+    func isShowingSample(for design: WidgetDesign) -> Bool {
+        switch design.content {
+        case .menu(let configuration): menu(for: configuration.meal).isSample
+        case .scores: feed.isSample
+        case .countdown: false
+        }
     }
 
-    /// Every sport in the unfiltered scoreboard, alphabetically. Load `.scores(PreviewData.allSports)` first.
-    var knownSports: [String] {
-        guard let scoreboard = scoreboards[Self.allSports]?.value else { return [] }
-        let games = scoreboard.live + scoreboard.recent + scoreboard.upcoming
-        return Set(games.map(\.sport)).sorted()
-    }
-
-    /// Fetches the data for `request` unless it's already loading or fresh.
+    /// Fetches the data for `request` unless it's already loading or fresh. A failed fetch keeps
+    /// any real data already loaded, or else shows sample data, and is retried the next time a
+    /// preview asks.
     func load(_ request: Request) async {
         guard needsLoad(request) else { return }
         started[request] = .now
-        do {
-            switch request {
-            case .menu(let selection):
+        switch request {
+        case .menu(let selection):
+            do {
                 let upcoming = try await menuService.upcomingMenu(for: selection)
                 menus[selection] = .fetched(upcoming)
-            case .scores(let configuration):
-                let scoreboard = try await scoresService.scoreboard(for: configuration)
-                scoreboards[configuration] = .fetched(scoreboard)
-            case .meals:
-                availableMeals = try await menuService.availableMeals()
+            } catch {
+                started[request] = nil
+                if menus[selection]?.isFetched != true {
+                    menus[selection] = .sample(UpcomingMenu.placeholder(for: selection))
+                }
             }
-        } catch {
-            // Retry the next time a preview appears; until then keep real data if there is any.
-            started[request] = nil
-            switch request {
-            case .menu(let selection) where menus[selection]?.isFetched != true:
-                menus[selection] = .sample(UpcomingMenu.placeholder(for: selection))
-            case .scores(let configuration) where scoreboards[configuration]?.isFetched != true:
-                scoreboards[configuration] = .sample(Scoreboard.sample)
-            default:
-                break
+        case .scores:
+            do {
+                let games = try await scoresService.feed()
+                feed = .fetched(games)
+            } catch {
+                started[request] = nil
+                if !feed.isFetched {
+                    feed = .sample(Self.sampleFeed)
+                }
             }
+        case .meals:
+            availableMeals = await menuService.availableMeals()
         }
     }
 

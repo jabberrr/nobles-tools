@@ -6,18 +6,10 @@ import NoblesKit
 struct CountdownWidgetView: View {
     let design: WidgetDesign
     let family: WidgetFamily
+    let colors: ThemeColors
     let snapshot: CountdownSnapshot
 
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.showsWidgetContainerBackground) private var showsBackground
-
     var body: some View {
-        content
-            .fontDesign(fontDesign)
-            .foregroundStyle(colors.primary)
-    }
-
-    @ViewBuilder private var content: some View {
         switch family {
         case .accessoryInline: inline
         case .accessoryCircular: circular
@@ -33,10 +25,6 @@ struct CountdownWidgetView: View {
     private var style: CountdownStyle { design.countdownConfiguration?.style ?? .ring }
 
     private var fontDesign: Font.Design { design.theme.font.fontDesign }
-
-    private var colors: ThemeColors {
-        ThemeColors(theme: design.theme, colorScheme: colorScheme, family: family, showsBackground: showsBackground)
-    }
 
     /// "63% complete · ends Fri, Jan 22", "Starts Mon, Sep 8", …
     private func progressDetail(_ countdown: Countdown) -> String {
@@ -296,8 +284,10 @@ struct CountdownWidgetView: View {
                             .font(.system(size: 24, weight: .bold, design: fontDesign))
                             .monospacedDigit()
                             .minimumScaleFactor(0.5)
-                        Text("days")
+                        Text(SchoolFormat.unit(countdown.counting, count: countdown.remaining, compact: true))
                             .font(.caption2)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                     }
                     .widgetAccentable()
                 } else {
@@ -343,40 +333,5 @@ struct CountdownWidgetView: View {
 
     private var inline: some View {
         Label(snapshot.primary?.sentence ?? "No \(snapshot.target.displayName.lowercased()) dates", systemImage: "calendar")
-    }
-}
-
-/// A circular progress track, filled clockwise from the top.
-struct ProgressRing: View {
-    let progress: Double
-    var lineWidth: CGFloat = 8
-    let colors: ThemeColors
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .stroke(colors.track, lineWidth: lineWidth)
-            Circle()
-                .trim(from: 0, to: CGFloat(progress))
-                .stroke(colors.accent, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-        }
-        .padding(lineWidth / 2)
-    }
-}
-
-/// A horizontal capsule progress bar.
-struct ProgressBar: View {
-    let progress: Double
-    let colors: ThemeColors
-
-    var body: some View {
-        GeometryReader { proxy in
-            let filled = progress > 0 ? max(proxy.size.height, proxy.size.width * CGFloat(progress)) : 0
-            ZStack(alignment: .leading) {
-                Capsule().fill(colors.track)
-                Capsule().fill(colors.accent).frame(width: filled)
-            }
-        }
     }
 }

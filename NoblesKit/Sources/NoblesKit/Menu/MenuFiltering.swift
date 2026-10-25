@@ -6,8 +6,8 @@ extension DailyMenu {
     ///
     /// Nobles' categories are always empty, so the built-in filters go by station title first:
     /// - `.entreesOnly`: stations named "…Entree…" or "…Main…", or ending in "Option" (dinner's
-    ///   "Vegan Option"), plus entrée-category dishes from other stations. If nothing qualifies,
-    ///   the first station is shown so the widget isn't blank.
+    ///   "Vegan Option"), plus entrée-category dishes from other stations. Without any entrées the
+    ///   menu is empty.
     /// - `.withoutSaladsAndSoups`: drops soup and salad stations, and dishes whose category or name
     ///   says soup, salad, chowder, bisque or gazpacho.
     /// - `.only` / `.excluding`: a station is selected when its title and a chosen name contain one
@@ -23,8 +23,7 @@ extension DailyMenu {
         case .everything:
             return sections
         case .entreesOnly:
-            let entrees = sections.map { $0.isEntreeStation ? $0 : $0.keeping(\.isEntree) }.filter { !$0.items.isEmpty }
-            return entrees.isEmpty ? Array(sections.lazy.filter { !$0.items.isEmpty }.prefix(1)) : entrees
+            return sections.map { $0.isEntreeStation ? $0 : $0.keeping(\.isEntree) }
         case .withoutSaladsAndSoups:
             return sections
                 .filter { !$0.title.containsAny(of: MenuKeywords.soupOrSaladStation) }
@@ -36,6 +35,18 @@ extension DailyMenu {
             let names = MenuKeywords.selection(names)
             return sections.filter { !$0.isSelected(by: names) }
         }
+    }
+
+    /// The dishes to feature when space is tight: entrées first, by the same rules as
+    /// `.entreesOnly` (dishes in entrée stations, then entrée-category dishes elsewhere), then
+    /// every other dish, each group in menu order. A dish listed twice appears once.
+    public var highlights: [MenuItem] {
+        let otherDishes = sections.filter { !$0.isEntreeStation }.flatMap(\.items)
+        let ordered = sections.filter(\.isEntreeStation).flatMap(\.items)
+            + otherDishes.filter(\.isEntree)
+            + otherDishes.filter { !$0.isEntree }
+        var seen: Set<Int> = []
+        return ordered.filter { seen.insert($0.id).inserted }
     }
 }
 

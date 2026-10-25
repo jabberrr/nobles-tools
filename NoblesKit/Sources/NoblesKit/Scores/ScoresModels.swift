@@ -42,6 +42,8 @@ public struct Game: Codable, Hashable, Identifiable, Sendable {
     }
 }
 
+/// Where a game stands. The Nobles source only reports `.scheduled` and `.final`; `.live`,
+/// `.postponed` and `.cancelled` are kept so a future live source fits.
 public enum GameStatus: Codable, Hashable, Sendable {
     case scheduled
     /// In progress; `detail` is e.g. "Q3" or "2nd half" when the source provides it.
@@ -49,6 +51,23 @@ public enum GameStatus: Codable, Hashable, Sendable {
     case final
     case postponed
     case cancelled
+}
+
+/// Games from a provider, and when they were fetched.
+public struct GameFeed: Hashable, Sendable {
+    public var games: [Game]
+    /// When the data was fetched: now for a fresh response, or when a cached copy was saved.
+    public var fetchedAt: Date
+
+    public init(games: [Game], fetchedAt: Date) {
+        self.games = games
+        self.fetchedAt = fetchedAt
+    }
+
+    /// Distinct `Game.sport` values, sorted, for pickers.
+    public var sports: [String] {
+        Set(games.map(\.sport)).sorted()
+    }
 }
 
 /// A final result as Nobles Athletics reports it.
@@ -81,7 +100,8 @@ public struct GameScore: Codable, Hashable, Sendable {
 }
 
 public struct ScoresConfiguration: Codable, Hashable, Sendable {
-    /// Sports to include, matched case-insensitively against `Game.sport`. Empty means all.
+    /// Sports to include, each equal to a `Game.sport` ignoring case (see `GameFeed.sports`).
+    /// Empty means all.
     public var sports: [String]
     public var varsityOnly: Bool
     public var showsUpcoming: Bool
@@ -90,5 +110,14 @@ public struct ScoresConfiguration: Codable, Hashable, Sendable {
         self.sports = sports
         self.varsityOnly = varsityOnly
         self.showsUpcoming = showsUpcoming
+    }
+
+    /// Missing fields take their defaults, so settings saved by other versions still load.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = ScoresConfiguration()
+        sports = try container.decode(.sports, or: defaults.sports)
+        varsityOnly = try container.decode(.varsityOnly, or: defaults.varsityOnly)
+        showsUpcoming = try container.decode(.showsUpcoming, or: defaults.showsUpcoming)
     }
 }

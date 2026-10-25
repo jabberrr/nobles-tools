@@ -48,4 +48,13 @@ extension WidgetKind {
             [.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular]
         }
     }
+
+    /// The WidgetKit `kind` of this kind's widget, which it's configured and reloaded by.
+    var timelineKind: String {
+        switch self {
+        case .menu: "MenuWidget"
+        case .countdown: "CountdownWidget"
+        case .scores: "ScoresWidget"
+        }
+    }
 }

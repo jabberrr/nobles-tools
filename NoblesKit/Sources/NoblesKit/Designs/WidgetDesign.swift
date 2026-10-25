@@ -18,7 +18,7 @@ public enum WidgetKind: String, Codable, CaseIterable, Identifiable, Sendable {
 
     public var summary: String {
         switch self {
-        case .menu: "Breakfast, lunch or dinner from the dining hall."
+        case .menu: "Lunch, dinner or the next meal, from the dining hall."
         case .countdown: "Days left in the quarter, semester or year."
         case .scores: "Recent results and upcoming games."
         }
@@ -47,6 +47,16 @@ public struct WidgetDesign: Codable, Hashable, Identifiable, Sendable {
         self.name = name
         self.theme = theme
         self.content = content
+    }
+
+    /// `id` and `content` are required, since nothing could stand in for them. Other missing
+    /// fields take defaults, so designs saved by other versions still load.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        content = try container.decode(WidgetContent.self, forKey: .content)
+        name = try container.decode(.name, or: content.kind.displayName)
+        theme = try container.decode(.theme, or: Theme())
     }
 
     public var kind: WidgetKind { content.kind }
@@ -88,6 +98,15 @@ public struct Theme: Codable, Hashable, Sendable {
         self.palette = palette
         self.font = font
         self.background = background
+    }
+
+    /// Missing fields take their defaults, so themes saved by other versions still load.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = Theme()
+        palette = try container.decode(.palette, or: defaults.palette)
+        font = try container.decode(.font, or: defaults.font)
+        background = try container.decode(.background, or: defaults.background)
     }
 }
 

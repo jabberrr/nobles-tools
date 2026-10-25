@@ -75,6 +75,14 @@ struct ThemeColors {
     var track: Color { primary.opacity(0.15) }
 }
 
+extension View {
+    /// Applies a design's theme to widget content: its font design, and its primary color for text.
+    func widgetTheme(_ theme: Theme, colors: ThemeColors) -> some View {
+        fontDesign(theme.font.fontDesign)
+            .foregroundStyle(colors.primary)
+    }
+}
+
 extension FontStyle {
     var fontDesign: Font.Design {
         switch self {

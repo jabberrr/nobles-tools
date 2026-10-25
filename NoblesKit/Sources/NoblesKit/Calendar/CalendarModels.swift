@@ -120,6 +120,15 @@ public struct CountdownConfiguration: Codable, Hashable, Sendable {
         self.counting = counting
         self.style = style
     }
+
+    /// Missing fields take their defaults, so settings saved by other versions still load.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = CountdownConfiguration()
+        target = try container.decode(.target, or: defaults.target)
+        counting = try container.decode(.counting, or: defaults.counting)
+        style = try container.decode(.style, or: defaults.style)
+    }
 }
 
 /// The computed state of a countdown on a given day.

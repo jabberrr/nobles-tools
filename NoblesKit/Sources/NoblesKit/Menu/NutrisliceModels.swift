@@ -79,27 +79,17 @@ struct NutrisliceItem: Decodable {
 
 struct NutrisliceFood: Decodable {
     var name: String?
-    var description: String?
     var category: String?
-    var calories: Double?
 
     private enum CodingKeys: String, CodingKey {
-        case name, description
+        case name
         case category = "food_category"
-        case nutrition = "rounded_nutrition_info"
-    }
-
-    private enum NutritionKeys: String, CodingKey {
-        case calories
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         name = container.text(forKey: .name)
-        description = container.text(forKey: .description)
         category = container.text(forKey: .category)
-        let nutrition = try? container.nestedContainer(keyedBy: NutritionKeys.self, forKey: .nutrition)
-        calories = nutrition?.number(forKey: .calories)
     }
 }
 

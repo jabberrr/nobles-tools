@@ -57,17 +57,45 @@ struct ScoreboardTests {
         #expect(everyone.recent.count == 4)
     }
 
-    @Test func filtersBySportIgnoringCase() {
+    @Test func filtersBySportExactlyIgnoringCase() {
         let games = [
             game("boys", sport: "Boys Soccer", day: -1, .final),
             game("girls", sport: "Girls Soccer", day: -1, .final),
-            game("hockey", sport: "Girls Field Hockey", day: -1, .final),
+            game("ms-xc", sport: "Cross Country", level: "Middle School", day: -1, .final),
+            game("boys-xc", sport: "Boys Cross Country", day: -1, .final),
         ]
-        let soccer = Scoreboard(games: games, configuration: ScoresConfiguration(sports: ["soccer"]), now: now)
-        let hockey = Scoreboard(games: games, configuration: ScoresConfiguration(sports: ["Field Hockey", " "]), now: now)
+        func shown(_ sports: [String]) -> Set<String> {
+            let configuration = ScoresConfiguration(sports: sports, varsityOnly: false)
+            return Set(Scoreboard(games: games, configuration: configuration, now: now).recent.map(\.id))
+        }
 
-        #expect(Set(soccer.recent.map(\.id)) == ["boys", "girls"])
-        #expect(hockey.recent.map(\.id) == ["hockey"])
+        #expect(shown(["boys soccer", " "]) == ["boys"])
+        #expect(shown(["Cross Country"]) == ["ms-xc"])
+        #expect(shown(["GIRLS SOCCER", "Boys Cross Country"]) == ["girls", "boys-xc"])
+        #expect(shown(["Soccer"]).isEmpty)
+        #expect(shown([]).count == 4)
+    }
+
+    @Test func feedListsEachSportOnceInOrder() {
+        let feed = GameFeed(games: [
+            game("volleyball", sport: "Girls Volleyball", day: -1, .final),
+            game("soccer-next", sport: "Boys Soccer", day: 1, .scheduled),
+            game("xc", sport: "Cross Country", day: -2, .final),
+            game("soccer-last", sport: "Boys Soccer", day: -3, .final),
+        ], fetchedAt: now)
+
+        #expect(feed.sports == ["Boys Soccer", "Cross Country", "Girls Volleyball"])
+        #expect(GameFeed(games: [], fetchedAt: now).sports.isEmpty)
+    }
+
+    @Test func scoreboardFromAFeedKeepsItsFetchTime() {
+        let fetchedAt = now - 2 * 60 * 60
+        let feed = GameFeed(games: [game("final", day: -1, .final)], fetchedAt: fetchedAt)
+        let board = Scoreboard(feed: feed, configuration: ScoresConfiguration(), now: now)
+
+        #expect(board.recent.map(\.id) == ["final"])
+        #expect(board.fetchedAt == fetchedAt)
+        #expect(Scoreboard(games: feed.games, configuration: ScoresConfiguration(), now: now, fetchedAt: fetchedAt) == board)
     }
 
     @Test func canHideUpcomingGames() {
@@ -93,18 +121,21 @@ struct ScoreboardTests {
 
         #expect(service.sourceName == "Recording")
         #expect(board.isEmpty)
-        let window = try #require(await provider.window)
-        #expect(window.start == now - 30 * 24 * 60 * 60)
-        #expect(window.end == now + 14 * 24 * 60 * 60)
+        #expect(board.fetchedAt == now - 60 * 60)
+        let request = try #require(await provider.request)
+        #expect(request.start == now - 30 * 24 * 60 * 60)
+        #expect(request.end == now + 14 * 24 * 60 * 60)
+        #expect(request.now == now)
     }
 }
 
+/// Records what it was asked for and answers with no games, fetched an hour before `now`.
 private actor RecordingProvider: ScoresProvider {
     nonisolated let sourceName = "Recording"
-    private(set) var window: (start: Date, end: Date)?
+    private(set) var request: (start: Date, end: Date, now: Date)?
 
-    func games(from start: Date, to end: Date) async throws -> [Game] {
-        window = (start, end)
-        return []
+    func games(from start: Date, to end: Date, now: Date) async throws -> GameFeed {
+        request = (start, end, now)
+        return GameFeed(games: [], fetchedAt: now - 60 * 60)
     }
 }

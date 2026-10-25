@@ -11,25 +11,19 @@ struct DesignStoreTests {
         try body(DesignStore(suiteName: suiteName), defaults)
     }
 
-    @Test func savesUpdatesAndDeletesDesigns() throws {
+    @Test func savesDesignsInOrder() throws {
         try withStore { store, _ in
             #expect(store.designs().isEmpty)
             let lunch = WidgetDesign.makeDefault(.menu)
             var countdown = WidgetDesign.makeDefault(.countdown)
-            store.save([lunch, countdown])
-
-            countdown.name = "Summer"
-            store.upsert(countdown)
             let scores = WidgetDesign.makeDefault(.scores)
-            store.upsert(scores)
-
+            store.save([lunch, countdown, scores])
             #expect(store.designs() == [lunch, countdown, scores])
             #expect(store.designs(of: .countdown) == [countdown])
-            #expect(store.design(id: scores.id) == scores)
 
-            store.delete(id: lunch.id)
-            #expect(store.designs() == [countdown, scores])
-            #expect(store.design(id: lunch.id) == nil)
+            countdown.name = "Summer"
+            store.save([countdown, lunch])
+            #expect(store.designs() == [countdown, lunch])
         }
     }
 
@@ -38,9 +32,7 @@ struct DesignStoreTests {
             store.seedDefaultsIfNeeded()
             #expect(store.designs().map(\.kind) == WidgetKind.allCases)
 
-            for design in store.designs() {
-                store.delete(id: design.id)
-            }
+            store.save([])
             store.seedDefaultsIfNeeded()
             #expect(store.designs().isEmpty)
         }
@@ -69,6 +61,40 @@ struct DesignStoreTests {
             store.saveCalendar(nil)
             #expect(store.calendar() == .nobles2026_27)
             #expect(!store.hasCustomCalendar)
+        }
+    }
+
+    @Test func skipsDesignsThatCannotBeRead() throws {
+        try withStore { store, defaults in
+            let lunch = WidgetDesign.makeDefault(.menu)
+            let scores = WidgetDesign.makeDefault(.scores)
+            let lunchJSON = String(decoding: try JSONEncoder().encode(lunch), as: UTF8.self)
+            let scoresJSON = String(decoding: try JSONEncoder().encode(scores), as: UTF8.self)
+            let saved = #"[\#(lunchJSON), {"id": "not-a-uuid", "name": "Broken"}, 42, \#(scoresJSON)]"#
+            defaults.set(Data(saved.utf8), forKey: "designs.v1")
+
+            #expect(store.designs() == [lunch, scores])
+        }
+    }
+
+    @Test func readsDesignsSavedByEarlierVersions() throws {
+        try withStore { store, defaults in
+            // Saved when menus had a descriptions toggle; the old key is ignored.
+            let saved = #"""
+            [{"id": "6F1C4A39-2D0B-4B8E-9F4E-1D2C3B4A5E6F", "name": "Entrées",
+              "theme": {"palette": "navy", "font": "rounded", "background": "solid"},
+              "content": {"menu": {"_0": {"meal": "upcoming", "filter": {"entreesOnly": {}},
+                                          "showsDescriptions": true, "showsSectionHeaders": false}}}}]
+            """#
+            defaults.set(Data(saved.utf8), forKey: "designs.v1")
+            let id = try #require(UUID(uuidString: "6F1C4A39-2D0B-4B8E-9F4E-1D2C3B4A5E6F"))
+
+            #expect(store.designs() == [WidgetDesign(
+                id: id,
+                name: "Entrées",
+                theme: Theme(palette: .navy, font: .rounded, background: .solid),
+                content: .menu(MenuConfiguration(meal: .upcoming, filter: .entreesOnly, showsSectionHeaders: false))
+            )])
         }
     }
 

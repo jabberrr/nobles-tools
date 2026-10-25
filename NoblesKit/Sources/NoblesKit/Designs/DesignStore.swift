@@ -1,7 +1,8 @@
 import Foundation
 
 /// Saves widget designs and the school calendar as JSON in the app group's defaults, so the app
-/// and its widgets see the same data. Unreadable data counts as missing rather than crashing.
+/// and its widgets see the same data. Unreadable data counts as missing rather than crashing,
+/// and designs are read one by one, so a design that can't be read doesn't hide the others.
 public struct DesignStore: Sendable {
     private enum Key {
         static let designs = "designs.v1"
@@ -23,36 +24,18 @@ public struct DesignStore: Sendable {
 
     // MARK: Designs
 
-    /// Every saved design, in the user's order.
+    /// Every saved design that can be read, in the user's order.
     public func designs() -> [WidgetDesign] {
-        decode([WidgetDesign].self, forKey: Key.designs) ?? []
+        decode([Lossy<WidgetDesign>].self, forKey: Key.designs)?.compactMap(\.value) ?? []
     }
 
     public func designs(of kind: WidgetKind) -> [WidgetDesign] {
         designs().filter { $0.kind == kind }
     }
 
-    public func design(id: UUID) -> WidgetDesign? {
-        designs().first { $0.id == id }
-    }
-
+    /// Replaces every saved design.
     public func save(_ designs: [WidgetDesign]) {
         encode(designs, forKey: Key.designs)
-    }
-
-    /// Replaces the design with the same ID, or appends it.
-    public func upsert(_ design: WidgetDesign) {
-        var designs = designs()
-        if let index = designs.firstIndex(where: { $0.id == design.id }) {
-            designs[index] = design
-        } else {
-            designs.append(design)
-        }
-        save(designs)
-    }
-
-    public func delete(id: UUID) {
-        save(designs().filter { $0.id != id })
     }
 
     /// On first launch, adds one default design per kind. Runs once: after the user deletes

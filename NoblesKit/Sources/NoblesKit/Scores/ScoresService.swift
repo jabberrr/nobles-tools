@@ -4,17 +4,9 @@ import Foundation
 public protocol ScoresProvider: Sendable {
     /// Shown in the app, e.g. "Nobles Athletics".
     var sourceName: String { get }
-    /// Games starting between `start` and `end`.
-    func games(from start: Date, to end: Date) async throws -> [Game]
-    /// `games(from:to:)` plus, when any of them came from an offline cache, when that copy was
-    /// fetched; `nil` means fresh. The default implementation always reports fresh games.
-    func fetchGames(from start: Date, to end: Date) async throws -> (games: [Game], cachedAt: Date?)
-}
-
-extension ScoresProvider {
-    public func fetchGames(from start: Date, to end: Date) async throws -> (games: [Game], cachedAt: Date?) {
-        (try await games(from: start, to: end), nil)
-    }
+    /// Games starting between `start` and `end`. A fresh feed is stamped `now`; one served from
+    /// an offline cache is stamped when that copy was saved.
+    func games(from start: Date, to end: Date, now: Date) async throws -> GameFeed
 }
 
 /// Builds scoreboards for scores widgets from a provider.
@@ -34,12 +26,13 @@ public struct ScoresService: Sendable {
 
     public var sourceName: String { provider.sourceName }
 
-    /// Games from 30 days before `now` to 14 days after, filtered and sorted for `configuration`.
-    /// When the provider served cached games, `fetchedAt` is when that copy was fetched.
+    /// Games from 30 days before `now` to 14 days after.
+    public func feed(now: Date = .now) async throws -> GameFeed {
+        try await provider.games(from: now - Self.lookBack, to: now + Self.lookAhead, now: now)
+    }
+
+    /// `feed(now:)`, filtered and sorted for `configuration`.
     public func scoreboard(for configuration: ScoresConfiguration, now: Date = .now) async throws -> Scoreboard {
-        let fetched = try await provider.fetchGames(from: now - Self.lookBack, to: now + Self.lookAhead)
-        var scoreboard = Scoreboard(games: fetched.games, configuration: configuration, now: now)
-        scoreboard.fetchedAt = fetched.cachedAt ?? now
-        return scoreboard
+        Scoreboard(feed: try await feed(now: now), configuration: configuration, now: now)
     }
 }

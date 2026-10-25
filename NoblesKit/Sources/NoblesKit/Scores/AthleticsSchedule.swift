@@ -1,16 +1,22 @@
 import Foundation
 
-/// The "Upcoming Schedule" on the Nobles athletics home page. Each game is a
-/// `<div class="ath-row …">` whose `data-*` attributes carry its details: `data-date`
-/// ("10.26.26"), `data-type` ("Game"), `data-team`, `data-opponent`, `data-homeaway`, `data-loc`,
-/// `data-start` ("4:00 PM") and `data-result` (empty until played).
+/// The "Upcoming Schedule" sidebar (`<aside class="home-sidebar">`) on the Nobles athletics home
+/// page. Each game is a `<div class="ath-row …">` whose `data-*` attributes carry its details:
+/// `data-date` ("10.26.26"), `data-type` ("Game"), `data-team`, `data-opponent`, `data-homeaway`,
+/// `data-loc`, `data-start` ("4:00 PM") and `data-result` (empty until played).
 enum AthleticsSchedule {
-    /// A page without the schedule's markup is an error rather than "no games", so it never
-    /// replaces a good cached copy.
+    /// The games in the sidebar, which is empty in the off-season and over breaks. A page without
+    /// the sidebar is an error rather than "no games", so it never replaces a good cached copy.
+    /// Only the sidebar is read, cut out the way `.github/scripts/extract-schedule.py` cuts test
+    /// fixtures: from its start tag to the first `</aside>`.
     static func games(from data: Data) throws -> [Game] {
         let html = String(decoding: data, as: UTF8.self)
-        guard html.contains("ath-row") else { throw ScoresServiceError.unrecognizedResponse }
-        return HTMLScanning.startTags(named: "div", in: html)
+        guard let start = html.range(of: #"<aside class="home-sidebar""#)?.lowerBound else {
+            throw ScoresServiceError.unrecognizedResponse
+        }
+        let rest = html[start...]
+        let sidebar = rest[..<(rest.range(of: "</aside>")?.upperBound ?? rest.endIndex)]
+        return HTMLScanning.startTags(named: "div", in: String(sidebar))
             .filter { ($0["class"] ?? "").split(separator: " ").contains("ath-row") }
             .compactMap(game(fromRow:))
     }

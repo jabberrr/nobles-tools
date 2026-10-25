@@ -4,9 +4,13 @@ import NoblesKit
 
 struct CountdownWidget: Widget {
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "CountdownWidget", intent: CountdownWidgetIntent.self, provider: CountdownProvider()) { entry in
-            WidgetChrome(design: entry.design) { family in
-                CountdownWidgetView(design: entry.design, family: family, snapshot: entry.snapshot)
+        AppIntentConfiguration(
+            kind: WidgetKind.countdown.timelineKind,
+            intent: CountdownWidgetIntent.self,
+            provider: CountdownTimelineProvider()
+        ) { entry in
+            WidgetChrome(design: entry.design) { family, colors in
+                CountdownWidgetView(design: entry.design, family: family, colors: colors, snapshot: entry.snapshot)
             }
         }
         .configurationDisplayName(WidgetKind.countdown.displayName)
@@ -32,7 +36,7 @@ struct CountdownEntry: TimelineEntry {
     }
 }
 
-struct CountdownProvider: AppIntentTimelineProvider {
+struct CountdownTimelineProvider: AppIntentTimelineProvider {
     /// Days of entries per timeline. Countdowns are computed locally, so this only bounds the work.
     private static let days = 7
 

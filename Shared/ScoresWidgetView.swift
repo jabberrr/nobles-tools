@@ -9,21 +9,13 @@ import NoblesKit
 struct ScoresWidgetView: View {
     let design: WidgetDesign
     let family: WidgetFamily
+    let colors: ThemeColors
     /// The games to show, or `nil` when nothing could be loaded (not even a cached copy).
     let scoreboard: Scoreboard?
     /// The moment on screen (the timeline entry's date).
     let now: Date
 
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.showsWidgetContainerBackground) private var showsBackground
-
     var body: some View {
-        content
-            .fontDesign(design.theme.font.fontDesign)
-            .foregroundStyle(colors.primary)
-    }
-
-    @ViewBuilder private var content: some View {
         switch family {
         case .accessoryRectangular: rectangular
         case .systemMedium: medium
@@ -35,10 +27,6 @@ struct ScoresWidgetView: View {
     // MARK: State
 
     private var configuration: ScoresConfiguration { design.scoresConfiguration ?? ScoresConfiguration() }
-
-    private var colors: ThemeColors {
-        ThemeColors(theme: design.theme, colorScheme: colorScheme, family: family, showsBackground: showsBackground)
-    }
 
     private var today: LocalDate { LocalDate(now) }
 
@@ -76,7 +64,7 @@ struct ScoresWidgetView: View {
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(2)
                     .minimumScaleFactor(0.85)
-                Text(staleness ?? dateText(game))
+                Text(staleness ?? game.dateText(today: today))
                     .font(.caption2)
                     .foregroundStyle(colors.secondary)
                     .lineLimit(1)
@@ -92,7 +80,7 @@ struct ScoresWidgetView: View {
                 Text(game.matchupText.isEmpty ? game.teamText : game.matchupText)
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(2)
-                Text(whenText(game))
+                Text(game.whenText(today: today))
                     .font(.caption)
                     .foregroundStyle(colors.secondary)
                     .lineLimit(1)
@@ -115,7 +103,7 @@ struct ScoresWidgetView: View {
                     .minimumScaleFactor(0.6)
             }
         } else {
-            Text(statusText(game))
+            Text(game.statusText(now: now))
                 .font(.headline)
                 .foregroundStyle(colors.secondary)
                 .lineLimit(1)
@@ -155,7 +143,7 @@ struct ScoresWidgetView: View {
             Text([game.teamText, game.matchupText].filter { !$0.isEmpty }.joined(separator: " "))
                 .lineLimit(1)
             Spacer(minLength: 4)
-            Text(whenText(game))
+            Text(game.whenText(today: today))
                 .foregroundStyle(colors.secondary)
                 .lineLimit(1)
                 .layoutPriority(1)
@@ -183,7 +171,7 @@ struct ScoresWidgetView: View {
                 if !upcoming.isEmpty {
                     sectionTitle("Upcoming")
                         .padding(.top, 4)
-                    FittingList(items: upcoming, capacity: 5, spacing: 6, overflowColor: colors.secondary) { upcomingRow($0) }
+                    FittingList(items: upcoming, capacity: 5, spacing: 6, overflowColor: colors.secondary) { upcomingRow($0, showsVenue: true) }
                 }
                 Spacer(minLength: 0)
             }
@@ -234,19 +222,15 @@ struct ScoresWidgetView: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(game.teamText)
                     .font(.footnote.weight(.semibold))
-                if !game.matchupText.isEmpty {
-                    Text(game.matchupText)
-                        .font(.caption2)
-                        .foregroundStyle(colors.secondary)
-                }
+                matchupLine(game)
             }
             .lineLimit(1)
             Spacer(minLength: 6)
             VStack(alignment: .trailing, spacing: 0) {
-                Text(game.score.flatMap(\.scoreline) ?? game.score?.outcome.word ?? statusText(game))
+                Text(game.score.flatMap(\.scoreline) ?? game.score?.outcome.word ?? game.statusText(now: now))
                     .font(.footnote.weight(.bold))
                     .monospacedDigit()
-                Text(dateText(game))
+                Text(game.dateText(today: today))
                     .font(.caption2)
                     .foregroundStyle(colors.secondary)
             }
@@ -255,7 +239,7 @@ struct ScoresWidgetView: View {
         }
     }
 
-    private func upcomingRow(_ game: Game) -> some View {
+    private func upcomingRow(_ game: Game, showsVenue: Bool = false) -> some View {
         HStack(spacing: 8) {
             Image(systemName: SportSymbol.name(for: game.sport))
                 .font(.caption)
@@ -264,11 +248,7 @@ struct ScoresWidgetView: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(game.teamText)
                     .font(.footnote.weight(.semibold))
-                if !game.matchupText.isEmpty {
-                    Text(game.matchupText)
-                        .font(.caption2)
-                        .foregroundStyle(colors.secondary)
-                }
+                matchupLine(game, showsVenue: showsVenue)
             }
             .lineLimit(1)
             Spacer(minLength: 6)
@@ -286,6 +266,30 @@ struct ScoresWidgetView: View {
         }
     }
 
+    /// "vs Thayer Academy", followed by " · Nobles-Burr Field" when `showsVenue` and the whole
+    /// line fits: a venue cut off mid-name isn't worth the space.
+    @ViewBuilder private func matchupLine(_ game: Game, showsVenue: Bool = false) -> some View {
+        let matchup = game.matchupText
+        if showsVenue, let venue = game.venueText {
+            if matchup.isEmpty {
+                detailText(venue)
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    detailText("\(matchup) · \(venue)")
+                    detailText(matchup)
+                }
+            }
+        } else if !matchup.isEmpty {
+            detailText(matchup)
+        }
+    }
+
+    private func detailText(_ text: String) -> some View {
+        Text(text)
+            .font(.caption2)
+            .foregroundStyle(colors.secondary)
+    }
+
     // MARK: Lock Screen
 
     @ViewBuilder private var rectangular: some View {
@@ -301,7 +305,7 @@ struct ScoresWidgetView: View {
                 Text(rectangularSummary(game))
                     .font(.subheadline)
                     .lineLimit(1)
-                Text(game.score == nil && game.start > now ? whenText(game) : dateText(game))
+                Text(game.score == nil && game.start > now ? game.whenText(today: today) : game.dateText(today: today))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -316,7 +320,7 @@ struct ScoresWidgetView: View {
     /// "W 3–0 vs Concord Academy", or "vs Thayer Academy" for a game still to come.
     private func rectangularSummary(_ game: Game) -> String {
         let result = game.score.map { [$0.outcome.rawValue, $0.scoreline].compactMap { $0 }.joined(separator: " ") }
-        let status = game.score == nil && game.start <= now ? statusText(game) : nil
+        let status = game.score == nil && game.start <= now ? game.statusText(now: now) : nil
         return [result, status, game.matchupText.isEmpty ? nil : game.matchupText]
             .compactMap { $0 }
             .joined(separator: " ")
@@ -330,32 +334,6 @@ struct ScoresWidgetView: View {
 
     private var empty: some View {
         WidgetMessage(symbol: "sportscourt", title: "No recent games", detail: configuration.summaryText, colors: colors)
-    }
-
-    // MARK: Text
-
-    /// "Oct 19", or "Today" / "Yesterday" for recent games.
-    private func dateText(_ game: Game) -> String {
-        let day = LocalDate(game.start)
-        return abs(today.days(until: day)) <= 1 ? SchoolFormat.relativeDay(day, from: today) : SchoolFormat.shortDate(day)
-    }
-
-    /// "Wed 4:00 PM", "Today 4:00 PM", or just the day when no time is known.
-    private func whenText(_ game: Game) -> String {
-        let day = LocalDate(game.start)
-        let dayText = today.days(until: day) <= 1 ? SchoolFormat.relativeDay(day, from: today) : SchoolFormat.weekday(day)
-        return game.hasStartTime ? "\(dayText) \(SchoolFormat.time(game.start))" : dayText
-    }
-
-    /// Stands in for a score when there isn't one.
-    private func statusText(_ game: Game) -> String {
-        switch game.status {
-        case .live(let detail): ["Live", detail].compactMap { $0 }.joined(separator: " · ")
-        case .postponed: "Postponed"
-        case .cancelled: "Cancelled"
-        case .final: "Final"
-        case .scheduled: game.start <= now ? "Awaiting result" : whenText(game)
-        }
     }
 }
 
@@ -373,72 +351,5 @@ private struct OutcomeBadge: View {
             .frame(width: size, height: size)
             .background(outcome == .win ? colors.accent : colors.track, in: shape)
             .accessibilityLabel(outcome.word)
-    }
-}
-
-extension ScoresConfiguration {
-    /// What the design is filtered to, e.g. "Varsity · Boys Soccer, Girls Soccer".
-    var summaryText: String {
-        let level = varsityOnly ? "Varsity" : "All levels"
-        let teams = sports.isEmpty ? "All sports" : sports.joined(separator: ", ")
-        return "\(level) · \(teams)"
-    }
-}
-
-extension GameScore.Outcome {
-    var word: String {
-        switch self {
-        case .win: "Win"
-        case .loss: "Loss"
-        case .tie: "Tie"
-        }
-    }
-}
-
-extension Game {
-    /// "Boys Soccer · JV": the level is left out for varsity teams.
-    var teamText: String {
-        guard let level, !level.isEmpty, level.caseInsensitiveCompare("Varsity") != .orderedSame else { return sport }
-        return "\(sport) · \(level)"
-    }
-
-    /// "vs Thayer Academy", "at Tabor Academy", or empty for a meet with no single opponent.
-    var matchupText: String {
-        guard !opponent.isEmpty else { return "" }
-        return "\(isHome == false ? "at" : "vs") \(opponent)"
-    }
-}
-
-/// SF Symbols for Nobles sports, matched loosely against names like "Girls Field Hockey".
-enum SportSymbol {
-    private static let table: [(keyword: String, symbol: String)] = [
-        ("field hockey", "figure.hockey"),
-        ("hockey", "hockey.puck"),
-        ("soccer", "soccerball"),
-        ("football", "football"),
-        ("basketball", "basketball"),
-        ("volleyball", "volleyball"),
-        ("baseball", "baseball"),
-        ("softball", "baseball"),
-        ("lacrosse", "figure.lacrosse"),
-        ("tennis", "tennis.racket"),
-        ("pickleball", "tennis.racket"),
-        ("squash", "figure.squash"),
-        ("cross country", "figure.run"),
-        ("track", "figure.run"),
-        ("swim", "figure.pool.swim"),
-        ("diving", "figure.pool.swim"),
-        ("ski", "figure.skiing.downhill"),
-        ("wrestling", "figure.wrestling"),
-        ("golf", "figure.golf"),
-        ("crew", "figure.rower"),
-        ("rowing", "figure.rower"),
-        ("sailing", "sailboat"),
-        ("fencing", "figure.fencing"),
-    ]
-
-    static func name(for sport: String) -> String {
-        let key = sport.lowercased()
-        return table.first { key.contains($0.keyword) }?.symbol ?? "sportscourt"
     }
 }
