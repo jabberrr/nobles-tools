@@ -129,7 +129,8 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 ## Environment gotchas (Claude Code cloud sessions)
 
 - The sandbox's network policy blocks `*.flikisdining.com`, `nobles.edu` and most other sites. `WebFetch` fails DNS for nearly every host. `WebSearch`, PyPI, npm, Docker Hub and github.com (git) work.
-- **To see live API data, run it in GitHub Actions and read the logs** with `mcp__github__get_job_logs`. Artifact downloads (blob storage) are blocked, so to bring real responses into the repo, run `capture-fixtures.yml`: it commits them to the branch, then `git pull`.
+- **To see live API data, run it in GitHub Actions and read the logs** with `mcp__github__get_job_logs`. Artifact downloads (blob storage) are blocked.
+- **To bring real responses into the repo,** dispatch `capture-fixtures.yml`: `mcp__github__actions_run_trigger` with method `run_workflow`, `workflow_id: capture-fixtures.yml` and the branch as `ref`. It commits the responses to that branch; then `git pull`. Re-capturing changes the content the `real-*` tests assert on, so update those tests in the same change.
 - If `git push` returns 403 "Claude doesn't have GitHub access", the Claude GitHub App needs to be installed on the repo. Ask the user.
 
 ## Conventions
