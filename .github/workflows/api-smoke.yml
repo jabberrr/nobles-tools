@@ -55,39 +55,33 @@ jobs:
           if-no-files-found: ignore
 
   athletics:
-    name: Nobles Athletics results feed
+    name: Nobles Athletics
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      FEED: https://nobilis.nobles.edu/WebServices/gameschedule.php
+      SITE: https://nobilis.nobles.edu/Athletics
     steps:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: .github/scripts
 
-      - name: Probe results feed
+      - name: Latest results (JSON)
         run: |
-          code=$(curl -sSL -o results.xml -w '%{http_code}' "$FEED?eventtypes=ContestResults" || true)
-          echo "ContestResults -> HTTP $code, $(wc -c < results.xml) bytes"
-          head -c 3000 results.xml; echo
+          curl -fsS --retry 3 "$SITE/endpoints/latest_results.php?page=1" -o results.json
+          jq -c '{count: length, keys: (map(keys) | add | unique), first: .[0:3]}' results.json
 
-      - name: Probe athletics pages
+      - name: Upcoming schedule (home page sidebar)
         run: |
-          for page in "Athletics/LatestResults.php 20000" "Athletics/ 25000" "athletics/schedule 8000" "Athletics/calendar.php 25000"; do
-            set -- $page
-            file=$(echo "$1" | tr '/' '_').html
-            echo "::group::$1"
-            code=$(curl -sSL -o "$file" -w '%{http_code}' "https://nobilis.nobles.edu/$1" || true)
-            echo "HTTP $code, $(wc -c < "$file") bytes"
-            python3 .github/scripts/summarize-html.py "$file" "$2"
-            echo "::endgroup::"
-          done
+          curl -fsS --retry 3 "$SITE/" -o home.html
+          python3 .github/scripts/extract-schedule.py home.html > schedule.html
+          echo "games: $(grep -c 'class="ath-row' schedule.html)"
+          grep -o 'data-[a-z]*="[^"]*"' schedule.html | grep -E '^data-(date|team|opponent|homeaway|start|result)=' | head -18
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: athletics-responses
           path: |
-            *.xml
-            *.html
+            results.json
+            schedule.html
           if-no-files-found: ignore

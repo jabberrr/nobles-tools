@@ -1,8 +1,8 @@
 name: Capture API fixtures
 
-# Saves real menu API responses as NoblesKit test fixtures and commits them to the
-# branch it runs on. Run it manually after the API's shape changes, then update the
-# tests that read the `real-*.json` fixtures.
+# Saves real menu and athletics responses as NoblesKit test fixtures and commits
+# them to the branch it runs on. Run it manually after an upstream format changes,
+# then update the tests that read the `real-*` fixtures.
 on:
   workflow_dispatch:
   push:
@@ -33,6 +33,12 @@ jobs:
           for meal in lunch dinner; do
             curl -fsS --retry 3 "$BASE/weeks/school/$SCHOOL/menu-type/$meal/$monday/" | jq "$strip" > "$OUT/real-$meal-week.json"
           done
+
+      - name: Download athletics data
+        run: |
+          curl -fsS --retry 3 "https://nobilis.nobles.edu/Athletics/endpoints/latest_results.php?page=1" | jq . > "$OUT/real-athletics-results.json"
+          curl -fsS --retry 3 "https://nobilis.nobles.edu/Athletics/" -o home.html
+          python3 .github/scripts/extract-schedule.py home.html > "$OUT/real-athletics-schedule.html"
           ls -la "$OUT"
 
       - name: Commit fixtures
@@ -44,5 +50,5 @@ jobs:
             echo "Fixtures unchanged."
             exit 0
           fi
-          git commit -m "Capture real menu API fixtures"
+          git commit -m "Capture real API fixtures"
           git push
