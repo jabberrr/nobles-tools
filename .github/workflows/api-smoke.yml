@@ -32,14 +32,14 @@ jobs:
             echo "::group::menu-type $slug ($D)"
             if curl -fsS --retry 3 "$BASE/weeks/school/$SCHOOL/menu-type/$slug/$D/" -o "menu-$slug.json"; then
               jq -c '{top_keys: keys, start_date, days: [.days[] | {date, items: (.menu_items | length)}]}' "menu-$slug.json"
-              echo "-- item keys:";       jq -c '[.days[].menu_items[] | keys] | add | unique' "menu-$slug.json"
-              echo "-- food keys:";       jq -c '[.days[].menu_items[].food | objects | keys] | add | unique' "menu-$slug.json"
+              echo "-- item keys:";       jq -c '[.days[].menu_items[] | keys] | add // [] | unique' "menu-$slug.json"
+              echo "-- food keys:";       jq -c '[.days[].menu_items[].food | objects | keys] | add // [] | unique' "menu-$slug.json"
               echo "-- section titles:";  jq -c '[.days[].menu_items[] | select(.is_section_title or .is_station_header) | .text] | unique' "menu-$slug.json"
               echo "-- food categories:"; jq -c '[.days[].menu_items[].food | objects | .food_category] | unique' "menu-$slug.json"
-              echo "-- first non-empty day:"
+              echo "-- first non-empty day, every item:"
               jq -c 'first(.days[] | select(.menu_items | length > 0)) | .menu_items[]
-                | {position, is_section_title, is_station_header, text,
-                   food: (.food | if . then {name, food_category} else null end)}' "menu-$slug.json"
+                | del(.station_logo, .station_mobile_image, .image, .image_thumbnail)
+                | .food |= (if type == "object" then {id, name, description, food_category, subtext, rounded_nutrition_info, icons: (.icons.food_icons // [] | map(.synced_name // .name))} else . end)' "menu-$slug.json"
             else
               echo "::warning::menu type '$slug' is not available"
             fi
@@ -59,18 +59,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      FEED: https://nobilis.nobles.edu/webservices/gameschedule.php
+      FEED: https://nobilis.nobles.edu/WebServices/gameschedule.php
     steps:
       - name: Fetch results and schedule
         run: |
           for type in ContestResults AllGameSchedule; do
             echo "::group::$type"
-            curl -fsS --retry 3 "$FEED?eventtypes=$type" -o "$type.xml"
+            curl -fsSL --retry 3 "$FEED?eventtypes=$type" -o "$type.xml"
             echo "bytes: $(wc -c < "$type.xml")"
             echo "-- element names:"
             grep -o '<[A-Za-z_][A-Za-z0-9_]*' "$type.xml" | sort | uniq -c | sort -rn | head -40
             echo "-- first 3000 bytes:"
-            head -c 3000 "$type.xml"; echo
+            head -c 6000 "$type.xml"; echo
             echo "::endgroup::"
           done
 
