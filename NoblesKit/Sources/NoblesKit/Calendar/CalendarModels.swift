@@ -125,9 +125,9 @@ public struct CountdownConfiguration: Codable, Hashable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let defaults = CountdownConfiguration()
-        target = try container.decode(.target, or: defaults.target)
-        counting = try container.decode(.counting, or: defaults.counting)
-        style = try container.decode(.style, or: defaults.style)
+        target = container.decode(.target, or: defaults.target)
+        counting = container.decode(.counting, or: defaults.counting)
+        style = container.decode(.style, or: defaults.style)
     }
 }
 

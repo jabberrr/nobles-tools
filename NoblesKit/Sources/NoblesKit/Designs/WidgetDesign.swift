@@ -55,8 +55,8 @@ public struct WidgetDesign: Codable, Hashable, Identifiable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         content = try container.decode(WidgetContent.self, forKey: .content)
-        name = try container.decode(.name, or: content.kind.displayName)
-        theme = try container.decode(.theme, or: Theme())
+        name = container.decode(.name, or: content.kind.displayName)
+        theme = container.decode(.theme, or: Theme())
     }
 
     public var kind: WidgetKind { content.kind }
@@ -104,9 +104,9 @@ public struct Theme: Codable, Hashable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let defaults = Theme()
-        palette = try container.decode(.palette, or: defaults.palette)
-        font = try container.decode(.font, or: defaults.font)
-        background = try container.decode(.background, or: defaults.background)
+        palette = container.decode(.palette, or: defaults.palette)
+        font = container.decode(.font, or: defaults.font)
+        background = container.decode(.background, or: defaults.background)
     }
 }
 

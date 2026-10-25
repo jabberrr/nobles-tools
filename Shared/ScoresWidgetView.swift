@@ -42,9 +42,10 @@ struct ScoresWidgetView: View {
         return scoreboard.upcoming
     }
 
-    /// "Updated 3h ago" when the scoreboard is an older cached copy.
+    /// "Updated 3h ago" when the scoreboard is an older cached copy. The threshold sits above the
+    /// widget's 2-hour refresh, so data that is merely between refreshes isn't flagged.
     private var staleness: String? {
-        guard let scoreboard, now.timeIntervalSince(scoreboard.fetchedAt) > 60 * 60,
+        guard let scoreboard, now.timeIntervalSince(scoreboard.fetchedAt) > 3 * 60 * 60,
               let age = SchoolFormat.age(of: scoreboard.fetchedAt, now: now)
         else { return nil }
         return "Updated \(age)"

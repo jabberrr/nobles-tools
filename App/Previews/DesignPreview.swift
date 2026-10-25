@@ -35,6 +35,13 @@ struct DesignPreview: View {
         }
     }
 
+    /// The design's games once real ones load. Until then, or when they can't load, the sample
+    /// scoreboard unfiltered, so a sample preview is never empty because of the design's filters.
+    private func scoreboard(for configuration: ScoresConfiguration, now: Date) -> Scoreboard {
+        guard case .fetched(let feed) = data.feed else { return .sample }
+        return Scoreboard(feed: feed, configuration: configuration, now: now)
+    }
+
     @ViewBuilder private func content(colors: ThemeColors) -> some View {
         let now = Date.now
         switch design.content {
@@ -56,15 +63,14 @@ struct DesignPreview: View {
                 snapshot: CountdownSnapshot(configuration: configuration, calendar: library.calendar, date: LocalDate(now))
             )
         case .scores(let configuration):
-            let feed = data.feed.value
             ScoresWidgetView(
                 design: design,
                 family: family,
                 colors: colors,
-                scoreboard: Scoreboard(feed: feed ?? PreviewData.sampleFeed, configuration: configuration, now: now),
+                scoreboard: scoreboard(for: configuration, now: now),
                 now: now
             )
-            .redacted(reason: feed == nil ? .placeholder : [])
+            .redacted(reason: data.feed.value == nil ? .placeholder : [])
         }
     }
 }

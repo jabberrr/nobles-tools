@@ -32,9 +32,10 @@ extension KeyedDecodingContainer {
 }
 
 extension KeyedDecodingContainer {
-    /// The value for `key`, or `fallback` when it's missing or null. Saved models decode every
-    /// field this way, so adding or removing a field never invalidates saved data.
-    func decode<T: Decodable>(_ key: Key, or fallback: T) throws -> T {
-        try decodeIfPresent(T.self, forKey: key) ?? fallback
+    /// The value for `key`, or `fallback` when it's missing, null or unreadable (e.g. an enum case
+    /// a later version removed). Saved settings decode every field this way, so changing a field
+    /// never invalidates a user's design.
+    func decode<T: Decodable>(_ key: Key, or fallback: T) -> T {
+        lenient(T.self, forKey: key) ?? fallback
     }
 }

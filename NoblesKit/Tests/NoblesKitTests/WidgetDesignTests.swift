@@ -30,6 +30,14 @@ struct WidgetDesignTests {
             == ScoresConfiguration(sports: ["Boys Soccer"]))
     }
 
+    @Test func unreadableSettingsTakeTheirDefaults() throws {
+        let menu = try decode(MenuConfiguration.self, from: #"{"meal": "brunch", "showsSectionHeaders": false}"#)
+        #expect(menu == MenuConfiguration(showsSectionHeaders: false))
+        let theme = try decode(Theme.self, from: #"{"palette": "neon", "font": "rounded"}"#)
+        #expect(theme == Theme(font: .rounded))
+        #expect(try decode(CountdownConfiguration.self, from: #"{"counting": 3}"#) == CountdownConfiguration())
+    }
+
     @Test func designsNeedOnlyAnIDAndContent() throws {
         let design = try decode(WidgetDesign.self, from: #"{"id": "6F1C4A39-2D0B-4B8E-9F4E-1D2C3B4A5E6F", "content": {"countdown": {"_0": {}}}}"#)
 

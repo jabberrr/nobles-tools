@@ -64,14 +64,14 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
   - Theme colors are resolved once and passed in: by `WidgetChrome` in the widget, and by `WidgetPreviewFrame`/`DesignPreview` in the app. `WidgetChrome` also applies `containerBackground` and the deep link.
 - **Persistence:** `DesignStore` stores JSON in app-group `UserDefaults`, under versioned keys (`designs.v1`, `designs.seeded.v1`, `calendar.v1`).
   - It is a `Sendable` struct, so widget timeline providers use it directly.
-  - Every configuration field decodes with a default, and the design list decodes lossily. Old or partially unreadable data never wipes a user's designs.
+  - Every settings field decodes with a default when it's missing or unreadable (e.g. a removed enum case). The design list decodes lossily, so one corrupt design can't wipe the rest. Only a design without a readable `id` or `content` is dropped.
   - The app wraps the store in a `@MainActor @Observable` `DesignLibrary`. It saves 500 ms after the last edit, and immediately when the app leaves the foreground. It then reloads only the affected widget kind (`WidgetCenter.reloadTimelines(ofKind: kind.timelineKind)`).
 - **Widget configuration:** each widget has an `AppIntent` with one optional design parameter. There is one concrete `AppEntity` type per kind, because AppIntents metadata can't handle generic entities. If no design is chosen, or the chosen one was deleted, the widget uses the first saved design of that kind, else `WidgetDesign.makeDefault(kind)`.
 - **Timelines:**
   - Menu: entries at now and at the next meal hand-off (`upcomingMenus(limit: 2)`), plus each school midnight for "Today"/"Tomorrow" labels; it reloads at the hand-off, at most 6 h out.
   - Countdown: one entry per school midnight.
   - Scores: refreshes every 2 h, or every 60 min on game days. It also adds an entry at the next school midnight, so the "Today" labels and the results/upcoming split move to the new day.
-- **Offline:** `ResponseCache` keeps the last good raw response per URL in the app-group container. Services fall back to it on network errors, and report the cache time so widgets can show "Updated 3h ago".
+- **Offline:** `ResponseCache` keeps the last good raw response per URL in the app-group container. Services fall back to it on network errors. The scores feed also reports the cache time (`GameFeed.fetchedAt`), so the widget can show "Updated 4h ago" once data is older than its 2 h refresh.
 - **App previews:** `PreviewData` fetches each data source once and filters locally per design, so toggling settings never re-fetches. It falls back to sample data, labelled as such, when offline.
 - **Dates:** use `LocalDate` and `Calendar.school` (America/New_York) for anything that is a school day or a meal time. Never use the device time zone for school logic.
 
@@ -86,7 +86,9 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
   - Lunch stations: Soup Station, Hot Entree, Vegan Entree, Sides, Weekly Composed Salad, Dessert, plus themed specials (e.g. "Dracula's Cookie Extravaganza").
   - Dinner stations: Hot Entree, Sides, Vegan Option, Dessert.
   - Because categories are empty, entrée and soup/salad detection is based on station titles.
-- Dinner is served Monday–Thursday. Friday shows only a "No Dinner Services" header, which becomes a note. A header with no dishes under it is dropped unless the whole day has no dishes.
+- Dinner is served Monday–Thursday. Friday shows only a "No Dinner Services" header.
+  - A header with no dishes under it is dropped. On a day with no dishes at all, its headers and holiday rows are kept as `DailyMenu.notes`.
+  - Widgets don't show notes yet: `upcomingMenu` skips ahead to the next day that has dishes.
 - Service end times used for auto-advance (`Meal.serviceEnds`): lunch 1:30 pm, dinner 7:00 pm. These are estimates. The Nobles dining page lists dinner as 5–7 pm Mon–Thu.
 - The sandbox network policy blocks this host for Claude Code cloud sessions. Use the CI workflows to reach it (see Environment gotchas).
 
@@ -151,6 +153,13 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 
 ## Session log
 
+Newest last. Add an entry after each piece of work. Keep each to a few lines: what changed and anything surprising.
+
 - **2026-10-25: initial build.**
-  - Researched the data sources; probed the live APIs from CI and captured real fixtures.
-  - Built NoblesKit, the app, the three widgets and CI.
+  - Researched the data sources and probed the live APIs from CI.
+    - Breakfast doesn't exist.
+    - The XML athletics feed is dead; results come from JSON and the schedule from HTML.
+    - The calendar is login-only.
+  - Captured real fixtures and built NoblesKit (103 tests), the app, the three widgets and CI.
+  - Ran a critic review: no blockers, 27 findings. Fixed them in a second round (shared API contract in parallel core/UI agents), then a final critic pass verified the fixes.
+  - CI is green on Xcode 26.3 with no compiler warnings.

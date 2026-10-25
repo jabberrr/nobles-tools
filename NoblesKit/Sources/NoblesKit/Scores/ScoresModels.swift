@@ -116,8 +116,8 @@ public struct ScoresConfiguration: Codable, Hashable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let defaults = ScoresConfiguration()
-        sports = try container.decode(.sports, or: defaults.sports)
-        varsityOnly = try container.decode(.varsityOnly, or: defaults.varsityOnly)
-        showsUpcoming = try container.decode(.showsUpcoming, or: defaults.showsUpcoming)
+        sports = container.decode(.sports, or: defaults.sports)
+        varsityOnly = container.decode(.varsityOnly, or: defaults.varsityOnly)
+        showsUpcoming = container.decode(.showsUpcoming, or: defaults.showsUpcoming)
     }
 }

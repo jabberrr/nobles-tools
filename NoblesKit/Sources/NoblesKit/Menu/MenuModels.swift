@@ -133,9 +133,9 @@ public struct MenuConfiguration: Codable, Hashable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let defaults = MenuConfiguration()
-        meal = try container.decode(.meal, or: defaults.meal)
-        filter = try container.decode(.filter, or: defaults.filter)
-        showsSectionHeaders = try container.decode(.showsSectionHeaders, or: defaults.showsSectionHeaders)
+        meal = container.decode(.meal, or: defaults.meal)
+        filter = container.decode(.filter, or: defaults.filter)
+        showsSectionHeaders = container.decode(.showsSectionHeaders, or: defaults.showsSectionHeaders)
     }
 }
 
