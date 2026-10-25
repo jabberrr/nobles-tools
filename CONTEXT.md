@@ -18,7 +18,7 @@ Widget kinds (`WidgetKind`):
 
 | Kind | Content | Families |
 | --- | --- | --- |
-| `menu` | Flik dining menu for Lunch, Dinner or "Next Meal" (auto-advances as each meal ends). Filters (`MenuFilter`): everything, entrées only, no salads/soups, only chosen stations ("Just…"), everything except chosen stations. Toggles for headers and descriptions. | systemSmall/Medium/Large, accessoryRectangular, accessoryInline |
+| `menu` | Flik dining menu for Lunch, Dinner or "Next Meal" (auto-advances as each meal ends). Filters (`MenuFilter`): everything, entrées only, no salads/soups, only chosen stations ("Just…"), everything except chosen stations. Toggle for station headers. "Just Entrées" shows nothing (with a message) when no entrée station exists. | systemSmall/Medium/Large, accessoryRectangular, accessoryInline |
 | `countdown` | Days left in the current quarter, semester or school year (`Term.Kind`), counted as school days, weekdays or calendar days. Number, ring or bar style. | systemSmall/Medium/Large, accessoryCircular/Rectangular/Inline |
 | `scores` | Recent results and upcoming games for Nobles teams, filtered by sport, with a varsity-only option. | systemSmall/Medium/Large, accessoryRectangular |
 
@@ -70,7 +70,7 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 - **Timelines:**
   - Menu: entries at now and at the next meal hand-off (`upcomingMenus(limit: 2)`), plus each school midnight for "Today"/"Tomorrow" labels; it reloads at the hand-off, at most 6 h out.
   - Countdown: one entry per school midnight.
-  - Scores: refreshes every 2 h, or every 60 min on game days.
+  - Scores: refreshes every 2 h, or every 60 min on game days. It also adds an entry at the next school midnight, so the "Today" labels and the results/upcoming split move to the new day.
 - **Offline:** `ResponseCache` keeps the last good raw response per URL in the app-group container. Services fall back to it on network errors, and report the cache time so widgets can show "Updated 3h ago".
 - **App previews:** `PreviewData` fetches each data source once and filters locally per design, so toggling settings never re-fetches. It falls back to sample data, labelled as such, when offline.
 - **Dates:** use `LocalDate` and `Calendar.school` (America/New_York) for anything that is a school day or a meal time. Never use the device time zone for school logic.

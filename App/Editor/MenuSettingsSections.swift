@@ -22,14 +22,13 @@ struct MenuSettingsSections: View {
                 }
             }
             Toggle("Station Names", isOn: $configuration.showsSectionHeaders)
-            Toggle("Descriptions", isOn: $configuration.showsDescriptions)
         } header: {
             Text("Menu")
         } footer: {
             if let meal = configuration.meal.meal, !previewData.availableMeals.contains(meal) {
                 Text("Flik doesn't publish a \(meal.displayName.lowercased()) menu for Nobles, so this design won't show any dishes.")
             } else {
-                Text("Next Meal moves on as each meal ends. Descriptions appear on the large size when Flik includes them.")
+                Text("Next Meal moves on as each meal ends.")
             }
         }
 
@@ -102,8 +101,15 @@ private struct StationPickerSection: View {
         } header: {
             Text(style == .only ? "Show Only" : "Hide")
         } footer: {
-            Text("Stations come from this week's menus. If one isn't listed (on a weekend, say), add it by name.")
+            Text(footerText)
         }
+    }
+
+    /// Asks for a choice while there's none (until then the widget shows every station).
+    private var footerText: String {
+        let source = "Stations come from this week's menus. If one isn't listed (on a weekend, say), add it by name."
+        guard selection.isEmpty else { return source }
+        return "Choose the stations to \(style == .only ? "show" : "hide"); until you do, every station is shown. \(source)"
     }
 
     /// This week's stations, then any chosen ones that aren't on it.

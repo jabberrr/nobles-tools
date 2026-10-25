@@ -47,18 +47,19 @@ struct FittingPrefix<Item, Content: View>: View {
     var body: some View {
         let counts = Self.candidateCounts(total: items.count, capacity: capacity)
         ViewThatFits(in: .vertical) {
-            prefix(counts[0])
-            prefix(counts[1])
-            prefix(counts[2])
-            prefix(counts[3])
-            prefix(counts[4])
-            prefix(counts[5])
-            prefix(counts[6])
-            prefix(counts[7])
+            layout(showing: counts[0])
+            layout(showing: counts[1])
+            layout(showing: counts[2])
+            layout(showing: counts[3])
+            layout(showing: counts[4])
+            layout(showing: counts[5])
+            layout(showing: counts[6])
+            layout(showing: counts[7])
         }
     }
 
-    private func prefix(_ count: Int) -> some View {
+    /// The first `count` items, then the "+N more" line if any are left out.
+    private func layout(showing count: Int) -> some View {
         VStack(alignment: .leading, spacing: spacing) {
             content(Array(items.prefix(count)))
             if let overflowColor, count < items.count {

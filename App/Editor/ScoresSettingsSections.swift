@@ -35,7 +35,7 @@ struct ScoresSettingsSections: View {
                     configuration.sports.append(sport)
                 }
             }
-            .task { await previewData.load(.scores(PreviewData.allSports)) }
+            .task { await previewData.load(.scores) }
         } header: {
             Text("Sports")
         } footer: {
@@ -43,8 +43,8 @@ struct ScoresSettingsSections: View {
         }
     }
 
-    /// Sports in the current scoreboard, then any chosen ones that aren't in it.
+    /// Sports with games in the feed, then any chosen ones that aren't among them.
     private var sportChoices: [String] {
-        previewData.knownSports.merged(with: configuration.sports)
+        (previewData.feed.value?.sports ?? []).merged(with: configuration.sports)
     }
 }

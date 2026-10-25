@@ -78,8 +78,16 @@ private struct DesignEditorForm: View {
                 library.delete(id: id)
             }
         } message: {
-            Text("Widgets showing it will switch to another \(design.kind.displayName.lowercased()) design.")
+            Text(deletionMessage)
         }
+    }
+
+    /// What widgets showing the design will show instead.
+    private var deletionMessage: String {
+        let kind = design.kind.displayName.lowercased()
+        return library.designs(of: design.kind).count > 1
+            ? "Widgets showing it will switch to another \(kind) design."
+            : "Widgets showing it will show a default \(kind) design."
     }
 
     private var sourceName: String {

@@ -53,8 +53,7 @@ struct SettingsView: View {
 
     private static let homeScreenSteps = [
         "Touch and hold an empty spot on your Home Screen until the apps jiggle.",
-        "Tap Edit, then Add Widget, and choose Nobles Tools.",
-        "Pick Dining Menu, Countdown or Scores, choose a size, and tap Add Widget.",
+        "Tap Edit or + at the top of the screen, then add a Nobles Tools widget in any size.",
         "Touch and hold the new widget, tap Edit Widget, and choose one of your designs.",
     ]
 

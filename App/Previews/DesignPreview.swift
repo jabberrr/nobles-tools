@@ -4,9 +4,9 @@ import NoblesKit
 
 /// A live preview of a design at one size, drawn by the same views the widget uses.
 ///
-/// Menus and scores come from `PreviewData`, filtered here for the design, so editing a setting
-/// redraws at once. Until the data first arrives the preview shows redacted sample content, like
-/// a widget placeholder.
+/// Menus and scores come from data `PreviewData` shares between designs, and each design's
+/// filters apply as it draws, so editing a setting redraws at once. Until the data first arrives
+/// the preview shows redacted sample content, like a widget placeholder.
 struct DesignPreview: View {
     let design: WidgetDesign
     let family: WidgetFamily
