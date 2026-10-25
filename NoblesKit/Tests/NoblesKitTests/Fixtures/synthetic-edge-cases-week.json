@@ -1,0 +1,55 @@
+{
+  "bold_all_entrees_enabled": false,
+  "id": 1,
+  "last_updated": "2026-11-15T12:00:00Z",
+  "menu_type_id": 2800,
+  "start_date": "2026-11-23",
+  "days": [
+    { "date": "2026-11-22", "has_unpublished_menus": false, "menu_info": {}, "menu_items": [] },
+    {
+      "date": "2026-11-23",
+      "has_unpublished_menus": false,
+      "menu_info": {},
+      "menu_items": [
+        42,
+        { "id": 9004, "date": null, "position": 4, "is_section_title": false, "is_station_header": false, "is_holiday": false, "text": "", "category": "",
+          "food": { "id": 854522, "name": "Sweet Potato Fries", "description": "  ", "food_category": "", "rounded_nutrition_info": { "calories": 329.6, "g_fat": 19.0 }, "icons": { "food_icons": [] } } },
+        { "id": 9000, "date": null, "position": 0, "is_section_title": true, "is_station_header": true, "is_holiday": false, "station_id": 34847, "text": "Hot Entree", "category": "", "food": null },
+        { "id": 9001, "date": null, "position": 1, "is_section_title": false, "is_station_header": false, "is_holiday": false, "station_id": 34847, "text": "  Turkey Pot Pie  ", "category": "", "food": null },
+        { "id": 9010, "date": null, "is_section_title": false, "is_station_header": false, "is_holiday": false, "station_id": 34847, "text": "Gravy", "category": "", "food": null },
+        { "id": 9003, "date": null, "position": 3, "is_section_title": true, "is_station_header": true, "is_holiday": false, "station_id": 12069, "text": "Sides", "category": "", "food": null },
+        { "id": 9005, "date": null, "position": 5, "is_section_title": false, "is_station_header": false, "is_holiday": false, "station_id": 12069, "text": "Garlic Knots", "category": "", "food": "unexpected" },
+        { "date": null, "position": "6", "is_section_title": false, "is_station_header": false, "is_holiday": false, "station_id": 12069, "text": "Cranberry Sauce", "category": null, "food": null },
+        { "id": 9002, "date": null, "position": 2, "is_section_title": false, "is_station_header": false, "is_holiday": false, "station_id": 34847, "text": "", "image_description": "Rev", "category": "", "food": null },
+        { "id": 9007, "date": null, "position": 7, "is_section_title": true, "is_station_header": true, "is_holiday": false, "station_id": 34870, "text": "Vegan Entree", "category": "", "food": null },
+        { "id": 9009, "date": null, "position": 9, "is_section_title": false, "is_station_header": false, "is_holiday": false, "station_id": 12069, "text": "Steamed Green Beans", "category": "", "food": null },
+        { "id": 9008, "date": null, "position": 8, "is_section_title": true, "is_station_header": true, "is_holiday": false, "station_id": 12069, "text": "Sides", "category": "", "food": null }
+      ]
+    },
+    {
+      "date": "2026-11-24",
+      "has_unpublished_menus": false,
+      "menu_info": {},
+      "menu_items": [
+        { "id": 9101, "position": 0, "is_section_title": false, "is_station_header": false, "text": "", "food": { "name": "Roast Turkey", "description": "Herb-brined, carved to order", "food_category": "entree" } },
+        { "id": 9102, "position": 1, "is_section_title": false, "is_station_header": false, "text": "", "food": { "name": "Mashed Potatoes", "food_category": "side" } },
+        { "id": 9103, "position": 2, "is_section_title": false, "is_station_header": false, "text": "Dinner Rolls", "food": null },
+        { "id": 9104, "position": 3, "is_section_title": false, "is_station_header": false, "text": "", "food": { "name": "Butternut Squash Soup", "food_category": "soup" } },
+        { "id": 9105, "position": 4, "is_section_title": false, "is_station_header": false, "text": "", "food": { "name": "Caesar Salad", "food_category": "salad_bar" } },
+        { "id": 9106, "position": 5, "is_section_title": false, "is_station_header": false, "text": "", "food": { "name": "Herb Stuffing", "food_category": "side" } },
+        { "id": 9107, "position": 6, "is_section_title": false, "is_station_header": false, "text": "", "food": { "name": "Pumpkin Pie", "food_category": "dessert" } }
+      ]
+    },
+    {
+      "date": "2026-11-25",
+      "has_unpublished_menus": false,
+      "menu_info": {},
+      "menu_items": [
+        { "id": 9201, "date": null, "position": 0, "is_section_title": false, "is_station_header": false, "is_holiday": true, "text": "No School – Thanksgiving Break", "category": "", "food": null }
+      ]
+    },
+    { "date": "not-a-date", "has_unpublished_menus": false, "menu_info": {}, "menu_items": [] },
+    "unexpected",
+    { "date": "2026-11-28", "has_unpublished_menus": false, "menu_info": {}, "menu_items": null }
+  ]
+}

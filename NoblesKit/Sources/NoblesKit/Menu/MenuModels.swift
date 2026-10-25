@@ -32,6 +32,11 @@ public enum Meal: String, Codable, CaseIterable, Identifiable, Sendable {
         case .dinner: (19, 0)
         }
     }
+
+    /// When service ends on `date`, in school time.
+    public func serviceEnd(on date: LocalDate) -> Date {
+        date.at(hour: serviceEnds.hour, minute: serviceEnds.minute)
+    }
 }
 
 /// Which meal a menu widget shows.
