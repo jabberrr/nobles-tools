@@ -61,24 +61,27 @@ jobs:
     env:
       FEED: https://nobilis.nobles.edu/WebServices/gameschedule.php
     steps:
-      - name: Probe results feeds and pages
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Probe results feed
         run: |
-          probe() {
-            local name=$1 url=$2
-            echo "::group::$name"
-            code=$(curl -sSL --retry 2 -o "$name" -w '%{http_code}' "$url" || true)
-            echo "$url -> HTTP $code, $(wc -c < "$name" 2>/dev/null || echo 0) bytes"
-            echo "-- elements:"; grep -o '<[A-Za-z_][A-Za-z0-9_]*' "$name" | sort | uniq -c | sort -rn | head -25
-            echo "-- links:"; grep -oiE '(href|src)="[^"]+"' "$name" | sort -u | head -80
-            echo "-- body:"; head -c 5000 "$name"; echo
+          code=$(curl -sSL -o results.xml -w '%{http_code}' "$FEED?eventtypes=ContestResults" || true)
+          echo "ContestResults -> HTTP $code, $(wc -c < results.xml) bytes"
+          head -c 3000 results.xml; echo
+
+      - name: Probe athletics pages
+        run: |
+          for page in "Athletics/LatestResults.php 20000" "Athletics/ 25000" "athletics/schedule 8000" "Athletics/calendar.php 25000"; do
+            set -- $page
+            file=$(echo "$1" | tr '/' '_').html
+            echo "::group::$1"
+            code=$(curl -sSL -o "$file" -w '%{http_code}' "https://nobilis.nobles.edu/$1" || true)
+            echo "HTTP $code, $(wc -c < "$file") bytes"
+            python3 .github/scripts/summarize-html.py "$file" "$2"
             echo "::endgroup::"
-          }
-          probe results.xml       "$FEED?eventtypes=ContestResults"
-          probe schedule.xml      "$FEED?eventtypes=AllGameSchedule"
-          probe results-pin.xml   "$FEED?eventtypes=ContestResults&iosPIN=&PeopleID="
-          probe latest.html       "https://nobilis.nobles.edu/Athletics/LatestResults.php"
-          probe index.html        "https://nobilis.nobles.edu/Athletics/"
-          probe calendar.html     "https://nobilis.nobles.edu/Athletics/calendar.php"
+          done
 
       - uses: actions/upload-artifact@v4
         if: always()
