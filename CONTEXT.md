@@ -28,7 +28,10 @@ All kinds share a `Theme`: palette, font style and background style.
 
 ```
 CLAUDE.md                   Imports this file, so Claude Code loads it automatically.
-project.yml                 XcodeGen spec. The .xcodeproj, Info.plists and entitlements are generated and gitignored.
+project.yml                 XcodeGen spec: the source of truth for the Xcode project.
+NoblesTools.xcodeproj       GENERATED from project.yml by CI and committed (with App|Widgets Info.plist and
+                            entitlements), so users just pull and open. Never hand-edit; change project.yml.
+Config/Signing.xcconfig     Signing settings; includes the gitignored Config/Local.xcconfig (DEVELOPMENT_TEAM).
 NoblesKit/                  Swift package, Foundation-only (no SwiftUI). Builds on iOS, macOS and Linux.
   Sources/NoblesKit/
     Core/                   LocalDate/DateSpan (school-time-zone days), HTTPClient, AppGroup, ResponseCache
@@ -49,6 +52,7 @@ Widgets/                    Widget extension: WidgetBundle, three AppIntentConfi
                             timeline providers, Intents/ (configuration intents and design entities)
 .github/workflows/
   ci.yml                    Linux `swift test` (swift:6.1 container); macOS: XcodeGen → `swift test` → xcodebuild
+                            (default signing, like a fresh clone) → commits the regenerated project on push
   api-smoke.yml             Weekly live check of the menu API and the athletics sources (prints response shapes)
   capture-fixtures.yml      Manual: commits real menu and athletics responses into NoblesKit test fixtures
 .github/scripts/            Helpers for those workflows (extract-schedule.py cuts the schedule sidebar out)
@@ -134,6 +138,7 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 - **To see live API data, run it in GitHub Actions and read the logs** with `mcp__github__get_job_logs`. Artifact downloads (blob storage) are blocked.
 - **To bring real responses into the repo,** dispatch `capture-fixtures.yml`: `mcp__github__actions_run_trigger` with method `run_workflow`, `workflow_id: capture-fixtures.yml` and the branch as `ref`. It commits the responses to that branch; then `git pull`. Re-capturing changes the content the `real-*` tests assert on, so update those tests in the same change.
 - If `git push` returns 403 "Claude doesn't have GitHub access", the Claude GitHub App needs to be installed on the repo. Ask the user.
+- **Pull before you push.** After a push that changes the project (new or removed files, `project.yml` edits), CI adds a "Regenerate Xcode project" commit to the branch. Run `git pull --rebase` before the next push.
 
 ## Conventions
 
@@ -143,7 +148,8 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 - Inside `extension Binding`, a bare `max(...)` or `min(...)` resolves as a dynamic member lookup. Write `Swift.max`. CI caught this once.
 - Tests use swift-testing (`import Testing`, `@Test`, `#expect`). Never touch the network in tests: inject a fake `HTTPClient` (`Tests/NoblesKitTests/Support/FakeHTTPClient.swift`). Prefer the `real-*` fixtures.
 - Model enums expose `displayName` (and `symbolName` where useful) for UI. Keep UI strings in the models only when they are shared between app and widget.
-- Don't commit the generated `.xcodeproj`. Change `project.yml` instead.
+- The committed `NoblesTools.xcodeproj` is generated output. Change `project.yml`, and let CI regenerate the project (or run `xcodegen generate` on a Mac) rather than editing it in Xcode.
+- Keep the development team out of the project file. It belongs in the gitignored `Config/Local.xcconfig`, so pulls never conflict with local signing.
 
 ## Open questions and next steps
 
@@ -163,3 +169,8 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
   - Captured real fixtures and built NoblesKit (103 tests), the app, the three widgets and CI.
   - Ran a critic review: no blockers, 27 findings. Fixed them in a second round (shared API contract in parallel core/UI agents), then a final critic pass verified the fixes.
   - CI is green on Xcode 26.3 with no compiler warnings.
+- **2026-10-26: commit the generated Xcode project.**
+  - The user asked to "just pull" instead of running XcodeGen.
+  - CI's macOS job now builds with the project's real signing settings, as a fresh clone would. That build is verified to succeed for the simulator with no development team.
+  - CI then commits `NoblesTools.xcodeproj`, the Info.plists and the entitlements whenever they change.
+  - Signing moved to `Config/Signing.xcconfig`, plus the gitignored `Config/Local.xcconfig`.

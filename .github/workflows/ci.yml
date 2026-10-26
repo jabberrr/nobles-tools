@@ -66,5 +66,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898099+github-actions[bot]@users.noreply.github.com"
           git commit -m "Regenerate Xcode project from project.yml [skip ci]"
-          git push origin "HEAD:$GITHUB_REF_NAME" ||
-            echo "::warning::$GITHUB_REF_NAME moved during this run; the newer run commits the project."
+          # If the branch moved during the run, replay this commit on top of it and retry.
+          for attempt in 1 2 3; do
+            git push origin "HEAD:$GITHUB_REF_NAME" && exit 0
+            git pull --rebase origin "$GITHUB_REF_NAME"
+          done
+          echo "::error::Couldn't push the regenerated project to $GITHUB_REF_NAME."
+          exit 1

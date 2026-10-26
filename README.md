@@ -12,15 +12,24 @@ Every widget also has a theme (palette, font and background). Make as many desig
 
 ## Building
 
-Requirements: Xcode 16 or later and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
+Requirements: Xcode 26 (CI builds with Xcode 26.3).
 
 ```sh
-brew install xcodegen
-xcodegen generate        # creates NoblesTools.xcodeproj from project.yml
+git pull
 open NoblesTools.xcodeproj
 ```
 
-To run it on a device, set your development team on both targets (`NoblesTools` and `NoblesWidgets`). If the bundle IDs or the app group `group.com.jabberrr.noblestools` are taken on your team, change them in `project.yml` and in `AppGroup.identifier` (`NoblesKit/Sources/NoblesKit/Core/AppGroup.swift`).
+Pick an iPhone simulator and press Run. That's all the setup there is: CI generates the Xcode project from `project.yml` and commits it every time it changes.
+
+**To run on your own iPhone,** create `Config/Local.xcconfig` with your Apple Developer Team ID. Xcode shows the ID under Settings → Accounts.
+
+```
+DEVELOPMENT_TEAM = ABCDE12345
+```
+
+The file is gitignored. Don't pick the team in Xcode's Signing & Capabilities tab: that edits the project file, and later pulls would conflict. If the bundle IDs or the app group `group.com.jabberrr.noblestools` are taken, change them in `project.yml` and in `AppGroup.identifier` (`NoblesKit/Sources/NoblesKit/Core/AppGroup.swift`).
+
+**Changing the project:** edit `project.yml` rather than Xcode's project settings, and push. CI regenerates `NoblesTools.xcodeproj`; pull to get it. To regenerate locally, run `brew install xcodegen && xcodegen generate`.
 
 The core logic lives in the `NoblesKit` Swift package and is tested on its own:
 
