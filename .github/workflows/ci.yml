@@ -56,20 +56,5 @@ jobs:
       # Keeps the committed project in sync with project.yml, so a pull is all it takes to open
       # the app in Xcode. Pushes made with GITHUB_TOKEN don't trigger workflows.
       - name: Commit the regenerated Xcode project
-        if: github.event_name == 'push'
-        run: |
-          git add NoblesTools.xcodeproj App/Info.plist App/NoblesTools.entitlements Widgets/Info.plist Widgets/NoblesWidgets.entitlements
-          if git diff --cached --quiet; then
-            echo "The committed Xcode project is up to date."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898099+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Regenerate Xcode project from project.yml [skip ci]"
-          # If the branch moved during the run, replay this commit on top of it and retry.
-          for attempt in 1 2 3; do
-            git push origin "HEAD:$GITHUB_REF_NAME" && exit 0
-            git pull --rebase origin "$GITHUB_REF_NAME"
-          done
-          echo "::error::Couldn't push the regenerated project to $GITHUB_REF_NAME."
-          exit 1
+        if: github.event_name == 'push' && github.ref_type == 'branch'
+        run: .github/scripts/commit-xcode-project.sh "$GITHUB_REF_NAME"

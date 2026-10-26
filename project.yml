@@ -7,7 +7,8 @@ options:
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
-  # Matches CI's Xcode, so opening the project doesn't offer to "update" (and edit) it.
+  # The Xcode the project was last checked against, so opening it doesn't offer to "update"
+  # (and edit) it. Bump it when CI's latest-stable Xcode moves on.
   xcodeVersion: "26.3"
 
 # The development team comes from an optional, gitignored Config/Local.xcconfig.

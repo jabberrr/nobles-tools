@@ -1,6 +1,8 @@
 # Xcode. NoblesTools.xcodeproj, the Info.plists and entitlements are generated from project.yml
 # by CI and committed; only per-user state is ignored.
 xcuserdata/
+*.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
 Config/Local.xcconfig
 DerivedData/
 build/

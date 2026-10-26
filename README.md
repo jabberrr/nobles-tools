@@ -29,7 +29,10 @@ DEVELOPMENT_TEAM = ABCDE12345
 
 The file is gitignored. Don't pick the team in Xcode's Signing & Capabilities tab: that edits the project file, and later pulls would conflict. If the bundle IDs or the app group `group.com.jabberrr.noblestools` are taken, change them in `project.yml` and in `AppGroup.identifier` (`NoblesKit/Sources/NoblesKit/Core/AppGroup.swift`).
 
-**Changing the project:** edit `project.yml` rather than Xcode's project settings, and push. CI regenerates `NoblesTools.xcodeproj`; pull to get it. To regenerate locally, run `brew install xcodegen && xcodegen generate`.
+**Changing the project:** edit `project.yml` rather than Xcode's project settings, and push. CI regenerates `NoblesTools.xcodeproj` a few minutes later; pull to get it. To regenerate locally, run `brew install xcodegen && xcodegen generate`.
+
+- If a pull right after files were added or removed doesn't build, CI hasn't committed the regenerated project yet. Wait for its "Regenerate Xcode project" commit and pull again.
+- If Xcode offers to update the project to recommended settings, decline. If a pull ever complains that local changes to the project would be overwritten, run `git restore NoblesTools.xcodeproj` and pull again.
 
 The core logic lives in the `NoblesKit` Swift package and is tested on its own:
 

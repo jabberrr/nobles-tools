@@ -119,7 +119,7 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 
 ## Building and testing
 
-- macOS: `brew install xcodegen && xcodegen generate && open NoblesTools.xcodeproj`. To run on a device, set a development team on both targets.
+- macOS: pull, then `open NoblesTools.xcodeproj`. The committed project runs on a simulator with no setup. For a device, put `DEVELOPMENT_TEAM = …` in the gitignored `Config/Local.xcconfig`. After changing `project.yml` locally, regenerate with `xcodegen generate`, or push and let CI do it.
 - Package tests: `swift test --package-path NoblesKit`.
 - **Linux or cloud sandbox (no Xcode):** NoblesKit can still be built and tested with Docker:
   ```sh
@@ -128,7 +128,7 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
   docker run --rm -v "$PWD/NoblesKit:/pkg" -w /pkg swift:6.1-noble swift test
   ```
   The App, Widgets and Shared targets (SwiftUI/WidgetKit/AppIntents) only compile in CI on macOS.
-- CI builds with `xcodebuild -scheme NoblesTools -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`. As of 2026-10-25 the `macos-15` runner's latest stable Xcode is **26.3, with the iOS 26.2 SDK**. A full CI run takes about 3 minutes.
+- CI builds with `xcodebuild build -project NoblesTools.xcodeproj -scheme NoblesTools -destination 'generic/platform=iOS Simulator'`. There's no signing override, so the build proves a fresh clone builds as-is. Then `.github/scripts/commit-xcode-project.sh` commits the regenerated project. When the branch moves mid-run, the script regenerates from the new tip instead of replaying an older project. As of 2026-10-25 the `macos-15` runner's latest stable Xcode is **26.3, with the iOS 26.2 SDK**. A full CI run takes about 3 minutes.
 - **Watching CI from the sandbox:** the repo is public, so `curl https://api.github.com/repos/jabberrr/nobles-tools/actions/runs/<id>` works. Poll it in a background `until` loop rather than sleeping. Read failure logs with `mcp__github__get_job_logs`.
 - **Intermediate commits:** add `[skip ci]` to the commit message when pushing work-in-progress that isn't meant to build yet. It skips every push-triggered workflow.
 
@@ -174,3 +174,4 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
   - CI's macOS job now builds with the project's real signing settings, as a fresh clone would. That build is verified to succeed for the simulator with no development team.
   - CI then commits `NoblesTools.xcodeproj`, the Info.plists and the entitlements whenever they change.
   - Signing moved to `Config/Signing.xcconfig`, plus the gitignored `Config/Local.xcconfig`.
+  - A critic pass hardened the commit step (`.github/scripts/commit-xcode-project.sh`). It regenerates on push races, skips tags and deleted branches, and commits every generated file. Tested against a local bare repo with a fake xcodegen.
