@@ -24,6 +24,8 @@ jobs:
     name: iOS build + NoblesKit tests (macOS)
     runs-on: macos-15
     timeout-minutes: 30
+    permissions:
+      contents: write # to commit the regenerated Xcode project
     steps:
       - uses: actions/checkout@v5
 
@@ -41,6 +43,7 @@ jobs:
       - name: Test NoblesKit
         run: swift test --package-path NoblesKit
 
+      # Uses the project's own signing settings, as a fresh clone opened in Xcode would.
       - name: Build app and widget extension
         run: |
           xcodebuild build \
@@ -48,5 +51,20 @@ jobs:
             -scheme NoblesTools \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build/DerivedData \
-            -quiet \
-            CODE_SIGNING_ALLOWED=NO
+            -quiet
+
+      # Keeps the committed project in sync with project.yml, so a pull is all it takes to open
+      # the app in Xcode. Pushes made with GITHUB_TOKEN don't trigger workflows.
+      - name: Commit the regenerated Xcode project
+        if: github.event_name == 'push'
+        run: |
+          git add NoblesTools.xcodeproj App/Info.plist App/NoblesTools.entitlements Widgets/Info.plist Widgets/NoblesWidgets.entitlements
+          if git diff --cached --quiet; then
+            echo "The committed Xcode project is up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898099+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Regenerate Xcode project from project.yml [skip ci]"
+          git push origin "HEAD:$GITHUB_REF_NAME" ||
+            echo "::warning::$GITHUB_REF_NAME moved during this run; the newer run commits the project."

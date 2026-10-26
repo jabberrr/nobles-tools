@@ -1,11 +1,7 @@
-# Xcode (the project, Info.plists and entitlements are generated from project.yml by XcodeGen)
-*.xcodeproj
-App/Info.plist
-App/*.entitlements
-Widgets/Info.plist
-Widgets/*.entitlements
-*.xcworkspace
+# Xcode. NoblesTools.xcodeproj, the Info.plists and entitlements are generated from project.yml
+# by CI and committed; only per-user state is ignored.
 xcuserdata/
+Config/Local.xcconfig
 DerivedData/
 build/
 

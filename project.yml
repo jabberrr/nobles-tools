@@ -1,5 +1,5 @@
-# XcodeGen spec for Nobles Tools. Generate the project with `xcodegen generate`;
-# the .xcodeproj itself is not checked in.
+# XcodeGen spec for Nobles Tools: the source of truth for the Xcode project. CI regenerates
+# NoblesTools.xcodeproj from this file and commits it, so edit settings here, not in Xcode.
 name: NoblesTools
 
 options:
@@ -7,14 +7,19 @@ options:
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
+  # Matches CI's Xcode, so opening the project doesn't offer to "update" (and edit) it.
+  xcodeVersion: "26.3"
+
+# The development team comes from an optional, gitignored Config/Local.xcconfig.
+configFiles:
+  Debug: Config/Signing.xcconfig
+  Release: Config/Signing.xcconfig
 
 settings:
   base:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
-    # Set to your Apple Developer Team ID (or pick a team in Xcode) to run on a device.
-    DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
     TARGETED_DEVICE_FAMILY: "1,2"
     ENABLE_PREVIEWS: YES
