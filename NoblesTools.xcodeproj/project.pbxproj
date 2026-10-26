@@ -1,0 +1,720 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		023864092E9CCD9B04544DF6 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5830B591DC7CB8F48A685C /* PreviewData.swift */; };
+		078FE43DF2A5CE86243D3C8F /* CountdownWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC1CE01F355EA8F5D7212FE /* CountdownWidgetView.swift */; };
+		0CC789C1DFA39CD1DDBCE2BA /* NoblesWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55049156F16DE494AAB5AD62 /* NoblesWidgetsBundle.swift */; };
+		12CBA7884892282FF566F0DF /* DesignEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26B8293DA3FCB8311B616183 /* DesignEditorView.swift */; };
+		1418B0BC8414484518550711 /* MenuWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE28073558D23F28106F0F7 /* MenuWidgetView.swift */; };
+		1932DF7A26BB22CF5F8C11D4 /* MenuWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE28073558D23F28106F0F7 /* MenuWidgetView.swift */; };
+		1CC41ABAE161E83A06A7B3DB /* ScoresWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA9CC3030C6DD97F2E962CBA /* ScoresWidget.swift */; };
+		27F6E9A9CDF8306E41F7F181 /* DesignLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7670635DA0563D092F5C62F2 /* DesignLibrary.swift */; };
+		29C40A9D502EA086BDB65618 /* SchoolFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D0D676A69D4CB987E2DB75E /* SchoolFormat.swift */; };
+		2BEDEDFF38D75FB8F9DD944F /* MenuWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9019A1B0F6375080CF3A702E /* MenuWidget.swift */; };
+		2F3554FAD6FCB7F7046F4DBC /* CountdownSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADCCEEEC683C3B0793403BF5 /* CountdownSnapshot.swift */; };
+		31A70288185A635CA434BA91 /* WidgetDesign+Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B1971106FACBCB9ED766A3 /* WidgetDesign+Content.swift */; };
+		3235170F03891F932344A0F6 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD002102B6E725A991D5A32 /* WidgetIntents.swift */; };
+		3CCD5E925536B3DCBB909266 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 08FF515C84F8ABB200F048C6 /* Assets.xcassets */; };
+		59029B519EF816DD0D052778 /* CalendarEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32C57B685E3B3A6FFF4A8A0 /* CalendarEditorView.swift */; };
+		5AE8D4891E68A993D8F35FB2 /* NoblesWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B8DD80AF53AF834A03B17A84 /* NoblesWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		5BADB3B6AEA01DAF35086B23 /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADC1EC6190C0B8B049E2B00 /* DeepLink.swift */; };
+		5F56EAC6E8B92BA88D22991B /* CountdownSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32FCF2FF8005DE646C0AC35 /* CountdownSettingsSection.swift */; };
+		5F9E0A013E7752731D02C5D8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4566EE27C2C7546346FFEDF6 /* SettingsView.swift */; };
+		6A68547D66919D8B13ED9D4A /* CountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94EE756DB4323BA39A148536 /* CountdownWidget.swift */; };
+		6CDF5F56ACAD928B3CC41B3C /* Scores+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8CF228B8104E15A221284 /* Scores+Display.swift */; };
+		6DB3C961B58E03BE7980E6F2 /* CountdownSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADCCEEEC683C3B0793403BF5 /* CountdownSnapshot.swift */; };
+		73C66311926BDCB34A7F6184 /* ScoresWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */; };
+		815762789AD853D498187026 /* DesignPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = E159999D57E7A167320B8E16 /* DesignPreview.swift */; };
+		87085D6EED0C99F7CE542ADE /* CountdownWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC1CE01F355EA8F5D7212FE /* CountdownWidgetView.swift */; };
+		8CA8EC28221863E1E496B397 /* NoblesKit in Frameworks */ = {isa = PBXBuildFile; productRef = D4B88FF741D38EA037429B1C /* NoblesKit */; };
+		97E072E8A7DD7F537721AF24 /* Theme+SwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */; };
+		982D5A9A95465277B4564730 /* WidgetBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D3D9BC3080A7906BE9F2E2 /* WidgetBackground.swift */; };
+		9AA43E3C5434E5F62F190311 /* WidgetComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1317E033DD7378C1E9855A17 /* WidgetComponents.swift */; };
+		A277DC9405C569A70CEC3800 /* Scores+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8CF228B8104E15A221284 /* Scores+Display.swift */; };
+		ADC1CFC7F579438384BC0A4D /* DesignListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BA211C76F9856DAE483410 /* DesignListView.swift */; };
+		B3C6E44108448E9ACF4B3EF5 /* NoblesKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1E106189296587F9719029D0 /* NoblesKit */; };
+		BDF54BF1228CC1442F52C62F /* EditorComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52BAEB9FA88CDCAA187E5245 /* EditorComponents.swift */; };
+		C16DBB719BF417B820C8123B /* ScoresWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */; };
+		C5032F688B0BA361C0158B2E /* WidgetDesign+Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B1971106FACBCB9ED766A3 /* WidgetDesign+Content.swift */; };
+		C5467E40DE217231C2D132B7 /* EditorBindings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6349A17AAE94CBB3144D2E4F /* EditorBindings.swift */; };
+		CB4ECFE12B2C52B259790241 /* DesignEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66AA418C91E9CA3ADD3D637A /* DesignEntities.swift */; };
+		D2AD1B55651BD384BFA566A3 /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADC1EC6190C0B8B049E2B00 /* DeepLink.swift */; };
+		D43BD2D35DE47EFAD6D119B1 /* NoblesToolsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C6B744B4477004C10C5BB50 /* NoblesToolsApp.swift */; };
+		D4C2606B59603AF8AF580F2B /* SchoolFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D0D676A69D4CB987E2DB75E /* SchoolFormat.swift */; };
+		D81C55535E22209CAA7E0DA6 /* Theme+SwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */; };
+		DD9345C60C9A1E6B961F6330 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ABEF95F8453392472EB3B8DB /* SwiftUI.framework */; };
+		E47D3265226CC85C4AF16171 /* WidgetPreviewFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1011F678E961CB529F8E79 /* WidgetPreviewFrame.swift */; };
+		E51F55B4F24B73CD61526BE9 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 706150FDE5F19A20DE169451 /* WidgetKit.framework */; };
+		E7020F842409BA85F94B50BD /* ScoresSettingsSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED23AA17C6B61D6C485DCABF /* ScoresSettingsSections.swift */; };
+		E96F98874878B6AC0AA850DF /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 706150FDE5F19A20DE169451 /* WidgetKit.framework */; };
+		EAA8128C6B897D656D71D496 /* AppearanceSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 927E73A6FB27A1244D518A22 /* AppearanceSection.swift */; };
+		EBF49AD57954905AC64EC8C4 /* WidgetBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D3D9BC3080A7906BE9F2E2 /* WidgetBackground.swift */; };
+		F00B21D7A51DC2FBB77E7897 /* WidgetSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AED143B9D1F8EF61F4B1134 /* WidgetSupport.swift */; };
+		F73AA7E74FC242A2D9D1294E /* MenuSettingsSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DACBA333C3E49C9E3EBFF3 /* MenuSettingsSections.swift */; };
+		F96F9C2FA9B9741BCF11369B /* WidgetComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1317E033DD7378C1E9855A17 /* WidgetComponents.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0B9775F8EFEF1AF3FBE40B4A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3C1D33DBC0B7B3E788AB78F3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 335B2DFB93C23B3C9B649C86;
+			remoteInfo = NoblesWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AC141B3BE98DB3C7A3D228E2 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5AE8D4891E68A993D8F35FB2 /* NoblesWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		08FF515C84F8ABB200F048C6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0BC1CE01F355EA8F5D7212FE /* CountdownWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownWidgetView.swift; sourceTree = "<group>"; };
+		1317E033DD7378C1E9855A17 /* WidgetComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetComponents.swift; sourceTree = "<group>"; };
+		1DC9684E2CB7ED5FC08ADBC5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		26B8293DA3FCB8311B616183 /* DesignEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignEditorView.swift; sourceTree = "<group>"; };
+		2C6B744B4477004C10C5BB50 /* NoblesToolsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoblesToolsApp.swift; sourceTree = "<group>"; };
+		2F1011F678E961CB529F8E79 /* WidgetPreviewFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPreviewFrame.swift; sourceTree = "<group>"; };
+		3D0D676A69D4CB987E2DB75E /* SchoolFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolFormat.swift; sourceTree = "<group>"; };
+		4566EE27C2C7546346FFEDF6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		52BAEB9FA88CDCAA187E5245 /* EditorComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorComponents.swift; sourceTree = "<group>"; };
+		55049156F16DE494AAB5AD62 /* NoblesWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoblesWidgetsBundle.swift; sourceTree = "<group>"; };
+		59DACBA333C3E49C9E3EBFF3 /* MenuSettingsSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuSettingsSections.swift; sourceTree = "<group>"; };
+		630CB637D5FAC5B8762E2AD4 /* NoblesKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NoblesKit; path = NoblesKit; sourceTree = SOURCE_ROOT; };
+		6349A17AAE94CBB3144D2E4F /* EditorBindings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorBindings.swift; sourceTree = "<group>"; };
+		66AA418C91E9CA3ADD3D637A /* DesignEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignEntities.swift; sourceTree = "<group>"; };
+		706150FDE5F19A20DE169451 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		7666CA38477159260C75E1EC /* NoblesTools.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NoblesTools.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7670635DA0563D092F5C62F2 /* DesignLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignLibrary.swift; sourceTree = "<group>"; };
+		7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoresWidgetView.swift; sourceTree = "<group>"; };
+		7AED143B9D1F8EF61F4B1134 /* WidgetSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSupport.swift; sourceTree = "<group>"; };
+		7DE28073558D23F28106F0F7 /* MenuWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuWidgetView.swift; sourceTree = "<group>"; };
+		86D3D9BC3080A7906BE9F2E2 /* WidgetBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetBackground.swift; sourceTree = "<group>"; };
+		9019A1B0F6375080CF3A702E /* MenuWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuWidget.swift; sourceTree = "<group>"; };
+		927E73A6FB27A1244D518A22 /* AppearanceSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSection.swift; sourceTree = "<group>"; };
+		929C86B6CB1340A405C83171 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		94EE756DB4323BA39A148536 /* CountdownWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownWidget.swift; sourceTree = "<group>"; };
+		95BA211C76F9856DAE483410 /* DesignListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignListView.swift; sourceTree = "<group>"; };
+		9DD002102B6E725A991D5A32 /* WidgetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetIntents.swift; sourceTree = "<group>"; };
+		9FF8CF228B8104E15A221284 /* Scores+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scores+Display.swift"; sourceTree = "<group>"; };
+		ABEF95F8453392472EB3B8DB /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		ADCCEEEC683C3B0793403BF5 /* CountdownSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownSnapshot.swift; sourceTree = "<group>"; };
+		B1B1971106FACBCB9ED766A3 /* WidgetDesign+Content.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WidgetDesign+Content.swift"; sourceTree = "<group>"; };
+		B32C57B685E3B3A6FFF4A8A0 /* CalendarEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarEditorView.swift; sourceTree = "<group>"; };
+		B32FCF2FF8005DE646C0AC35 /* CountdownSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownSettingsSection.swift; sourceTree = "<group>"; };
+		B8DD80AF53AF834A03B17A84 /* NoblesWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = NoblesWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C490D68C7BBDD5EAF0DC24F2 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		C4EE6229B19F8453AC09FAF7 /* NoblesWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoblesWidgets.entitlements; sourceTree = "<group>"; };
+		CA9CC3030C6DD97F2E962CBA /* ScoresWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoresWidget.swift; sourceTree = "<group>"; };
+		E159999D57E7A167320B8E16 /* DesignPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignPreview.swift; sourceTree = "<group>"; };
+		EADC1EC6190C0B8B049E2B00 /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLink.swift; sourceTree = "<group>"; };
+		ED23AA17C6B61D6C485DCABF /* ScoresSettingsSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoresSettingsSections.swift; sourceTree = "<group>"; };
+		EE5830B591DC7CB8F48A685C /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
+		F3E05BDCD0B0151D8E0AAC28 /* NoblesTools.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoblesTools.entitlements; sourceTree = "<group>"; };
+		FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Theme+SwiftUI.swift"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0F6661087073108CC0726C21 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B3C6E44108448E9ACF4B3EF5 /* NoblesKit in Frameworks */,
+				E96F98874878B6AC0AA850DF /* WidgetKit.framework in Frameworks */,
+				DD9345C60C9A1E6B961F6330 /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFD1110E88DF746CDE1BB7C0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8CA8EC28221863E1E496B397 /* NoblesKit in Frameworks */,
+				E51F55B4F24B73CD61526BE9 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		012673B7CD4D03111B481449 /* Previews */ = {
+			isa = PBXGroup;
+			children = (
+				E159999D57E7A167320B8E16 /* DesignPreview.swift */,
+				2F1011F678E961CB529F8E79 /* WidgetPreviewFrame.swift */,
+			);
+			path = Previews;
+			sourceTree = "<group>";
+		};
+		022B78FEC1664038E39821C0 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				C490D68C7BBDD5EAF0DC24F2 /* Signing.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		0A2E34BB56BEE51CFB205FF0 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				08FF515C84F8ABB200F048C6 /* Assets.xcassets */,
+				7670635DA0563D092F5C62F2 /* DesignLibrary.swift */,
+				929C86B6CB1340A405C83171 /* Info.plist */,
+				F3E05BDCD0B0151D8E0AAC28 /* NoblesTools.entitlements */,
+				2C6B744B4477004C10C5BB50 /* NoblesToolsApp.swift */,
+				EE5830B591DC7CB8F48A685C /* PreviewData.swift */,
+				0ECBA3BD5EAE35456F64A8F9 /* Designs */,
+				EC6694052E428DAF5D47EC90 /* Editor */,
+				012673B7CD4D03111B481449 /* Previews */,
+				B5EA5C67EFE619C532E285C1 /* Settings */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		0ECBA3BD5EAE35456F64A8F9 /* Designs */ = {
+			isa = PBXGroup;
+			children = (
+				95BA211C76F9856DAE483410 /* DesignListView.swift */,
+			);
+			path = Designs;
+			sourceTree = "<group>";
+		};
+		281E102BA838FBA758D937D6 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				ADCCEEEC683C3B0793403BF5 /* CountdownSnapshot.swift */,
+				0BC1CE01F355EA8F5D7212FE /* CountdownWidgetView.swift */,
+				EADC1EC6190C0B8B049E2B00 /* DeepLink.swift */,
+				7DE28073558D23F28106F0F7 /* MenuWidgetView.swift */,
+				3D0D676A69D4CB987E2DB75E /* SchoolFormat.swift */,
+				9FF8CF228B8104E15A221284 /* Scores+Display.swift */,
+				7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */,
+				FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */,
+				86D3D9BC3080A7906BE9F2E2 /* WidgetBackground.swift */,
+				1317E033DD7378C1E9855A17 /* WidgetComponents.swift */,
+				B1B1971106FACBCB9ED766A3 /* WidgetDesign+Content.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		38ACEADFF4EB96BA3C1D4D3F = {
+			isa = PBXGroup;
+			children = (
+				0A2E34BB56BEE51CFB205FF0 /* App */,
+				022B78FEC1664038E39821C0 /* Config */,
+				A4C4EBDF1664F31F31F21AB5 /* Packages */,
+				281E102BA838FBA758D937D6 /* Shared */,
+				E7EB077EC4CC05137E0407D6 /* Widgets */,
+				9F9FBE83E2F34D3D13AB732F /* Frameworks */,
+				B7CCCB263D80DF6AB82780D2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9C3E27BFA82A0F9CBEB97242 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				66AA418C91E9CA3ADD3D637A /* DesignEntities.swift */,
+				9DD002102B6E725A991D5A32 /* WidgetIntents.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		9F9FBE83E2F34D3D13AB732F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				ABEF95F8453392472EB3B8DB /* SwiftUI.framework */,
+				706150FDE5F19A20DE169451 /* WidgetKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A4C4EBDF1664F31F31F21AB5 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				630CB637D5FAC5B8762E2AD4 /* NoblesKit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		B5EA5C67EFE619C532E285C1 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				B32C57B685E3B3A6FFF4A8A0 /* CalendarEditorView.swift */,
+				4566EE27C2C7546346FFEDF6 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		B7CCCB263D80DF6AB82780D2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7666CA38477159260C75E1EC /* NoblesTools.app */,
+				B8DD80AF53AF834A03B17A84 /* NoblesWidgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E7EB077EC4CC05137E0407D6 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				94EE756DB4323BA39A148536 /* CountdownWidget.swift */,
+				1DC9684E2CB7ED5FC08ADBC5 /* Info.plist */,
+				9019A1B0F6375080CF3A702E /* MenuWidget.swift */,
+				C4EE6229B19F8453AC09FAF7 /* NoblesWidgets.entitlements */,
+				55049156F16DE494AAB5AD62 /* NoblesWidgetsBundle.swift */,
+				CA9CC3030C6DD97F2E962CBA /* ScoresWidget.swift */,
+				7AED143B9D1F8EF61F4B1134 /* WidgetSupport.swift */,
+				9C3E27BFA82A0F9CBEB97242 /* Intents */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+		EC6694052E428DAF5D47EC90 /* Editor */ = {
+			isa = PBXGroup;
+			children = (
+				927E73A6FB27A1244D518A22 /* AppearanceSection.swift */,
+				B32FCF2FF8005DE646C0AC35 /* CountdownSettingsSection.swift */,
+				26B8293DA3FCB8311B616183 /* DesignEditorView.swift */,
+				6349A17AAE94CBB3144D2E4F /* EditorBindings.swift */,
+				52BAEB9FA88CDCAA187E5245 /* EditorComponents.swift */,
+				59DACBA333C3E49C9E3EBFF3 /* MenuSettingsSections.swift */,
+				ED23AA17C6B61D6C485DCABF /* ScoresSettingsSections.swift */,
+			);
+			path = Editor;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		335B2DFB93C23B3C9B649C86 /* NoblesWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D0350D5E83391C96383189D5 /* Build configuration list for PBXNativeTarget "NoblesWidgets" */;
+			buildPhases = (
+				00AA9B2FDCD56CC790425196 /* Sources */,
+				0F6661087073108CC0726C21 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NoblesWidgets;
+			packageProductDependencies = (
+				1E106189296587F9719029D0 /* NoblesKit */,
+			);
+			productName = NoblesWidgets;
+			productReference = B8DD80AF53AF834A03B17A84 /* NoblesWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		4EDF433FBF7B19724B06676D /* NoblesTools */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 06BDBD7479D635239917ED76 /* Build configuration list for PBXNativeTarget "NoblesTools" */;
+			buildPhases = (
+				529308377185A2D140D3FA31 /* Sources */,
+				F91BEEFBB9185A6323912ED2 /* Resources */,
+				EFD1110E88DF746CDE1BB7C0 /* Frameworks */,
+				AC141B3BE98DB3C7A3D228E2 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B8E5E53F472C1F9D440D1D0B /* PBXTargetDependency */,
+			);
+			name = NoblesTools;
+			packageProductDependencies = (
+				D4B88FF741D38EA037429B1C /* NoblesKit */,
+			);
+			productName = NoblesTools;
+			productReference = 7666CA38477159260C75E1EC /* NoblesTools.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3C1D33DBC0B7B3E788AB78F3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					335B2DFB93C23B3C9B649C86 = {
+						ProvisioningStyle = Automatic;
+					};
+					4EDF433FBF7B19724B06676D = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 09B23C56247CC1DEAB3D1B92 /* Build configuration list for PBXProject "NoblesTools" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 38ACEADFF4EB96BA3C1D4D3F;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E8489D4104FC9172A510C244 /* XCLocalSwiftPackageReference "NoblesKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B7CCCB263D80DF6AB82780D2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4EDF433FBF7B19724B06676D /* NoblesTools */,
+				335B2DFB93C23B3C9B649C86 /* NoblesWidgets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F91BEEFBB9185A6323912ED2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3CCD5E925536B3DCBB909266 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		00AA9B2FDCD56CC790425196 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F3554FAD6FCB7F7046F4DBC /* CountdownSnapshot.swift in Sources */,
+				6A68547D66919D8B13ED9D4A /* CountdownWidget.swift in Sources */,
+				078FE43DF2A5CE86243D3C8F /* CountdownWidgetView.swift in Sources */,
+				D2AD1B55651BD384BFA566A3 /* DeepLink.swift in Sources */,
+				CB4ECFE12B2C52B259790241 /* DesignEntities.swift in Sources */,
+				2BEDEDFF38D75FB8F9DD944F /* MenuWidget.swift in Sources */,
+				1418B0BC8414484518550711 /* MenuWidgetView.swift in Sources */,
+				0CC789C1DFA39CD1DDBCE2BA /* NoblesWidgetsBundle.swift in Sources */,
+				D4C2606B59603AF8AF580F2B /* SchoolFormat.swift in Sources */,
+				6CDF5F56ACAD928B3CC41B3C /* Scores+Display.swift in Sources */,
+				1CC41ABAE161E83A06A7B3DB /* ScoresWidget.swift in Sources */,
+				73C66311926BDCB34A7F6184 /* ScoresWidgetView.swift in Sources */,
+				D81C55535E22209CAA7E0DA6 /* Theme+SwiftUI.swift in Sources */,
+				EBF49AD57954905AC64EC8C4 /* WidgetBackground.swift in Sources */,
+				9AA43E3C5434E5F62F190311 /* WidgetComponents.swift in Sources */,
+				31A70288185A635CA434BA91 /* WidgetDesign+Content.swift in Sources */,
+				3235170F03891F932344A0F6 /* WidgetIntents.swift in Sources */,
+				F00B21D7A51DC2FBB77E7897 /* WidgetSupport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		529308377185A2D140D3FA31 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EAA8128C6B897D656D71D496 /* AppearanceSection.swift in Sources */,
+				59029B519EF816DD0D052778 /* CalendarEditorView.swift in Sources */,
+				5F56EAC6E8B92BA88D22991B /* CountdownSettingsSection.swift in Sources */,
+				6DB3C961B58E03BE7980E6F2 /* CountdownSnapshot.swift in Sources */,
+				87085D6EED0C99F7CE542ADE /* CountdownWidgetView.swift in Sources */,
+				5BADB3B6AEA01DAF35086B23 /* DeepLink.swift in Sources */,
+				12CBA7884892282FF566F0DF /* DesignEditorView.swift in Sources */,
+				27F6E9A9CDF8306E41F7F181 /* DesignLibrary.swift in Sources */,
+				ADC1CFC7F579438384BC0A4D /* DesignListView.swift in Sources */,
+				815762789AD853D498187026 /* DesignPreview.swift in Sources */,
+				C5467E40DE217231C2D132B7 /* EditorBindings.swift in Sources */,
+				BDF54BF1228CC1442F52C62F /* EditorComponents.swift in Sources */,
+				F73AA7E74FC242A2D9D1294E /* MenuSettingsSections.swift in Sources */,
+				1932DF7A26BB22CF5F8C11D4 /* MenuWidgetView.swift in Sources */,
+				D43BD2D35DE47EFAD6D119B1 /* NoblesToolsApp.swift in Sources */,
+				023864092E9CCD9B04544DF6 /* PreviewData.swift in Sources */,
+				29C40A9D502EA086BDB65618 /* SchoolFormat.swift in Sources */,
+				A277DC9405C569A70CEC3800 /* Scores+Display.swift in Sources */,
+				E7020F842409BA85F94B50BD /* ScoresSettingsSections.swift in Sources */,
+				C16DBB719BF417B820C8123B /* ScoresWidgetView.swift in Sources */,
+				5F9E0A013E7752731D02C5D8 /* SettingsView.swift in Sources */,
+				97E072E8A7DD7F537721AF24 /* Theme+SwiftUI.swift in Sources */,
+				982D5A9A95465277B4564730 /* WidgetBackground.swift in Sources */,
+				F96F9C2FA9B9741BCF11369B /* WidgetComponents.swift in Sources */,
+				C5032F688B0BA361C0158B2E /* WidgetDesign+Content.swift in Sources */,
+				E47D3265226CC85C4AF16171 /* WidgetPreviewFrame.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B8E5E53F472C1F9D440D1D0B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 335B2DFB93C23B3C9B649C86 /* NoblesWidgets */;
+			targetProxy = 0B9775F8EFEF1AF3FBE40B4A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		11C55BCAFFBE8775B384D73D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/NoblesTools.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5B80575F66CD2DEED0B85F69 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/NoblesTools.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		85701BAF133F707709312BF7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Widgets/NoblesWidgets.entitlements;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools.widgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		8AF898CA46147CC998075DBF /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C490D68C7BBDD5EAF0DC24F2 /* Signing.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9257003FB95BE276E43FABA6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Widgets/NoblesWidgets.entitlements;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools.widgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		96568375EAA498158CA47179 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C490D68C7BBDD5EAF0DC24F2 /* Signing.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		06BDBD7479D635239917ED76 /* Build configuration list for PBXNativeTarget "NoblesTools" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11C55BCAFFBE8775B384D73D /* Debug */,
+				5B80575F66CD2DEED0B85F69 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		09B23C56247CC1DEAB3D1B92 /* Build configuration list for PBXProject "NoblesTools" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				96568375EAA498158CA47179 /* Debug */,
+				8AF898CA46147CC998075DBF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D0350D5E83391C96383189D5 /* Build configuration list for PBXNativeTarget "NoblesWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9257003FB95BE276E43FABA6 /* Debug */,
+				85701BAF133F707709312BF7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		E8489D4104FC9172A510C244 /* XCLocalSwiftPackageReference "NoblesKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = NoblesKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1E106189296587F9719029D0 /* NoblesKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NoblesKit;
+		};
+		D4B88FF741D38EA037429B1C /* NoblesKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NoblesKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 3C1D33DBC0B7B3E788AB78F3 /* Project object */;
+}
