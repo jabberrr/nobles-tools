@@ -97,11 +97,11 @@
 		52BAEB9FA88CDCAA187E5245 /* EditorComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorComponents.swift; sourceTree = "<group>"; };
 		55049156F16DE494AAB5AD62 /* NoblesWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoblesWidgetsBundle.swift; sourceTree = "<group>"; };
 		59DACBA333C3E49C9E3EBFF3 /* MenuSettingsSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuSettingsSections.swift; sourceTree = "<group>"; };
-		630CB637D5FAC5B8762E2AD4 /* NoblesKit */ = {isa = PBXFileReference; lastKnownFileType = folder; path = NoblesKit; sourceTree = SOURCE_ROOT; };
+		630CB637D5FAC5B8762E2AD4 /* NoblesKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NoblesKit; path = NoblesKit; sourceTree = SOURCE_ROOT; };
 		6349A17AAE94CBB3144D2E4F /* EditorBindings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorBindings.swift; sourceTree = "<group>"; };
 		66AA418C91E9CA3ADD3D637A /* DesignEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignEntities.swift; sourceTree = "<group>"; };
 		706150FDE5F19A20DE169451 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		7666CA38477159260C75E1EC /* NoblesTools.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NoblesTools.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7666CA38477159260C75E1EC /* NoblesTools.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = NoblesTools.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7670635DA0563D092F5C62F2 /* DesignLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignLibrary.swift; sourceTree = "<group>"; };
 		7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoresWidgetView.swift; sourceTree = "<group>"; };
 		7AED143B9D1F8EF61F4B1134 /* WidgetSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSupport.swift; sourceTree = "<group>"; };
@@ -119,7 +119,7 @@
 		B1B1971106FACBCB9ED766A3 /* WidgetDesign+Content.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WidgetDesign+Content.swift"; sourceTree = "<group>"; };
 		B32C57B685E3B3A6FFF4A8A0 /* CalendarEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarEditorView.swift; sourceTree = "<group>"; };
 		B32FCF2FF8005DE646C0AC35 /* CountdownSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownSettingsSection.swift; sourceTree = "<group>"; };
-		B8DD80AF53AF834A03B17A84 /* NoblesWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NoblesWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B8DD80AF53AF834A03B17A84 /* NoblesWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = NoblesWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C490D68C7BBDD5EAF0DC24F2 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		C4EE6229B19F8453AC09FAF7 /* NoblesWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoblesWidgets.entitlements; sourceTree = "<group>"; };
 		CA9CC3030C6DD97F2E962CBA /* ScoresWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoresWidget.swift; sourceTree = "<group>"; };
@@ -472,13 +472,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = App/NoblesTools.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 6W4ZKDHBVD;
 				INFOPLIST_FILE = App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -491,13 +490,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = App/NoblesTools.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 6W4ZKDHBVD;
 				INFOPLIST_FILE = App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -507,14 +505,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Widgets/NoblesWidgets.entitlements;
-				DEVELOPMENT_TEAM = 6W4ZKDHBVD;
 				INFOPLIST_FILE = Widgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools.widgets;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -587,14 +584,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Widgets/NoblesWidgets.entitlements;
-				DEVELOPMENT_TEAM = 6W4ZKDHBVD;
 				INFOPLIST_FILE = Widgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools.widgets;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
