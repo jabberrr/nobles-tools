@@ -18,11 +18,17 @@ Widget kinds (`WidgetKind`):
 
 | Kind | Content | Families |
 | --- | --- | --- |
-| `menu` | Flik dining menu for Lunch, Dinner or "Next Meal" (auto-advances as each meal ends). Filters (`MenuFilter`): everything, entrées only, no salads/soups, only chosen stations ("Just…"), everything except chosen stations. Toggle for station headers. "Just Entrées" shows nothing (with a message) when no entrée station exists. | systemSmall/Medium/Large, accessoryRectangular, accessoryInline |
-| `countdown` | Days left in the current quarter, semester or school year (`Term.Kind`), counted as school days, weekdays or calendar days. Number, ring or bar style. | systemSmall/Medium/Large, accessoryCircular/Rectangular/Inline |
-| `scores` | Recent results and upcoming games for Nobles teams, filtered by sport, with a varsity-only option. | systemSmall/Medium/Large, accessoryRectangular |
+| `menu` | Flik dining menu for Lunch, Dinner or "Next Meal" (auto-advances as each meal ends). Filters (`MenuFilter`): everything, entrées only, no salads/soups, only chosen stations ("Just…"), everything except chosen stations. Toggle for station headers. A **featured dish** (`MenuConfiguration.featuredStation`: the first dish of a chosen station, or Automatic = first entrée) leads every size and is the only dish on Lock Screen sizes. A chosen station overrides the filter; Automatic follows it. "Just Entrées" shows nothing (with a message) when no entrée station exists. | all six: systemSmall/Medium/Large, accessoryCircular/Rectangular/Inline |
+| `countdown` | Days left in the current quarter, semester or school year (`Term.Kind`), counted as school days, weekdays or calendar days. Number, ring or bar style. | all six |
+| `scores` | Recent results and upcoming games for Nobles teams, filtered by sport, with a varsity-only option. | all six |
 
 All kinds share a `Theme`: palette, font style and background style.
+
+Visual language (Shared/):
+- A common header: an icon in an accent circle, the title, and a detail that shortens when space is tight.
+- Small uppercase section labels with icons.
+- Icons for stations (`Symbols.swift`, keyword-mapped), sports (`SportSymbol`) and terms (`Term.Kind.symbolName`).
+- Lists show fewer items in full plus "+N more", never truncated names. `MenuItem.shortName` and `Game.shortOpponent` provide short forms where space is tiny.
 
 ## Repository map
 
@@ -159,6 +165,11 @@ Identifiers:
 - In AppIntents types, use computed static properties (`static var title: LocalizedStringResource { "…" }`). Stored `static var` is a Swift 6 concurrency error.
 - **New persisted fields must decode with a default** (`container.decode(.key, or: default)` from `LenientDecoding.swift`), so designs saved by older builds keep loading.
 - Inside `extension Binding`, a bare `max(...)` or `min(...)` resolves as a dynamic member lookup. Write `Swift.max`. CI caught this once.
+- **Widget layout gotchas** (learned from the renders):
+  - Stacks can truncate wrapping text even when everything fits. Pin each wrapping `Text` with `.fixedSize(horizontal: false, vertical: true)`.
+  - Don't nest `ViewThatFits`: an outer one measures only the inner one's first child. Use `FirstFitting` (`TextFitting.swift`) with one flat list of variants.
+  - The system linear `Gauge` renders broken in ImageRenderer, so progress bars are drawn (`ProgressViews.swift`).
+  - The preview frame draws a stand-in for `AccessoryWidgetBackground` on circular Lock Screen previews.
 - Tests use swift-testing (`import Testing`, `@Test`, `#expect`). Never touch the network in tests: inject a fake `HTTPClient` (`Tests/NoblesKitTests/Support/FakeHTTPClient.swift`). Prefer the `real-*` fixtures.
 - Model enums expose `displayName` (and `symbolName` where useful) for UI. Keep UI strings in the models only when they are shared between app and widget.
 - The committed `NoblesTools.xcodeproj` is generated output. Change `project.yml`, and let CI regenerate the project (or run `xcodegen generate` on a Mac) rather than editing it in Xcode.
