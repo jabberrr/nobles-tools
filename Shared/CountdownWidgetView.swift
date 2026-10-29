@@ -55,6 +55,8 @@ struct CountdownWidgetView: View {
             }
             .padding(lineWidth + 9)
         }
+        // Square, so the padding keeps the count inside the ring rather than the wider frame.
+        .aspectRatio(1, contentMode: .fit)
     }
 
     /// "92% complete · ends Fri, Oct 30" on one line, shortened to "92% · ends Oct 30" to fit.
@@ -218,7 +220,11 @@ struct CountdownWidgetView: View {
                 VStack(alignment: .leading, spacing: 1) {
                     termName(countdown.term)
                         .font(isPrimary ? Font.headline : Font.subheadline.weight(.semibold))
-                    progressLine(countdown)
+                    // Short on every row, which leaves room for the unit beside it.
+                    Text(countdown.shortProgressText)
+                        .font(.caption)
+                        .foregroundStyle(colors.secondary)
+                        .lineLimit(1)
                 }
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 0) {
