@@ -2,13 +2,38 @@
 
 An iOS app for designing Home Screen and Lock Screen widgets for Noble and Greenough School.
 
-| Widget | Shows | Sizes |
-| --- | --- | --- |
-| **Dining Menu** | Lunch, dinner, or whichever meal is next, from the Flik dining menus. Styles: Everything, Just Entrées, No Salads or Soups, Just… (stations you pick), Everything Except… | Small, Medium, Large, Lock Screen rectangular & inline |
-| **Countdown** | Days left in the current quarter, semester or school year, counted as school days, weekdays or calendar days. Number, ring or bar style. | Small, Medium, Large, Lock Screen circular, rectangular & inline |
-| **Scores** | Recent Nobles results and upcoming games, filtered by sport. | Small, Medium, Large, Lock Screen rectangular |
+Every widget comes in all six sizes: Small, Medium and Large on the Home Screen, and circular, rectangular and inline on the Lock Screen.
+
+| Widget | Shows |
+| --- | --- |
+| **Dining Menu** | Lunch, dinner, or whichever meal is next, from the Flik dining menus. Styles: Everything, Just Entrées, No Salads or Soups, Just… (stations you pick), Everything Except…. A **featured dish** leads every size and is the one dish shown on the Lock Screen. You pick its station (Hot Entree, Vegan Entree, Soup…), or let it pick the first entrée. |
+| **Countdown** | Days left in the current quarter, semester or school year, counted as school days, weekdays or calendar days. Number, ring or bar style. |
+| **Scores** | Recent Nobles results and upcoming games, filtered by sport. |
 
 Every widget also has a theme (palette, font and background). Make as many designs as you like in the app, then add a Nobles Tools widget to your Home Screen, long-press it, choose **Edit Widget**, and pick a design.
+
+## Gallery
+
+These images are rendered by CI from the widgets' own views with sample data (`App/Previews/WidgetGallery.swift`). Every size and variant is in [`docs/widgets`](docs/widgets).
+
+<p>
+  <img src="docs/widgets/menu-lunch-small.png" width="202" alt="Dining Menu, small">
+  <img src="docs/widgets/menu-lunch-medium.png" width="396" alt="Dining Menu, medium">
+</p>
+<p>
+  <img src="docs/widgets/countdown-year-small.png" width="202" alt="Countdown, small">
+  <img src="docs/widgets/scores-medium.png" width="396" alt="Scores, medium">
+</p>
+<p>
+  <img src="docs/widgets/menu-halloween-sunset-medium.png" width="396" alt="Dining Menu in the Sunset theme">
+  <img src="docs/widgets/scores-crimson-small.png" width="202" alt="Scores in the Crimson theme">
+</p>
+<p>
+  <img src="docs/widgets/menu-lunch-lock-rectangular.png" width="248" alt="Dining Menu, Lock Screen rectangular">
+  <img src="docs/widgets/menu-lunch-lock-circular.png" width="152" alt="Dining Menu, Lock Screen circular">
+  <img src="docs/widgets/countdown-year-lock-circular.png" width="152" alt="Countdown, Lock Screen circular">
+  <img src="docs/widgets/scores-lock-inline.png" width="316" alt="Scores, Lock Screen inline">
+</p>
 
 ## Building
 
