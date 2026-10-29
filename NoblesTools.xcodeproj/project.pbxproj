@@ -21,6 +21,7 @@
 		31A70288185A635CA434BA91 /* WidgetDesign+Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B1971106FACBCB9ED766A3 /* WidgetDesign+Content.swift */; };
 		3235170F03891F932344A0F6 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD002102B6E725A991D5A32 /* WidgetIntents.swift */; };
 		3CCD5E925536B3DCBB909266 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 08FF515C84F8ABB200F048C6 /* Assets.xcassets */; };
+		4F9F0C36AA87BED175EBD740 /* WidgetSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC00D703EFCA97DB75DFFA1B /* WidgetSnapshotTests.swift */; };
 		59029B519EF816DD0D052778 /* CalendarEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32C57B685E3B3A6FFF4A8A0 /* CalendarEditorView.swift */; };
 		5AE8D4891E68A993D8F35FB2 /* NoblesWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B8DD80AF53AF834A03B17A84 /* NoblesWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5BADB3B6AEA01DAF35086B23 /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADC1EC6190C0B8B049E2B00 /* DeepLink.swift */; };
@@ -30,11 +31,13 @@
 		6CDF5F56ACAD928B3CC41B3C /* Scores+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8CF228B8104E15A221284 /* Scores+Display.swift */; };
 		6DB3C961B58E03BE7980E6F2 /* CountdownSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADCCEEEC683C3B0793403BF5 /* CountdownSnapshot.swift */; };
 		73C66311926BDCB34A7F6184 /* ScoresWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */; };
+		7F6A9E7696243D0FAA3FFD00 /* DesignWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4D089E1E8D3DAF884D4294 /* DesignWidgetContent.swift */; };
 		815762789AD853D498187026 /* DesignPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = E159999D57E7A167320B8E16 /* DesignPreview.swift */; };
 		87085D6EED0C99F7CE542ADE /* CountdownWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC1CE01F355EA8F5D7212FE /* CountdownWidgetView.swift */; };
 		8CA8EC28221863E1E496B397 /* NoblesKit in Frameworks */ = {isa = PBXBuildFile; productRef = D4B88FF741D38EA037429B1C /* NoblesKit */; };
 		97E072E8A7DD7F537721AF24 /* Theme+SwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */; };
 		982D5A9A95465277B4564730 /* WidgetBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D3D9BC3080A7906BE9F2E2 /* WidgetBackground.swift */; };
+		983132C5183FEB3D6ECC0B74 /* WidgetGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1241AB0E547E54EBDAC8C5A2 /* WidgetGallery.swift */; };
 		9AA43E3C5434E5F62F190311 /* WidgetComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1317E033DD7378C1E9855A17 /* WidgetComponents.swift */; };
 		A277DC9405C569A70CEC3800 /* Scores+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8CF228B8104E15A221284 /* Scores+Display.swift */; };
 		ADC1CFC7F579438384BC0A4D /* DesignListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BA211C76F9856DAE483410 /* DesignListView.swift */; };
@@ -68,6 +71,13 @@
 			remoteGlobalIDString = 335B2DFB93C23B3C9B649C86;
 			remoteInfo = NoblesWidgets;
 		};
+		87E88D2B85409C09E34CD3F3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3C1D33DBC0B7B3E788AB78F3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4EDF433FBF7B19724B06676D;
+			remoteInfo = NoblesTools;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -87,9 +97,11 @@
 /* Begin PBXFileReference section */
 		08FF515C84F8ABB200F048C6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0BC1CE01F355EA8F5D7212FE /* CountdownWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownWidgetView.swift; sourceTree = "<group>"; };
+		1241AB0E547E54EBDAC8C5A2 /* WidgetGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGallery.swift; sourceTree = "<group>"; };
 		1317E033DD7378C1E9855A17 /* WidgetComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetComponents.swift; sourceTree = "<group>"; };
 		1DC9684E2CB7ED5FC08ADBC5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		26B8293DA3FCB8311B616183 /* DesignEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignEditorView.swift; sourceTree = "<group>"; };
+		2C4D089E1E8D3DAF884D4294 /* DesignWidgetContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignWidgetContent.swift; sourceTree = "<group>"; };
 		2C6B744B4477004C10C5BB50 /* NoblesToolsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoblesToolsApp.swift; sourceTree = "<group>"; };
 		2F1011F678E961CB529F8E79 /* WidgetPreviewFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPreviewFrame.swift; sourceTree = "<group>"; };
 		3D0D676A69D4CB987E2DB75E /* SchoolFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolFormat.swift; sourceTree = "<group>"; };
@@ -115,11 +127,13 @@
 		9DD002102B6E725A991D5A32 /* WidgetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetIntents.swift; sourceTree = "<group>"; };
 		9FF8CF228B8104E15A221284 /* Scores+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scores+Display.swift"; sourceTree = "<group>"; };
 		ABEF95F8453392472EB3B8DB /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		AC00D703EFCA97DB75DFFA1B /* WidgetSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotTests.swift; sourceTree = "<group>"; };
 		ADCCEEEC683C3B0793403BF5 /* CountdownSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownSnapshot.swift; sourceTree = "<group>"; };
 		B1B1971106FACBCB9ED766A3 /* WidgetDesign+Content.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WidgetDesign+Content.swift"; sourceTree = "<group>"; };
 		B32C57B685E3B3A6FFF4A8A0 /* CalendarEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarEditorView.swift; sourceTree = "<group>"; };
 		B32FCF2FF8005DE646C0AC35 /* CountdownSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownSettingsSection.swift; sourceTree = "<group>"; };
 		B8DD80AF53AF834A03B17A84 /* NoblesWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = NoblesWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C005C9126285AF9403198B4C /* WidgetSnapshots.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WidgetSnapshots.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C490D68C7BBDD5EAF0DC24F2 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		C4EE6229B19F8453AC09FAF7 /* NoblesWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoblesWidgets.entitlements; sourceTree = "<group>"; };
 		CA9CC3030C6DD97F2E962CBA /* ScoresWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoresWidget.swift; sourceTree = "<group>"; };
@@ -158,6 +172,8 @@
 			isa = PBXGroup;
 			children = (
 				E159999D57E7A167320B8E16 /* DesignPreview.swift */,
+				2C4D089E1E8D3DAF884D4294 /* DesignWidgetContent.swift */,
+				1241AB0E547E54EBDAC8C5A2 /* WidgetGallery.swift */,
 				2F1011F678E961CB529F8E79 /* WidgetPreviewFrame.swift */,
 			);
 			path = Previews;
@@ -221,6 +237,7 @@
 				022B78FEC1664038E39821C0 /* Config */,
 				A4C4EBDF1664F31F31F21AB5 /* Packages */,
 				281E102BA838FBA758D937D6 /* Shared */,
+				B352086AFEE7C74AFFA2ADDD /* Snapshots */,
 				E7EB077EC4CC05137E0407D6 /* Widgets */,
 				9F9FBE83E2F34D3D13AB732F /* Frameworks */,
 				B7CCCB263D80DF6AB82780D2 /* Products */,
@@ -253,6 +270,14 @@
 			name = Packages;
 			sourceTree = "<group>";
 		};
+		B352086AFEE7C74AFFA2ADDD /* Snapshots */ = {
+			isa = PBXGroup;
+			children = (
+				AC00D703EFCA97DB75DFFA1B /* WidgetSnapshotTests.swift */,
+			);
+			path = Snapshots;
+			sourceTree = "<group>";
+		};
 		B5EA5C67EFE619C532E285C1 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -267,6 +292,7 @@
 			children = (
 				7666CA38477159260C75E1EC /* NoblesTools.app */,
 				B8DD80AF53AF834A03B17A84 /* NoblesWidgets.appex */,
+				C005C9126285AF9403198B4C /* WidgetSnapshots.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -344,6 +370,24 @@
 			productReference = 7666CA38477159260C75E1EC /* NoblesTools.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AE58586D614FF33B6F52485F /* WidgetSnapshots */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 044357D66F98CE845C89C614 /* Build configuration list for PBXNativeTarget "WidgetSnapshots" */;
+			buildPhases = (
+				4829E8761CB482FCFA6F2126 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4E1E0170C5C2AD187F20C244 /* PBXTargetDependency */,
+			);
+			name = WidgetSnapshots;
+			packageProductDependencies = (
+			);
+			productName = WidgetSnapshots;
+			productReference = C005C9126285AF9403198B4C /* WidgetSnapshots.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -358,6 +402,10 @@
 						ProvisioningStyle = Automatic;
 					};
 					4EDF433FBF7B19724B06676D = {
+						DevelopmentTeam = 6W4ZKDHBVD;
+						ProvisioningStyle = Automatic;
+					};
+					AE58586D614FF33B6F52485F = {
 						DevelopmentTeam = 6W4ZKDHBVD;
 						ProvisioningStyle = Automatic;
 					};
@@ -382,6 +430,7 @@
 			targets = (
 				4EDF433FBF7B19724B06676D /* NoblesTools */,
 				335B2DFB93C23B3C9B649C86 /* NoblesWidgets */,
+				AE58586D614FF33B6F52485F /* WidgetSnapshots */,
 			);
 		};
 /* End PBXProject section */
@@ -423,6 +472,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4829E8761CB482FCFA6F2126 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4F9F0C36AA87BED175EBD740 /* WidgetSnapshotTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		529308377185A2D140D3FA31 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -437,6 +494,7 @@
 				27F6E9A9CDF8306E41F7F181 /* DesignLibrary.swift in Sources */,
 				ADC1CFC7F579438384BC0A4D /* DesignListView.swift in Sources */,
 				815762789AD853D498187026 /* DesignPreview.swift in Sources */,
+				7F6A9E7696243D0FAA3FFD00 /* DesignWidgetContent.swift in Sources */,
 				C5467E40DE217231C2D132B7 /* EditorBindings.swift in Sources */,
 				BDF54BF1228CC1442F52C62F /* EditorComponents.swift in Sources */,
 				F73AA7E74FC242A2D9D1294E /* MenuSettingsSections.swift in Sources */,
@@ -452,6 +510,7 @@
 				982D5A9A95465277B4564730 /* WidgetBackground.swift in Sources */,
 				F96F9C2FA9B9741BCF11369B /* WidgetComponents.swift in Sources */,
 				C5032F688B0BA361C0158B2E /* WidgetDesign+Content.swift in Sources */,
+				983132C5183FEB3D6ECC0B74 /* WidgetGallery.swift in Sources */,
 				E47D3265226CC85C4AF16171 /* WidgetPreviewFrame.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -459,6 +518,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4E1E0170C5C2AD187F20C244 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4EDF433FBF7B19724B06676D /* NoblesTools */;
+			targetProxy = 87E88D2B85409C09E34CD3F3 /* PBXContainerItemProxy */;
+		};
 		B8E5E53F472C1F9D440D1D0B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 335B2DFB93C23B3C9B649C86 /* NoblesWidgets */;
@@ -482,6 +546,23 @@
 				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		571CD5A8CB4D8D097715DAF3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools.snapshots;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NoblesTools.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NoblesTools";
 			};
 			name = Debug;
 		};
@@ -668,9 +749,35 @@
 			};
 			name = Debug;
 		};
+		9E9AD52A22BFC7F54D93784C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools.snapshots;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NoblesTools.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NoblesTools";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		044357D66F98CE845C89C614 /* Build configuration list for PBXNativeTarget "WidgetSnapshots" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				571CD5A8CB4D8D097715DAF3 /* Debug */,
+				9E9AD52A22BFC7F54D93784C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		06BDBD7479D635239917ED76 /* Build configuration list for PBXNativeTarget "NoblesTools" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

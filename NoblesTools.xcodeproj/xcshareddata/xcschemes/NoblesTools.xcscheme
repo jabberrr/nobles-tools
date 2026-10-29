@@ -53,6 +53,17 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AE58586D614FF33B6F52485F"
+               BuildableName = "WidgetSnapshots.xctest"
+               BlueprintName = "WidgetSnapshots"
+               ReferencedContainer = "container:NoblesTools.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>
