@@ -83,6 +83,7 @@ private struct ScoresHomeScreenView: View {
             if !game.matchupText.isEmpty {
                 ViewThatFits(in: .vertical) {
                     Text(game.matchupText)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(game.shortMatchupText)
                 }
                 .font(.subheadline.weight(.semibold))

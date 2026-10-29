@@ -5,7 +5,9 @@ import SwiftUI
 ///
 /// Rows keep their natural size instead of being cut off mid-line: `ViewThatFits` tries counts
 /// from `capacity` (the most that could ever fit) down to none, and shows the first that fits.
-/// Give rows no line limit, so a row that would need more lines counts as not fitting.
+/// Give rows no line limit, so a row that would need more lines counts as not fitting, and pin
+/// text that wraps to its ideal height (`fixedSize(horizontal: false, vertical: true)`): a stack
+/// shares its height out by its own rules and can cut one row short even when all of them fit.
 struct FittingPrefix<Item, Content: View>: View {
     let items: [Item]
     /// The most items this space could hold; keeps the candidate counts close together.
@@ -36,10 +38,7 @@ struct FittingPrefix<Item, Content: View>: View {
     private func layout(showing count: Int) -> some View {
         VStack(alignment: .leading, spacing: spacing) {
             if count > 0 {
-                // The rows chosen fit whole, so they keep their ideal height: a stack would
-                // otherwise share its height out evenly and cut short a row that needs more.
                 content(Array(items.prefix(count)))
-                    .fixedSize(horizontal: false, vertical: true)
             }
             if let overflowColor, count < items.count {
                 Text("+\(items.count - count) more")

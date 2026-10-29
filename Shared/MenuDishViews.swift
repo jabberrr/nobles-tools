@@ -2,7 +2,7 @@ import SwiftUI
 import NoblesKit
 
 /// The featured dish in large type, under its station's name. Steps down a text size, rather
-/// than cutting the name off, when it doesn't fit.
+/// than cutting the name off, when it doesn't fit; only at the smallest size is it cut short.
 struct FeaturedDishView: View {
     let dish: Dish
     /// `.large` for the large widget's card, `.regular` elsewhere.
@@ -18,14 +18,14 @@ struct FeaturedDishView: View {
     var body: some View {
         ViewThatFits(in: .vertical) {
             layout(font: prominence == .large ? .title3.weight(.semibold) : .headline)
-                .fixedSize(horizontal: false, vertical: true)
             layout(font: prominence == .large ? .headline : .subheadline.weight(.semibold))
-                .fixedSize(horizontal: false, vertical: true)
-            layout(font: .footnote.weight(.semibold))
+            layout(font: .footnote.weight(.semibold), canCutShort: true)
         }
     }
 
-    private func layout(font: Font) -> some View {
+    /// The station over the dish. Unless `canCutShort`, the name keeps its ideal height: this
+    /// layout is only shown when it fits whole.
+    private func layout(font: Font, canCutShort: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             if showsStation, !dish.station.isEmpty {
                 Eyebrow(symbol: dish.symbol, text: dish.station, colors: colors)
@@ -34,6 +34,7 @@ struct FeaturedDishView: View {
             Text(dish.item.name)
                 .font(font)
                 .foregroundStyle(colors.primary)
+                .fixedSize(horizontal: false, vertical: !canCutShort)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -57,6 +58,7 @@ struct CompactDishRow: View {
                 .opacity(showsIcon ? 1 : 0)
             Text(dish.item.name)
                 .font(font)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -72,9 +74,7 @@ struct StationColumns: View {
         let rows = DishRow.rows(of: stations)
         ViewThatFits(in: .vertical) {
             column(rows, font: .subheadline)
-                .fixedSize(horizontal: false, vertical: true)
             columns(rows, font: .subheadline)
-                .fixedSize(horizontal: false, vertical: true)
             FittingPrefix(items: rows, capacity: 14, spacing: 8, overflowColor: colors.secondary) { shown in
                 columns(shown, font: .footnote)
             }
@@ -96,10 +96,12 @@ struct StationColumns: View {
                     VStack(alignment: .leading, spacing: 2) {
                         if row.startsSection, !row.section.isEmpty {
                             Eyebrow(symbol: StationSymbol.name(for: row.section), text: row.section, colors: colors)
+                                .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, index == 0 ? 0 : 6)
                         }
                         Text(row.item.name)
                             .font(font)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 } else {
                     CompactDishRow(

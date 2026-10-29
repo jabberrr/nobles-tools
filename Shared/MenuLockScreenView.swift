@@ -90,7 +90,6 @@ struct MenuLockScreenView: View {
                 + names(of: featured).map { (name: $0, station: Dish?.none) }
             FirstFitting(variants: variants, axes: .vertical) { variant in
                 rectangularDish(variant.name, station: variant.station)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         case .unavailable:
             rectangularMessage("Menu unavailable")
@@ -106,6 +105,7 @@ struct MenuLockScreenView: View {
             rectangularHeader
             Text(name)
                 .font(.headline)
+                .fixedSize(horizontal: false, vertical: true)
             if let station, !station.station.isEmpty {
                 Label(station.station, systemImage: station.symbol)
                     .font(.caption2.weight(.medium))
