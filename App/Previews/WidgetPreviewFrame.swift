@@ -33,11 +33,18 @@ struct WidgetPreviewFrame<Content: View>: View {
     }
 
     /// Lock Screen widgets are monochrome over the wallpaper, so they sit on a dark backdrop here.
+    /// Circular ones get a translucent disc like the `AccessoryWidgetBackground` the widget draws,
+    /// which only renders inside a widget.
     private func lockScreen(_ widget: some View) -> some View {
         let size = family.widgetPointSize
         return widget
             .lineLimit(family == .accessoryInline ? 1 : nil)
             .frame(width: size.width, height: size.height)
+            .background {
+                if family == .accessoryCircular {
+                    Circle().fill(Color.white.opacity(0.16))
+                }
+            }
             .environment(\.colorScheme, .dark)
             .padding(PreviewMetrics.lockScreenInset)
             .background(

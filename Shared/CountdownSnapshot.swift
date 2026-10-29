@@ -26,6 +26,16 @@ struct CountdownSnapshot: Hashable, Sendable {
 
     /// The other kinds of term, for the larger sizes.
     var others: [Countdown] { countdowns.filter { $0.term.kind != target } }
+
+    /// "In 26 days · Nov 25 – 29", or "Now · through Nov 29" during the break.
+    func timingText(of schoolBreak: SchoolBreak) -> String {
+        if schoolBreak.span.contains(date) {
+            return "Now · through \(SchoolFormat.shortDate(schoolBreak.span.end))"
+        }
+        let days = date.days(until: schoolBreak.span.start)
+        let when = days == 1 ? "Tomorrow" : "In \(days) days"
+        return "\(when) · \(SchoolFormat.span(schoolBreak.span))"
+    }
 }
 
 extension Countdown {
@@ -63,6 +73,16 @@ extension Countdown {
         case .inProgress: return isYear ? "\(remaining) \(unit) left" : "\(remaining) \(unit) left in \(name)"
         case .lastDay: return isYear ? "Last day of school!" : "Last day of \(name)!"
         case .finished: return isYear ? "School's out!" : "\(name) is done"
+        }
+    }
+
+    /// "63% complete · ends Fri, Jan 22", "Starts Mon, Sep 8", …
+    var progressText: String {
+        switch phase {
+        case .upcoming: "Starts \(SchoolFormat.weekdayDate(term.span.start))"
+        case .inProgress: "\(percentComplete) complete · ends \(SchoolFormat.weekdayDate(term.span.end))"
+        case .lastDay: "Last day today"
+        case .finished: "Ended \(SchoolFormat.weekdayDate(term.span.end))"
         }
     }
 

@@ -8,10 +8,23 @@ extension Game {
         return "\(sport) · \(level)"
     }
 
+    /// The sport without "Boys" or "Girls", e.g. "Field Hockey", for tight spaces.
+    var shortSport: String {
+        for prefix in ["Boys ", "Girls "] where sport.hasPrefix(prefix) {
+            return String(sport.dropFirst(prefix.count))
+        }
+        return sport
+    }
+
     /// "vs Thayer Academy", "at Tabor Academy", or empty for a meet with no single opponent.
-    var matchupText: String {
-        guard !opponent.isEmpty else { return "" }
-        return "\(isHome == false ? "at" : "vs") \(opponent)"
+    var matchupText: String { matchup(against: opponent) }
+
+    /// "vs Thayer", "at Tabor": `matchupText` with the opponent's `shortOpponent`.
+    var shortMatchupText: String { matchup(against: shortOpponent) }
+
+    /// "W 3–0", or "W" when only the outcome was posted; `nil` without a result.
+    var resultText: String? {
+        score.map { [$0.outcome.rawValue, $0.scoreline].compactMap { $0 }.joined(separator: " ") }
     }
 
     /// Where the game is played, e.g. "Nobles-Burr Field"; `nil` when that's unknown or just the
@@ -46,6 +59,11 @@ extension Game {
         case .scheduled: start <= now ? "Awaiting result" : whenText(today: LocalDate(now))
         }
     }
+
+    private func matchup(against name: String) -> String {
+        guard !name.isEmpty else { return "" }
+        return "\(isHome == false ? "at" : "vs") \(name)"
+    }
 }
 
 extension GameScore.Outcome {
@@ -65,39 +83,5 @@ extension ScoresConfiguration {
         let level = varsityOnly ? "Varsity" : "All levels"
         let teams = sports.isEmpty ? "All sports" : sports.joined(separator: ", ")
         return "\(level) · \(teams)"
-    }
-}
-
-/// SF Symbols for Nobles sports, matched loosely against names like "Girls Field Hockey".
-enum SportSymbol {
-    private static let table: [(keyword: String, symbol: String)] = [
-        ("field hockey", "figure.hockey"),
-        ("hockey", "hockey.puck"),
-        ("soccer", "soccerball"),
-        ("football", "football"),
-        ("basketball", "basketball"),
-        ("volleyball", "volleyball"),
-        ("baseball", "baseball"),
-        ("softball", "baseball"),
-        ("lacrosse", "figure.lacrosse"),
-        ("tennis", "tennis.racket"),
-        ("pickleball", "tennis.racket"),
-        ("squash", "figure.squash"),
-        ("cross country", "figure.run"),
-        ("track", "figure.run"),
-        ("swim", "figure.pool.swim"),
-        ("diving", "figure.pool.swim"),
-        ("ski", "figure.skiing.downhill"),
-        ("wrestling", "figure.wrestling"),
-        ("golf", "figure.golf"),
-        ("crew", "figure.rower"),
-        ("rowing", "figure.rower"),
-        ("sailing", "sailboat"),
-        ("fencing", "figure.fencing"),
-    ]
-
-    static func name(for sport: String) -> String {
-        let key = sport.lowercased()
-        return table.first { key.contains($0.keyword) }?.symbol ?? "sportscourt"
     }
 }

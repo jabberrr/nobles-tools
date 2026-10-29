@@ -8,10 +8,10 @@ struct DesignWidgetContent: View {
     let design: WidgetDesign
     let family: WidgetFamily
     let colors: ThemeColors
-    /// The menu a menu design shows.
-    let menu: UpcomingMenu
-    /// The games a scores design shows.
-    let scoreboard: Scoreboard
+    /// The menu a menu design shows; `nil` shows it as unavailable.
+    let menu: UpcomingMenu?
+    /// The games a scores design shows; `nil` shows them as unavailable.
+    let scoreboard: Scoreboard?
     /// The school calendar a countdown design counts against.
     let calendar: SchoolCalendar
     let now: Date

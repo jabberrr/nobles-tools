@@ -71,8 +71,11 @@ struct ThemeColors {
         self.onAccent = onAccent
     }
 
-    /// A faint version of the primary color, for progress tracks and dividers.
+    /// A faint version of the primary color, for progress tracks, tiles and dividers.
     var track: Color { primary.opacity(0.15) }
+
+    /// A fainter one, for cards that set off part of a large widget.
+    var card: Color { primary.opacity(0.08) }
 }
 
 extension View {

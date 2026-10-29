@@ -122,11 +122,20 @@ public struct MenuConfiguration: Codable, Hashable, Sendable {
     public var filter: MenuFilter
     /// Group items under their station names.
     public var showsSectionHeaders: Bool
+    /// The station whose dish the design features where only one fits (see `featuredDish(in:)`),
+    /// e.g. "Vegan Entree"; `nil` features the first entrée.
+    public var featuredStation: String?
 
-    public init(meal: MealSelection = .lunch, filter: MenuFilter = .everything, showsSectionHeaders: Bool = true) {
+    public init(
+        meal: MealSelection = .lunch,
+        filter: MenuFilter = .everything,
+        showsSectionHeaders: Bool = true,
+        featuredStation: String? = nil
+    ) {
         self.meal = meal
         self.filter = filter
         self.showsSectionHeaders = showsSectionHeaders
+        self.featuredStation = featuredStation
     }
 
     /// Missing fields take their defaults, so settings saved by other versions still load.
@@ -136,6 +145,7 @@ public struct MenuConfiguration: Codable, Hashable, Sendable {
         meal = container.decode(.meal, or: defaults.meal)
         filter = container.decode(.filter, or: defaults.filter)
         showsSectionHeaders = container.decode(.showsSectionHeaders, or: defaults.showsSectionHeaders)
+        featuredStation = container.text(forKey: .featuredStation)
     }
 }
 

@@ -11,9 +11,8 @@ struct CountdownWidgetView: View {
 
     var body: some View {
         switch family {
-        case .accessoryInline: inline
-        case .accessoryCircular: circular
-        case .accessoryRectangular: rectangular
+        case .accessoryInline, .accessoryCircular, .accessoryRectangular:
+            CountdownLockScreenView(snapshot: snapshot, family: family, style: style, colors: colors, fontDesign: fontDesign)
         case .systemMedium: medium
         case .systemLarge: large
         default: small
@@ -26,26 +25,6 @@ struct CountdownWidgetView: View {
 
     private var fontDesign: Font.Design { design.theme.font.fontDesign }
 
-    /// "63% complete · ends Fri, Jan 22", "Starts Mon, Sep 8", …
-    private func progressDetail(_ countdown: Countdown) -> String {
-        switch countdown.phase {
-        case .upcoming: "Starts \(SchoolFormat.weekdayDate(countdown.term.span.start))"
-        case .inProgress: "\(countdown.percentComplete) complete · ends \(SchoolFormat.weekdayDate(countdown.term.span.end))"
-        case .lastDay: "Last day today"
-        case .finished: "Ended \(SchoolFormat.weekdayDate(countdown.term.span.end))"
-        }
-    }
-
-    /// "In 26 days · Nov 25 – 29", or "Through Nov 29" during the break.
-    private func breakDetail(_ schoolBreak: SchoolBreak) -> String {
-        if schoolBreak.span.contains(snapshot.date) {
-            return "Now · through \(SchoolFormat.shortDate(schoolBreak.span.end))"
-        }
-        let days = snapshot.date.days(until: schoolBreak.span.start)
-        let when = days == 1 ? "Tomorrow" : "In \(days) days"
-        return "\(when) · \(SchoolFormat.span(schoolBreak.span))"
-    }
-
     // MARK: Building blocks
 
     private func figure(_ countdown: Countdown, size: CGFloat) -> some View {
@@ -56,11 +35,15 @@ struct CountdownWidgetView: View {
             .minimumScaleFactor(0.4)
     }
 
-    private func termLabel(_ countdown: Countdown) -> some View {
-        Text(countdown.term.name)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(colors.accent)
-            .lineLimit(1)
+    /// "school days" under a count; nothing once there's nothing to count.
+    @ViewBuilder private func unit(_ countdown: Countdown, font: Font) -> some View {
+        if countdown.isCounting {
+            Text(SchoolFormat.unit(countdown.counting, count: countdown.remaining))
+                .font(font)
+                .foregroundStyle(colors.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
     }
 
     private func ring(_ countdown: Countdown, lineWidth: CGFloat, figureSize: CGFloat) -> some View {
@@ -68,16 +51,18 @@ struct CountdownWidgetView: View {
             ProgressRing(progress: countdown.progress, lineWidth: lineWidth, colors: colors)
             VStack(spacing: 0) {
                 figure(countdown, size: figureSize)
-                if countdown.isCounting {
-                    Text(SchoolFormat.unit(countdown.counting, count: countdown.remaining))
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(colors.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
+                unit(countdown, font: .caption2.weight(.medium))
             }
             .padding(lineWidth + 6)
         }
+    }
+
+    private func termName(_ term: Term) -> some View {
+        ViewThatFits(in: .horizontal) {
+            Text(term.name)
+            Text(term.compactName)
+        }
+        .lineLimit(1)
     }
 
     private var noDates: some View {
@@ -95,13 +80,25 @@ struct CountdownWidgetView: View {
         if let countdown = snapshot.primary {
             switch style {
             case .ring:
-                VStack(spacing: 6) {
-                    ring(countdown, lineWidth: 9, figureSize: 34)
-                    termLabel(countdown)
+                VStack(spacing: 8) {
+                    ring(countdown, lineWidth: 10, figureSize: 34)
+                    Label {
+                        termName(countdown.term)
+                    } icon: {
+                        Image(systemName: countdown.term.kind.symbolName)
+                            .symbolVariant(.fill)
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(colors.accent)
                 }
             case .number, .bar:
                 VStack(alignment: .leading, spacing: 2) {
-                    termLabel(countdown)
+                    WidgetHeader(
+                        symbol: countdown.term.kind.symbolName,
+                        title: countdown.term.name,
+                        shortTitle: countdown.term.compactName,
+                        colors: colors
+                    )
                     Spacer(minLength: 0)
                     figure(countdown, size: style == .number ? 56 : 46)
                     Text(countdown.caption)
@@ -111,7 +108,7 @@ struct CountdownWidgetView: View {
                     if style == .bar {
                         ProgressBar(progress: countdown.progress, colors: colors)
                             .frame(height: 7)
-                            .padding(.top, 4)
+                            .padding(.top, 6)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
@@ -133,10 +130,7 @@ struct CountdownWidgetView: View {
                     case .number, .bar:
                         VStack(alignment: .leading, spacing: 0) {
                             figure(countdown, size: 54)
-                            Text(countdown.isCounting ? SchoolFormat.unit(countdown.counting, count: countdown.remaining) : countdown.term.name)
-                                .font(.footnote.weight(.medium))
-                                .foregroundStyle(colors.secondary)
-                                .lineLimit(2)
+                            unit(countdown, font: .footnote.weight(.medium))
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -144,12 +138,9 @@ struct CountdownWidgetView: View {
                 .frame(width: 118)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(countdown.term.name)
-                            .font(.headline)
-                            .foregroundStyle(colors.accent)
-                            .lineLimit(1)
-                        Text(progressDetail(countdown))
+                    VStack(alignment: .leading, spacing: 3) {
+                        WidgetHeader(symbol: countdown.term.kind.symbolName, title: countdown.term.name, colors: colors)
+                        Text(countdown.progressText)
                             .font(.caption)
                             .foregroundStyle(colors.secondary)
                             .lineLimit(2)
@@ -171,11 +162,14 @@ struct CountdownWidgetView: View {
     }
 
     private func otherRow(_ countdown: Countdown) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(countdown.term.name)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Image(systemName: countdown.term.kind.symbolName)
+                    .symbolVariant(.fill)
+                    .font(.caption2)
+                    .foregroundStyle(colors.accent)
+                termName(countdown.term)
                     .font(.caption.weight(.medium))
-                    .lineLimit(1)
                 Spacer(minLength: 4)
                 Text(countdown.isCounting ? "\(countdown.remaining)" : countdown.figure)
                     .font(.caption.weight(.bold))
@@ -192,23 +186,17 @@ struct CountdownWidgetView: View {
         if snapshot.countdowns.isEmpty {
             noDates
         } else {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    Label("Countdown", systemImage: "calendar.badge.clock")
-                    Spacer(minLength: 4)
-                    Text(SchoolFormat.weekdayDate(snapshot.date))
-                        .foregroundStyle(colors.secondary)
-                }
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(colors.accent)
-                .lineLimit(1)
-
+            VStack(alignment: .leading, spacing: 16) {
+                WidgetHeader(
+                    symbol: "calendar",
+                    title: "Countdown",
+                    detail: SchoolFormat.weekdayDate(snapshot.date),
+                    colors: colors
+                )
                 ForEach(snapshot.countdowns, id: \.term.id) { countdown in
                     largeRow(countdown, isPrimary: countdown.term.kind == snapshot.target)
                 }
-
                 Spacer(minLength: 0)
-
                 if let nextBreak = snapshot.nextBreak {
                     breakCard(nextBreak)
                 }
@@ -218,41 +206,36 @@ struct CountdownWidgetView: View {
     }
 
     private func largeRow(_ countdown: Countdown, isPrimary: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack(alignment: .lastTextBaseline) {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 10) {
+                IconChip(symbol: countdown.term.kind.symbolName, size: 28, colors: colors)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(countdown.term.name)
+                    termName(countdown.term)
                         .font(isPrimary ? Font.headline : Font.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                    Text(progressDetail(countdown))
+                    Text(countdown.progressText)
                         .font(.caption)
                         .foregroundStyle(colors.secondary)
                         .lineLimit(1)
                 }
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 0) {
-                    figure(countdown, size: isPrimary ? 34 : 24)
-                    if countdown.isCounting {
-                        Text(SchoolFormat.unit(countdown.counting, count: countdown.remaining))
-                            .font(.caption2)
-                            .foregroundStyle(colors.secondary)
-                    }
+                    figure(countdown, size: isPrimary ? 32 : 24)
+                    unit(countdown, font: .caption2)
                 }
+                .layoutPriority(1)
             }
             ProgressBar(progress: countdown.progress, colors: colors)
-                .frame(height: isPrimary ? 8 : 5)
+                .frame(height: isPrimary ? 7 : 5)
         }
     }
 
     private func breakCard(_ schoolBreak: SchoolBreak) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: "beach.umbrella")
-                .font(.title3)
-                .foregroundStyle(colors.accent)
+            IconChip(symbol: BreakSymbol.name(for: schoolBreak), size: 28, colors: colors)
             VStack(alignment: .leading, spacing: 1) {
                 Text(schoolBreak.name)
                     .font(.subheadline.weight(.semibold))
-                Text(breakDetail(schoolBreak))
+                Text(snapshot.timingText(of: schoolBreak))
                     .font(.caption)
                     .foregroundStyle(colors.secondary)
             }
@@ -260,78 +243,6 @@ struct CountdownWidgetView: View {
             Spacer(minLength: 0)
         }
         .padding(10)
-        .background(colors.track, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-
-    // MARK: Lock Screen
-
-    @ViewBuilder private var circular: some View {
-        if let countdown = snapshot.primary, countdown.isCounting, style != .number {
-            Gauge(value: countdown.progress) {
-                Text(countdown.term.compactName)
-            } currentValueLabel: {
-                Text("\(countdown.remaining)")
-                    .monospacedDigit()
-            }
-            .gaugeStyle(.accessoryCircularCapacity)
-            .widgetAccentable()
-        } else {
-            ZStack {
-                AccessoryWidgetBackground()
-                if let countdown = snapshot.primary, countdown.isCounting {
-                    VStack(spacing: -2) {
-                        Text("\(countdown.remaining)")
-                            .font(.system(size: 24, weight: .bold, design: fontDesign))
-                            .monospacedDigit()
-                            .minimumScaleFactor(0.5)
-                        Text(SchoolFormat.unit(countdown.counting, count: countdown.remaining, compact: true))
-                            .font(.caption2)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                    .widgetAccentable()
-                } else {
-                    Image(systemName: circularSymbol)
-                        .font(.title3.weight(.semibold))
-                        .widgetAccentable()
-                }
-            }
-        }
-    }
-
-    /// Shown in the circle when there's no count: the last day, all done, or no dates.
-    private var circularSymbol: String {
-        switch snapshot.primary?.phase {
-        case .lastDay: "flag.checkered"
-        case .finished: "checkmark"
-        default: "calendar"
-        }
-    }
-
-    @ViewBuilder private var rectangular: some View {
-        if let countdown = snapshot.primary {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(countdown.term.name)
-                    .font(.headline)
-                    .widgetAccentable()
-                    .lineLimit(1)
-                Text(countdown.isCounting ? "\(countdown.figure) \(countdown.caption)" : countdown.sentence)
-                    .font(.subheadline)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Gauge(value: countdown.progress) {
-                    EmptyView()
-                }
-                .gaugeStyle(.accessoryLinearCapacity)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        } else {
-            Text("No \(snapshot.target.displayName.lowercased()) dates")
-                .font(.headline)
-        }
-    }
-
-    private var inline: some View {
-        Label(snapshot.primary?.sentence ?? "No \(snapshot.target.displayName.lowercased()) dates", systemImage: "calendar")
+        .background(colors.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }

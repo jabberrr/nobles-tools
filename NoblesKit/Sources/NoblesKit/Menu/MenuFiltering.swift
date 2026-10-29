@@ -48,6 +48,29 @@ extension DailyMenu {
         var seen: Set<Int> = []
         return ordered.filter { seen.insert($0.id).inserted }
     }
+
+    /// The one dish to show where only one fits: the first dish of the first station whose title
+    /// matches `station` the way "Just…" matches stations, or the first highlight when `station`
+    /// is `nil` or isn't serving on this menu.
+    public func featuredDish(station: String?) -> MenuItem? {
+        let names = MenuKeywords.selection(station.map { [$0] } ?? [])
+        let chosen = names.isEmpty ? nil : sections.first { $0.isSelected(by: names) && !$0.items.isEmpty }
+        return chosen?.items.first ?? highlights.first
+    }
+}
+
+extension MenuConfiguration {
+    /// The dish this design features: the only one on Lock Screen widgets, and the first on Home
+    /// Screen ones.
+    ///
+    /// A chosen station is looked up on the whole menu, so choosing one overrides the filter; on a
+    /// day it isn't serving, the menu's first highlight stands in. Automatic (`featuredStation`
+    /// `nil`) follows the filter: the first highlight of the filtered menu.
+    public func featuredDish(in menu: DailyMenu) -> MenuItem? {
+        featuredStation == nil
+            ? menu.filtered(by: filter).highlights.first
+            : menu.featuredDish(station: featuredStation)
+    }
 }
 
 private enum MenuKeywords {

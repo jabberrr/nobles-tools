@@ -37,16 +37,10 @@ extension WidgetDesign {
 }
 
 extension WidgetKind {
-    /// The sizes each kind's widget offers, in the order the editor previews them.
+    /// The sizes each kind's widget offers, in the order the editor previews them: every Home
+    /// Screen and Lock Screen size.
     var widgetFamilies: [WidgetFamily] {
-        switch self {
-        case .menu:
-            [.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryInline]
-        case .countdown:
-            [.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline]
-        case .scores:
-            [.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular]
-        }
+        [.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline]
     }
 
     /// The WidgetKit `kind` of this kind's widget, which it's configured and reloaded by.

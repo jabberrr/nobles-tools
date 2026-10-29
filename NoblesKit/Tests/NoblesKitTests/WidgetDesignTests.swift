@@ -7,7 +7,7 @@ struct WidgetDesignTests {
         WidgetContent.menu(MenuConfiguration()),
         .menu(MenuConfiguration(meal: .upcoming, filter: .only(sections: ["Hot Entree", "Vegan Entree"]))),
         .menu(MenuConfiguration(meal: .dinner, filter: .excluding(sections: ["Dessert"]), showsSectionHeaders: false)),
-        .menu(MenuConfiguration(filter: .withoutSaladsAndSoups)),
+        .menu(MenuConfiguration(filter: .withoutSaladsAndSoups, featuredStation: "Vegan Entree")),
         .countdown(CountdownConfiguration(target: .quarter, counting: .weekdays, style: .bar)),
         .scores(ScoresConfiguration(sports: ["Soccer", "Field Hockey"], varsityOnly: false, showsUpcoming: false)),
     ])

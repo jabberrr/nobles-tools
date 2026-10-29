@@ -2,8 +2,9 @@ import SwiftUI
 import WidgetKit
 import NoblesKit
 
-/// Every kind of widget at every size, drawn from fixed sample data at a fixed moment. Shown in
-/// Xcode's canvas, and rendered to `docs/widgets` by the `WidgetSnapshots` tests so layouts can be
+/// Every kind of widget at every size, drawn from fixed sample data at a fixed moment, in several
+/// themes, and with the long names and empty states layouts must hold up to. Shown in Xcode's
+/// canvas, and rendered to `docs/widgets` by the `WidgetSnapshots` tests so layouts can be
 /// checked without a device.
 enum WidgetGallery {
     struct Entry: Identifiable {
@@ -18,7 +19,7 @@ enum WidgetGallery {
     static let now = LocalDate(year: 2026, month: 10, day: 27).at(hour: 11, minute: 30)
 
     static var entries: [Entry] {
-        variants.flatMap { variant in
+        (menuVariants + countdownVariants + scoresVariants).flatMap { variant in
             variant.families.map { family in
                 Entry(name: "\(variant.name)-\(family.galleryName)", view: AnyView(tile(variant, family)))
             }
@@ -27,54 +28,99 @@ enum WidgetGallery {
 
     // MARK: Variants
 
-    /// One design to render, the sizes to render it at, and the appearance to render it in.
+    /// One design to render, the sizes to render it at, the data it shows, and the appearance.
     private struct Variant {
         let name: String
         let design: WidgetDesign
-        var families: [WidgetFamily]
+        let families: [WidgetFamily]
         var colorScheme: ColorScheme = .light
+        /// The menu a menu design shows; `nil` shows it as unavailable.
+        var menu: UpcomingMenu? = nil
+        /// The games a scores design shows; `nil` shows them as unavailable.
+        var scoreboard: Scoreboard? = nil
     }
 
-    private static var variants: [Variant] {
-        let menu = WidgetDesign(name: "Lunch", content: .menu(MenuConfiguration(meal: .lunch)))
-        let dinner = WidgetDesign(
-            name: "Dinner",
-            theme: Theme(palette: .navy, font: .rounded),
-            content: .menu(MenuConfiguration(meal: .dinner, filter: .withoutSaladsAndSoups))
+    private static var homeScreen: [WidgetFamily] { [.systemSmall, .systemMedium, .systemLarge] }
+
+    private static func design(_ content: WidgetContent, theme: Theme = Theme()) -> WidgetDesign {
+        WidgetDesign(name: content.kind.displayName, theme: theme, content: content)
+    }
+
+    private static var menuVariants: [Variant] {
+        let lunch = design(.menu(MenuConfiguration()))
+        let dinner = design(
+            .menu(MenuConfiguration(meal: .dinner, filter: .withoutSaladsAndSoups)),
+            theme: Theme(palette: .navy, font: .rounded)
         )
-        let year = WidgetDesign(name: "Year", content: .countdown(CountdownConfiguration(target: .year, style: .ring)))
-        let quarter = WidgetDesign(
-            name: "Quarter",
-            theme: Theme(palette: .forest, font: .serif),
-            content: .countdown(CountdownConfiguration(target: .quarter, counting: .weekdays, style: .bar))
+        let halloween = design(.menu(MenuConfiguration()), theme: Theme(palette: .sunset, font: .serif))
+        let vegan = design(
+            .menu(MenuConfiguration(showsSectionHeaders: false, featuredStation: "Vegan Entree")),
+            theme: Theme(palette: .graphite, background: .solid)
         )
-        let scores = WidgetDesign(name: "Scores", content: .scores(ScoresConfiguration()))
-        let scoresThemed = WidgetDesign(
-            name: "Scores",
-            theme: Theme(palette: .crimson, background: .solid),
-            content: .scores(ScoresConfiguration())
-        )
-        let homeScreen: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
+        let closed = design(.menu(MenuConfiguration(meal: .dinner)), theme: Theme(palette: .paper))
+        let lunchMenu = GallerySamples.menu(.lunch)
         return [
-            Variant(name: "menu-lunch", design: menu, families: WidgetKind.menu.widgetFamilies),
-            Variant(name: "menu-dinner-navy", design: dinner, families: homeScreen),
-            Variant(name: "menu-lunch-dark", design: menu, families: [.systemMedium], colorScheme: .dark),
-            Variant(name: "countdown-year", design: year, families: WidgetKind.countdown.widgetFamilies),
-            Variant(name: "countdown-quarter-forest", design: quarter, families: homeScreen),
-            Variant(name: "countdown-year-dark", design: year, families: [.systemSmall], colorScheme: .dark),
-            Variant(name: "scores", design: scores, families: WidgetKind.scores.widgetFamilies),
-            Variant(name: "scores-crimson", design: scoresThemed, families: homeScreen),
-            Variant(name: "scores-dark", design: scores, families: [.systemMedium], colorScheme: .dark),
+            Variant(name: "menu-lunch", design: lunch, families: WidgetKind.menu.widgetFamilies, menu: lunchMenu),
+            Variant(name: "menu-dinner-navy", design: dinner, families: homeScreen, menu: GallerySamples.menu(.dinner)),
+            Variant(name: "menu-lunch-dark", design: lunch, families: [.systemMedium], colorScheme: .dark, menu: lunchMenu),
+            Variant(
+                name: "menu-halloween-sunset",
+                design: halloween,
+                families: homeScreen + [.accessoryRectangular],
+                menu: GallerySamples.halloweenLunch
+            ),
+            Variant(
+                name: "menu-vegan-graphite",
+                design: vegan,
+                families: [.systemSmall, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline],
+                menu: lunchMenu
+            ),
+            Variant(name: "menu-closed-paper", design: closed, families: [.systemSmall], menu: GallerySamples.noDinner),
+            Variant(name: "menu-unavailable", design: lunch, families: [.systemMedium], menu: nil),
         ]
     }
 
-    // MARK: Data
-
-    private static func menu(for design: WidgetDesign) -> UpcomingMenu {
-        let meal = design.menuConfiguration?.meal.meal ?? .lunch
-        let day = LocalDate(now)
-        return UpcomingMenu(meal: meal, date: day, menu: .sample(meal: meal, date: day), validUntil: meal.serviceEnd(on: day))
+    private static var countdownVariants: [Variant] {
+        let year = design(.countdown(CountdownConfiguration(target: .year, style: .ring)))
+        let quarter = design(
+            .countdown(CountdownConfiguration(target: .quarter, counting: .weekdays, style: .bar)),
+            theme: Theme(palette: .forest, font: .serif)
+        )
+        let semester = design(.countdown(CountdownConfiguration(target: .semester, style: .number)))
+        return [
+            Variant(name: "countdown-year", design: year, families: WidgetKind.countdown.widgetFamilies),
+            Variant(name: "countdown-quarter-forest", design: quarter, families: homeScreen),
+            Variant(name: "countdown-semester-dark", design: semester, families: [.systemSmall, .accessoryCircular], colorScheme: .dark),
+        ]
     }
+
+    private static var scoresVariants: [Variant] {
+        let scores = design(.scores(ScoresConfiguration()))
+        let crimson = design(.scores(ScoresConfiguration()), theme: Theme(palette: .crimson, background: .solid))
+        let allLevels = design(.scores(ScoresConfiguration(varsityOnly: false)), theme: Theme(palette: .paper))
+        let squash = ScoresConfiguration(sports: ["Girls Squash"])
+        let sample = GallerySamples.scoreboard
+        return [
+            Variant(name: "scores", design: scores, families: WidgetKind.scores.widgetFamilies, scoreboard: sample),
+            Variant(name: "scores-crimson", design: crimson, families: [.systemSmall], scoreboard: sample),
+            Variant(name: "scores-dark", design: scores, families: [.systemMedium], colorScheme: .dark, scoreboard: sample),
+            Variant(
+                name: "scores-long-paper",
+                design: allLevels,
+                families: [.systemSmall, .systemMedium, .accessoryRectangular, .accessoryInline],
+                scoreboard: GallerySamples.longNamesScoreboard
+            ),
+            Variant(
+                name: "scores-empty",
+                design: design(.scores(squash)),
+                families: [.systemSmall],
+                scoreboard: Scoreboard(games: [], configuration: squash, now: now)
+            ),
+            Variant(name: "scores-unavailable", design: scores, families: [.accessoryRectangular], scoreboard: nil),
+        ]
+    }
+
+    // MARK: Drawing
 
     private static func tile(_ variant: Variant, _ family: WidgetFamily) -> some View {
         WidgetPreviewFrame(family: family, theme: variant.design.theme) { colors in
@@ -82,8 +128,8 @@ enum WidgetGallery {
                 design: variant.design,
                 family: family,
                 colors: colors,
-                menu: menu(for: variant.design),
-                scoreboard: .sample(now: now),
+                menu: variant.menu,
+                scoreboard: variant.scoreboard,
                 calendar: .nobles2026_27,
                 now: now
             )

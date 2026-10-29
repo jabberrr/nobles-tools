@@ -47,6 +47,14 @@ public struct Term: Codable, Hashable, Identifiable, Sendable {
             case .year: "School Year"
             }
         }
+
+        public var symbolName: String {
+            switch self {
+            case .quarter: "chart.pie"
+            case .semester: "books.vertical"
+            case .year: "graduationcap"
+            }
+        }
     }
 }
 
