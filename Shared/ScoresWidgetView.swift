@@ -66,7 +66,9 @@ private struct ScoresHomeScreenView: View {
                 detail: isUpcoming
                     ? SchoolFormat.relativeDay(LocalDate(game.start), from: content.today)
                     : game.dateText(today: content.today),
-                shortDetail: isUpcoming ? SchoolFormat.shortRelativeDay(LocalDate(game.start), from: content.today) : nil,
+                shortDetail: isUpcoming
+                    ? SchoolFormat.shortRelativeDay(LocalDate(game.start), from: content.today)
+                    : SchoolFormat.shortDate(LocalDate(game.start)),
                 colors: colors
             )
             Spacer(minLength: 4)
@@ -87,7 +89,7 @@ private struct ScoresHomeScreenView: View {
                     .minimumScaleFactor(0.6)
             }
             TeamName(game: game)
-                .font(.subheadline.weight(.semibold))
+                .font(.footnote.weight(.semibold))
                 .padding(.top, 4)
             if !game.matchupVariants.isEmpty {
                 FirstFitting(variants: game.matchupVariants, axes: .vertical) { matchup in

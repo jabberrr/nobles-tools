@@ -3,7 +3,7 @@ import WidgetKit
 
 /// The top line of every Home Screen widget: an icon chip and a title in the theme's accent
 /// color, with an optional detail such as "Today" on the right. When it all doesn't fit, the
-/// short detail and then the short title stand in.
+/// short detail and then the short title stand in, and as a last resort the detail goes.
 struct WidgetHeader: View {
     let symbol: String
     let title: String
@@ -19,6 +19,7 @@ struct WidgetHeader: View {
             row(title: title, detail: detail)
             row(title: title, detail: shortDetail ?? detail)
             row(title: shortTitle ?? title, detail: shortDetail ?? detail)
+            row(title: shortTitle ?? title, detail: nil)
         }
         .lineLimit(1)
     }

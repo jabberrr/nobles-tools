@@ -17,10 +17,11 @@ extension Game {
     }
 
     /// The team from fullest to shortest, for fitting: "Girls Field Hockey · Middle School",
-    /// "Girls Field Hockey · MS", "Field Hockey · MS". Varsity teams go without a level.
+    /// "Girls Field Hockey · MS", "Field Hockey · MS", and the sport alone as a last resort.
+    /// Varsity teams go without a level.
     var teamVariants: [String] {
         guard let level = shortLevel else { return [sport, shortSport] }
-        return [teamText, "\(sport) · \(level)", "\(shortSport) · \(level)"]
+        return [teamText, "\(sport) · \(level)", "\(shortSport) · \(level)", shortSport]
     }
 
     /// "vs Thayer Academy", "at Tabor Academy", or empty for a meet with no single opponent.

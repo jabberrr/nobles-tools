@@ -93,6 +93,16 @@ extension Countdown {
         }
     }
 
+    /// `progressText` for tight spaces: "63% · ends Jan 22", "Starts Sep 8", …
+    var shortProgressText: String {
+        switch phase {
+        case .upcoming: "Starts \(SchoolFormat.shortDate(term.span.start))"
+        case .inProgress: "\(percentComplete) · ends \(SchoolFormat.shortDate(term.span.end))"
+        case .lastDay: "Last day today"
+        case .finished: "Ended \(SchoolFormat.shortDate(term.span.end))"
+        }
+    }
+
     /// Whole percent of the term completed, e.g. "63%".
     var percentComplete: String { "\(Int((progress * 100).rounded()))%" }
 }

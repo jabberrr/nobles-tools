@@ -53,8 +53,16 @@ struct CountdownWidgetView: View {
                 figure(countdown, size: figureSize)
                 unit(countdown, font: .caption2.weight(.medium))
             }
-            .padding(lineWidth + 6)
+            .padding(lineWidth + 9)
         }
+    }
+
+    /// "92% complete · ends Fri, Oct 30" on one line, shortened to "92% · ends Oct 30" to fit.
+    private func progressLine(_ countdown: Countdown) -> some View {
+        FirstFitting(variants: [countdown.progressText, countdown.shortProgressText], axes: .horizontal) { Text($0) }
+            .font(.caption)
+            .foregroundStyle(colors.secondary)
+            .lineLimit(1)
     }
 
     private func termName(_ term: Term) -> some View {
@@ -140,10 +148,7 @@ struct CountdownWidgetView: View {
                             shortTitle: countdown.term.compactName,
                             colors: colors
                         )
-                        Text(countdown.progressText)
-                            .font(.caption)
-                            .foregroundStyle(colors.secondary)
-                            .lineLimit(2)
+                        progressLine(countdown)
                     }
                     if style == .bar {
                         ProgressBar(progress: countdown.progress, colors: colors)
@@ -213,10 +218,7 @@ struct CountdownWidgetView: View {
                 VStack(alignment: .leading, spacing: 1) {
                     termName(countdown.term)
                         .font(isPrimary ? Font.headline : Font.subheadline.weight(.semibold))
-                    Text(countdown.progressText)
-                        .font(.caption)
-                        .foregroundStyle(colors.secondary)
-                        .lineLimit(1)
+                    progressLine(countdown)
                 }
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 0) {
