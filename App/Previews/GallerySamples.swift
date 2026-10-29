@@ -39,6 +39,13 @@ enum GallerySamples {
     /// The sample scoreboard.
     static var scoreboard: Scoreboard { .sample(now: WidgetGallery.now) }
 
+    /// The sample scoreboard as a copy cached five hours ago, which widgets flag as out of date.
+    static var staleScoreboard: Scoreboard {
+        var scoreboard = scoreboard
+        scoreboard.fetchedAt = WidgetGallery.now.addingTimeInterval(-5 * 60 * 60)
+        return scoreboard
+    }
+
     /// Real opponents with the longest names, at every level.
     static var longNamesScoreboard: Scoreboard {
         func day(_ offset: Int, at hour: Int = 12, _ minute: Int = 0) -> Date {

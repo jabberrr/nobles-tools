@@ -12,8 +12,8 @@ struct ScoresContent {
     let results: [Game]
     /// Upcoming games, soonest first; empty when the design hides them.
     let upcoming: [Game]
-    /// "Updated 3h ago" when the scoreboard is an older cached copy.
-    let staleness: String?
+    /// How old the scoreboard is, e.g. "3h ago", when it's an older cached copy.
+    let age: String?
     /// What the design is filtered to, e.g. "Varsity · Girls Soccer", for when nothing matches.
     let filterSummary: String
     /// The moment on screen (the timeline entry's date).
@@ -23,22 +23,23 @@ struct ScoresContent {
         isAvailable = scoreboard != nil
         results = scoreboard.map { $0.live + $0.recent } ?? []
         upcoming = configuration.showsUpcoming ? scoreboard?.upcoming ?? [] : []
-        staleness = scoreboard.flatMap { Self.staleness(of: $0, now: now) }
+        age = scoreboard.flatMap { Self.age(of: $0, now: now) }
         filterSummary = configuration.summaryText
         self.now = now
     }
 
     var today: LocalDate { LocalDate(now) }
 
+    /// "Updated 3h ago" when the scoreboard is an older cached copy.
+    var staleness: String? { age.map { "Updated \($0)" } }
+
     /// The game to show where only one fits: the latest result, else the next game.
     var featured: Game? { results.first ?? upcoming.first }
 
-    /// "Updated 3h ago" when the scoreboard is an older cached copy. The threshold sits above the
+    /// "3h ago" when the scoreboard is an older cached copy. The threshold sits above the
     /// widget's 2-hour refresh, so data that is merely between refreshes isn't flagged.
-    private static func staleness(of scoreboard: Scoreboard, now: Date) -> String? {
-        guard now.timeIntervalSince(scoreboard.fetchedAt) > 3 * 60 * 60,
-              let age = SchoolFormat.age(of: scoreboard.fetchedAt, now: now)
-        else { return nil }
-        return "Updated \(age)"
+    private static func age(of scoreboard: Scoreboard, now: Date) -> String? {
+        guard now.timeIntervalSince(scoreboard.fetchedAt) > 3 * 60 * 60 else { return nil }
+        return SchoolFormat.age(of: scoreboard.fetchedAt, now: now)
     }
 }

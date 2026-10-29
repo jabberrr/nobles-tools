@@ -29,6 +29,11 @@ enum SchoolFormat {
         }
     }
 
+    /// "Today", "Tomorrow", "Yesterday", or "Mon": `relativeDay` for tight spaces.
+    static func shortRelativeDay(_ date: LocalDate, from today: LocalDate) -> String {
+        abs(today.days(until: date)) <= 1 ? relativeDay(date, from: today) : weekday(date)
+    }
+
     /// "4:00 PM"
     static func time(_ date: Date) -> String {
         date.formatted(style(.dateTime.hour().minute()))

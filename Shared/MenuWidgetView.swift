@@ -36,12 +36,18 @@ private struct MenuHomeScreenView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 10) {
-            WidgetHeader(symbol: content.mealSymbol, title: content.mealName, detail: content.day, colors: colors)
+            WidgetHeader(
+                symbol: content.mealSymbol,
+                title: content.mealName,
+                detail: content.day,
+                shortDetail: content.shortDay,
+                colors: colors
+            )
             switch content.state {
             case .unavailable:
                 WidgetMessage(symbol: "wifi.slash", title: "Menu unavailable", detail: "Will try again soon", colors: colors)
-            case .closed(let title):
-                WidgetMessage(symbol: "fork.knife", title: title, colors: colors)
+            case .closed:
+                WidgetMessage(symbol: "fork.knife", title: content.noMenuText, colors: colors)
             case .filteredOut:
                 WidgetMessage(
                     symbol: "line.3.horizontal.decrease",

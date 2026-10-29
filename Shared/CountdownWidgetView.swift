@@ -82,14 +82,9 @@ struct CountdownWidgetView: View {
             case .ring:
                 VStack(spacing: 8) {
                     ring(countdown, lineWidth: 10, figureSize: 34)
-                    Label {
-                        termName(countdown.term)
-                    } icon: {
-                        Image(systemName: countdown.term.kind.symbolName)
-                            .symbolVariant(.fill)
-                    }
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(colors.accent)
+                    termName(countdown.term)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(colors.accent)
                 }
             case .number, .bar:
                 VStack(alignment: .leading, spacing: 2) {

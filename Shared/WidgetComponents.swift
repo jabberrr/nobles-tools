@@ -2,26 +2,33 @@ import SwiftUI
 import WidgetKit
 
 /// The top line of every Home Screen widget: an icon chip and a title in the theme's accent
-/// color, with an optional detail such as "Today" on the right.
+/// color, with an optional detail such as "Today" on the right. When it all doesn't fit, the
+/// short detail and then the short title stand in.
 struct WidgetHeader: View {
     let symbol: String
     let title: String
     /// Shown instead of `title` when it doesn't fit.
     var shortTitle: String? = nil
     var detail: String? = nil
+    /// Shown instead of `detail` when it doesn't fit, e.g. "Fri" for "Fri, Oct 30".
+    var shortDetail: String? = nil
     let colors: ThemeColors
 
     var body: some View {
+        ViewThatFits(in: .horizontal) {
+            row(title: title, detail: detail)
+            row(title: title, detail: shortDetail ?? detail)
+            row(title: shortTitle ?? title, detail: shortDetail ?? detail)
+        }
+        .lineLimit(1)
+    }
+
+    private func row(title: String, detail: String?) -> some View {
         HStack(spacing: 6) {
             IconChip(symbol: symbol, colors: colors)
-            ViewThatFits(in: .horizontal) {
-                Text(title)
-                if let shortTitle {
-                    Text(shortTitle)
-                }
-            }
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(colors.accent)
+            Text(title)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(colors.accent)
             Spacer(minLength: 4)
             if let detail {
                 Text(detail)
@@ -30,7 +37,6 @@ struct WidgetHeader: View {
                     .layoutPriority(1)
             }
         }
-        .lineLimit(1)
     }
 }
 

@@ -15,7 +15,7 @@ struct MenuContent {
     enum State {
         /// Nothing could be loaded.
         case unavailable
-        /// Nothing is published for this meal, e.g. "No dinner menu today".
+        /// Nothing is published for this meal; says so, e.g. "No dinner menu today".
         case closed(String)
         /// A menu is published, but the design's filter hides every dish.
         case filteredOut
@@ -29,13 +29,19 @@ struct MenuContent {
     let mealSymbol: String
     /// "Today", "Tomorrow" or "Fri, Oct 30"; `nil` when nothing could be loaded.
     let day: String?
+    /// `day` for tight spaces: "Fri".
+    let shortDay: String?
     let state: State
+
+    /// "No dinner menu", for when the day is shown alongside.
+    var noMenuText: String { "No \(mealName.lowercased()) menu" }
 
     init(configuration: MenuConfiguration, upcoming: UpcomingMenu?, now: Date) {
         let today = LocalDate(now)
         mealName = upcoming?.meal.displayName ?? configuration.meal.displayName
         mealSymbol = (upcoming?.meal ?? configuration.meal.meal)?.symbolName ?? "fork.knife"
         day = upcoming.map { SchoolFormat.relativeDay($0.date, from: today) }
+        shortDay = upcoming.map { SchoolFormat.shortRelativeDay($0.date, from: today) }
         state = Self.state(configuration: configuration, upcoming: upcoming, today: today)
     }
 

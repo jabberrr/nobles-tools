@@ -18,7 +18,9 @@ struct FeaturedDishView: View {
     var body: some View {
         ViewThatFits(in: .vertical) {
             layout(font: prominence == .large ? .title3.weight(.semibold) : .headline)
+                .fixedSize(horizontal: false, vertical: true)
             layout(font: prominence == .large ? .headline : .subheadline.weight(.semibold))
+                .fixedSize(horizontal: false, vertical: true)
             layout(font: .footnote.weight(.semibold))
         }
     }
@@ -59,23 +61,35 @@ struct CompactDishRow: View {
     }
 }
 
-/// Dishes by station in two columns, as many as fit whole, then "+N more" for the rest.
+/// Dishes by station: in one column, or two, in larger type when they all fit; otherwise in two
+/// columns of smaller type, as many as fit whole, then "+N more" for the rest.
 struct StationColumns: View {
     let stations: [MenuSection]
     let showsStations: Bool
     let colors: ThemeColors
 
     var body: some View {
-        FittingPrefix(items: DishRow.rows(of: stations), capacity: 14, spacing: 8, overflowColor: colors.secondary) { shown in
-            let halves = DishRow.split(shown)
-            HStack(alignment: .top, spacing: 14) {
-                column(halves.left)
-                column(halves.right)
+        let rows = DishRow.rows(of: stations)
+        ViewThatFits(in: .vertical) {
+            column(rows, font: .subheadline)
+                .fixedSize(horizontal: false, vertical: true)
+            columns(rows, font: .subheadline)
+                .fixedSize(horizontal: false, vertical: true)
+            FittingPrefix(items: rows, capacity: 14, spacing: 8, overflowColor: colors.secondary) { shown in
+                columns(shown, font: .footnote)
             }
         }
     }
 
-    private func column(_ rows: [DishRow]) -> some View {
+    private func columns(_ rows: [DishRow], font: Font) -> some View {
+        let halves = DishRow.split(rows)
+        return HStack(alignment: .top, spacing: 14) {
+            column(halves.left, font: font)
+            column(halves.right, font: font)
+        }
+    }
+
+    private func column(_ rows: [DishRow], font: Font) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
                 if showsStations {
@@ -85,13 +99,13 @@ struct StationColumns: View {
                                 .padding(.top, index == 0 ? 0 : 6)
                         }
                         Text(row.item.name)
-                            .font(.footnote)
+                            .font(font)
                     }
                 } else {
                     CompactDishRow(
                         dish: Dish(item: row.item, station: row.section),
                         showsIcon: row.startsSection,
-                        font: .footnote,
+                        font: font,
                         colors: colors
                     )
                 }

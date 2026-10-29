@@ -31,16 +31,21 @@ private struct ScoresHomeScreenView: View {
     let fontDesign: Font.Design
 
     var body: some View {
-        if !content.isAvailable {
-            WidgetMessage(symbol: "wifi.slash", title: "Scores unavailable", detail: "Will try again soon", colors: colors)
-        } else if let featured = content.featured {
+        if let featured = content.featured {
             switch family {
             case .systemSmall: small(featured)
             case .systemMedium: medium
             default: large
             }
         } else {
-            WidgetMessage(symbol: "sportscourt", title: "No recent games", detail: content.filterSummary, colors: colors)
+            VStack(alignment: .leading, spacing: 8) {
+                WidgetHeader(symbol: "sportscourt", title: "Scores", colors: colors)
+                if content.isAvailable {
+                    WidgetMessage(symbol: "sportscourt", title: "No recent games", detail: content.filterSummary, colors: colors)
+                } else {
+                    WidgetMessage(symbol: "wifi.slash", title: "Scores unavailable", detail: "Will try again soon", colors: colors)
+                }
+            }
         }
     }
 
@@ -96,21 +101,26 @@ private struct ScoresHomeScreenView: View {
 
     // MARK: Medium
 
-    /// Recent results, then the next game; or upcoming games when there are no results.
+    /// Recent results, then the next game under a rule; or upcoming games when there are no
+    /// results. Spacing is tight so two results and the next game fit.
     private var medium: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 0) {
             header
+                .padding(.bottom, 6)
             if results.isEmpty {
                 FittingList(items: upcoming, capacity: 3, spacing: 6) { upcomingRow($0) }
             } else {
                 FittingList(items: results, capacity: upcoming.isEmpty ? 3 : 2, spacing: 6) { resultRow($0) }
                     .layoutPriority(1)
-                Spacer(minLength: 0)
+                Spacer(minLength: 4)
                 if let next = upcoming.first {
-                    Rectangle()
-                        .fill(colors.track)
-                        .frame(height: 1)
                     upcomingRow(next)
+                        .padding(.top, 6)
+                        .overlay(alignment: .top) {
+                            Rectangle()
+                                .fill(colors.track)
+                                .frame(height: 1)
+                        }
                 }
             }
         }
@@ -145,7 +155,13 @@ private struct ScoresHomeScreenView: View {
     // MARK: Building blocks
 
     private var header: some View {
-        WidgetHeader(symbol: "sportscourt", title: results.isEmpty ? "Upcoming" : "Results", detail: content.staleness, colors: colors)
+        WidgetHeader(
+            symbol: "sportscourt",
+            title: results.isEmpty ? "Upcoming" : "Results",
+            detail: content.staleness,
+            shortDetail: content.age,
+            colors: colors
+        )
     }
 
     private func resultRow(_ game: Game) -> some View {

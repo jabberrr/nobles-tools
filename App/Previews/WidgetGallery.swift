@@ -103,7 +103,13 @@ enum WidgetGallery {
         return [
             Variant(name: "scores", design: scores, families: WidgetKind.scores.widgetFamilies, scoreboard: sample),
             Variant(name: "scores-crimson", design: crimson, families: [.systemSmall], scoreboard: sample),
-            Variant(name: "scores-dark", design: scores, families: [.systemMedium], colorScheme: .dark, scoreboard: sample),
+            Variant(
+                name: "scores-stale-dark",
+                design: scores,
+                families: [.systemMedium],
+                colorScheme: .dark,
+                scoreboard: GallerySamples.staleScoreboard
+            ),
             Variant(
                 name: "scores-long-paper",
                 design: allLevels,

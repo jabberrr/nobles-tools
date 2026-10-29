@@ -36,7 +36,10 @@ struct FittingPrefix<Item, Content: View>: View {
     private func layout(showing count: Int) -> some View {
         VStack(alignment: .leading, spacing: spacing) {
             if count > 0 {
+                // The rows chosen fit whole, so they keep their ideal height: a stack would
+                // otherwise share its height out evenly and cut short a row that needs more.
                 content(Array(items.prefix(count)))
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if let overflowColor, count < items.count {
                 Text("+\(items.count - count) more")

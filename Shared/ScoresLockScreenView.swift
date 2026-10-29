@@ -26,22 +26,19 @@ struct ScoresLockScreenView: View {
 
     // MARK: Inline
 
-    /// "W 3–0 vs Concord Academy", shortening the opponent, then leaving it out, to fit.
+    /// "W 3–0 vs Concord Academy", shortening the opponent's name, then cutting it, to fit.
     private var inline: some View {
-        let texts = inlineTexts
-        return ViewThatFits {
-            Label(texts.long, systemImage: symbol)
-            Label(texts.medium, systemImage: symbol)
-            Label(texts.short, systemImage: symbol)
+        FirstFitting(variants: inlineTexts) { text in
+            Label(text, systemImage: symbol)
         }
     }
 
-    private var inlineTexts: (long: String, medium: String, short: String) {
-        guard content.isAvailable else { return ("Scores unavailable", "Unavailable", "Unavailable") }
-        guard let game = content.featured else { return ("No recent games", "No games", "No games") }
+    private var inlineTexts: [String] {
+        guard content.isAvailable else { return ["Scores unavailable", "Unavailable"] }
+        guard let game = content.featured else { return ["No recent games", "No games"] }
         let lead = leadText(game)
-        func withMatchup(_ matchup: String) -> String { matchup.isEmpty ? lead : "\(lead) \(matchup)" }
-        return (withMatchup(game.matchupText), withMatchup(game.shortMatchupText), lead)
+        let matchups = [game.matchupText, game.shortMatchupText] + game.shortMatchupText.cutsAtWords(limit: 2)
+        return matchups.filter { !$0.isEmpty }.map { "\(lead) \($0)" } + [lead]
     }
 
     // MARK: Circular
@@ -87,40 +84,43 @@ struct ScoresLockScreenView: View {
     // MARK: Rectangular
 
     /// The team; the result (or the day of the next game) large, with its date (or time); then
-    /// the opponent.
+    /// the opponent, on a second line if need be.
     @ViewBuilder private var rectangular: some View {
         if !content.isAvailable {
-            rectangularMessage("Scores unavailable", detail: "Will try again soon")
+            rectangularMessage("Unavailable", detail: "Will try again soon")
         } else if let game = content.featured {
-            VStack(alignment: .leading, spacing: 0) {
-                Label {
-                    TeamName(game: game)
-                } icon: {
-                    Image(systemName: symbol)
-                }
-                .font(.footnote.weight(.semibold))
-                .widgetAccentable()
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(headline(game))
-                        .font(.title3.weight(.bold))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.7)
-                    Spacer(minLength: 4)
-                    Text(detail(game))
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.secondary)
-                        .layoutPriority(1)
-                }
-                .lineLimit(1)
-                if !game.matchupText.isEmpty {
-                    MatchupName(game: game)
-                        .font(.footnote)
-                }
+            FirstFitting(variants: [game.matchupText, game.shortMatchupText], axes: .vertical) { matchup in
+                rectangularGame(game, matchup: matchup)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             rectangularMessage("No recent games", detail: content.filterSummary)
         }
+    }
+
+    private func rectangularGame(_ game: Game, matchup: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            rectangularHeader {
+                TeamName(game: game)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(headline(game))
+                    .font(.title3.weight(.bold))
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.7)
+                Spacer(minLength: 4)
+                Text(detail(game))
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .layoutPriority(1)
+            }
+            .lineLimit(1)
+            if !matchup.isEmpty {
+                Text(matchup)
+                    .font(.footnote)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// "W 3–0" for a result, the day for a game to come, or a status such as "Postponed".
@@ -137,15 +137,28 @@ struct ScoresLockScreenView: View {
     }
 
     private func rectangularMessage(_ title: String, detail: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Label(title, systemImage: "sportscourt")
+        VStack(alignment: .leading, spacing: 1) {
+            rectangularHeader {
+                Text("Scores")
+            }
+            Text(title)
                 .font(.headline)
-                .widgetAccentable()
             Text(detail)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .lineLimit(2)
+        .lineLimit(1)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The top line, after the sport's icon.
+    private func rectangularHeader<Title: View>(@ViewBuilder title: () -> Title) -> some View {
+        Label {
+            title()
+        } icon: {
+            Image(systemName: symbol)
+        }
+        .font(.footnote.weight(.semibold))
+        .widgetAccentable()
     }
 }
