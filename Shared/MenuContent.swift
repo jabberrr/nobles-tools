@@ -31,6 +31,10 @@ struct MenuContent {
     let day: String?
     /// `day` for tight spaces: "Fri".
     let shortDay: String?
+    /// Whether to name stations (the design's "Station Names" setting).
+    let showsStations: Bool
+    /// What the design's filter keeps, e.g. "Just Entrées", for when it hides every dish.
+    let filterSummary: String
     let state: State
 
     /// "No dinner menu", for when the day is shown alongside.
@@ -42,6 +46,8 @@ struct MenuContent {
         mealSymbol = (upcoming?.meal ?? configuration.meal.meal)?.symbolName ?? "fork.knife"
         day = upcoming.map { SchoolFormat.relativeDay($0.date, from: today) }
         shortDay = upcoming.map { SchoolFormat.shortRelativeDay($0.date, from: today) }
+        showsStations = configuration.showsSectionHeaders
+        filterSummary = configuration.filter.summaryText
         state = Self.state(configuration: configuration, upcoming: upcoming, today: today)
     }
 

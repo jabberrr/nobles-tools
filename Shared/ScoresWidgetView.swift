@@ -41,7 +41,7 @@ private struct ScoresHomeScreenView: View {
             VStack(alignment: .leading, spacing: 8) {
                 WidgetHeader(symbol: "sportscourt", title: "Scores", colors: colors)
                 if content.isAvailable {
-                    WidgetMessage(symbol: "sportscourt", title: "No recent games", detail: content.filterSummary, colors: colors)
+                    WidgetMessage(symbol: "line.3.horizontal.decrease", title: "No recent games", detail: content.filterSummary, colors: colors)
                 } else {
                     WidgetMessage(symbol: "wifi.slash", title: "Scores unavailable", detail: "Will try again soon", colors: colors)
                 }
@@ -54,10 +54,21 @@ private struct ScoresHomeScreenView: View {
 
     // MARK: Small
 
-    /// The game's sport, its result (or when it starts), and the opponent.
+    /// The result large (or when the next game starts), then the team on its own line, so it
+    /// keeps its gender and level, and the opponent.
     private func small(_ game: Game) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            WidgetHeader(symbol: SportSymbol.name(for: game.sport), title: game.teamText, shortTitle: game.shortSport, colors: colors)
+        let isUpcoming = game.score == nil && game.start > content.now
+        return VStack(alignment: .leading, spacing: 2) {
+            WidgetHeader(
+                symbol: SportSymbol.name(for: game.sport),
+                title: game.score != nil ? "Final" : isUpcoming ? "Next Game" : "Latest",
+                shortTitle: isUpcoming ? "Next" : nil,
+                detail: isUpcoming
+                    ? SchoolFormat.relativeDay(LocalDate(game.start), from: content.today)
+                    : game.dateText(today: content.today),
+                shortDetail: isUpcoming ? SchoolFormat.shortRelativeDay(LocalDate(game.start), from: content.today) : nil,
+                colors: colors
+            )
             Spacer(minLength: 4)
             if let score = game.score {
                 HStack(spacing: 8) {
@@ -68,31 +79,28 @@ private struct ScoresHomeScreenView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                 }
-            } else if game.start > content.now {
-                Eyebrow(symbol: "calendar", text: "Next game", colors: colors)
-                Text(game.whenText(today: content.today))
-                    .font(.headline)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
             } else {
-                Text(game.statusText(now: content.now))
-                    .font(.headline)
-                    .foregroundStyle(colors.secondary)
+                Text(isUpcoming ? game.startText : game.statusText(now: content.now))
+                    .font(.system(size: 26, weight: .bold, design: fontDesign))
+                    .foregroundStyle(isUpcoming ? colors.primary : colors.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.6)
             }
-            if !game.matchupText.isEmpty {
-                ViewThatFits(in: .vertical) {
-                    Text(game.matchupText)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(game.shortMatchupText)
-                }
+            TeamName(game: game)
                 .font(.subheadline.weight(.semibold))
-                .padding(.top, 2)
+                .padding(.top, 4)
+            if !game.matchupVariants.isEmpty {
+                FirstFitting(variants: game.matchupVariants, axes: .vertical) { matchup in
+                    Text(matchup)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .font(.footnote)
+                .foregroundStyle(colors.secondary)
                 .layoutPriority(1)
             }
-            if game.score != nil || game.start <= content.now {
-                Text(content.staleness ?? game.dateText(today: content.today))
-                    .font(.caption)
+            if let staleness = content.staleness {
+                Text(staleness)
+                    .font(.caption2)
                     .foregroundStyle(colors.secondary)
                     .lineLimit(1)
             }
@@ -155,10 +163,12 @@ private struct ScoresHomeScreenView: View {
 
     // MARK: Building blocks
 
+    /// "Results" over the large list, "Scores" over the medium one (which ends with the next
+    /// game), or "Upcoming" when there are no results.
     private var header: some View {
         WidgetHeader(
             symbol: "sportscourt",
-            title: results.isEmpty ? "Upcoming" : "Results",
+            title: results.isEmpty ? "Upcoming" : family == .systemLarge ? "Results" : "Scores",
             detail: content.staleness,
             shortDetail: content.age,
             colors: colors

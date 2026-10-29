@@ -1,36 +1,31 @@
 import SwiftUI
+import WidgetKit
 import NoblesKit
 
-/// A game's team on one line, shortened to fit: "Girls Field Hockey · JV", then "Girls Field
-/// Hockey", then "Field Hockey".
+/// A game's team on one line, shortened to fit (see `Game.teamVariants`).
 struct TeamName: View {
     let game: Game
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            Text(game.teamText)
-            Text(game.sport)
-            Text(game.shortSport)
-        }
-        .lineLimit(1)
+        FirstFitting(variants: game.teamVariants, axes: .horizontal) { Text($0) }
+            .lineLimit(1)
     }
 }
 
-/// "vs Buckingham Browne & Nichols School" on one line, or "vs Buckingham Browne & Nichols" when
-/// that doesn't fit. With `showsVenue`, " · Nobles-Burr Field" follows when the whole line fits.
+/// The matchup on one line, shortened to fit (see `Game.matchupVariants`). With `showsVenue`,
+/// " · Nobles-Burr Field" follows when the whole line fits.
 struct MatchupName: View {
     let game: Game
     var showsVenue = false
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            if showsVenue, let venue = game.venueText {
-                Text([game.matchupText, venue].filter { !$0.isEmpty }.joined(separator: " · "))
-            }
-            Text(game.matchupText)
-            Text(game.shortMatchupText)
-        }
-        .lineLimit(1)
+        FirstFitting(variants: variants, axes: .horizontal) { Text($0) }
+            .lineLimit(1)
+    }
+
+    private var variants: [String] {
+        guard showsVenue, let venue = game.venueText else { return game.matchupVariants }
+        return [[game.matchupText, venue].filter { !$0.isEmpty }.joined(separator: " · ")] + game.matchupVariants
     }
 }
 
@@ -110,7 +105,8 @@ struct UpcomingRow: View {
     }
 }
 
-/// A rounded "W", "L" or "T" tile; wins are filled with the accent color.
+/// A rounded "W", "L" or "T" tile. A win is an accent-colored tile with its letter cut out, which
+/// keeps its shape in the Home Screen's tinted and clear modes (see `IconChip`).
 struct OutcomeBadge: View {
     let outcome: GameScore.Outcome
     let size: CGFloat
@@ -118,11 +114,23 @@ struct OutcomeBadge: View {
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-        Text(outcome.rawValue)
+        let letter = Text(outcome.rawValue)
             .font(.system(size: size * 0.55, weight: .heavy, design: .rounded))
-            .foregroundStyle(outcome == .win ? colors.onAccent : colors.primary)
-            .frame(width: size, height: size)
-            .background(outcome == .win ? colors.accent : colors.track, in: shape)
-            .accessibilityLabel(outcome.word)
+        Group {
+            if outcome == .win {
+                shape
+                    .fill(colors.accent)
+                    .overlay { letter.blendMode(.destinationOut) }
+                    .compositingGroup()
+                    .widgetAccentable()
+            } else {
+                letter
+                    .foregroundStyle(colors.primary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(colors.track, in: shape)
+            }
+        }
+        .frame(width: size, height: size)
+        .accessibilityLabel(outcome.word)
     }
 }

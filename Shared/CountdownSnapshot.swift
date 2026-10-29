@@ -51,6 +51,13 @@ extension Countdown {
         }
     }
 
+    /// The unit under a count: "school days left" during the term, "school days" (its length)
+    /// before it starts.
+    var unitText: String {
+        let unit = SchoolFormat.unit(counting, count: remaining)
+        return phase == .inProgress ? "\(unit) left" : unit
+    }
+
     /// The line under the figure, e.g. "school days left" or "school days · starts Jan 25".
     var caption: String {
         let unit = SchoolFormat.unit(counting, count: remaining)

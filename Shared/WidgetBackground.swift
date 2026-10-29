@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 import NoblesKit
 
 /// The themed fill behind a widget, in colors already resolved for where it's drawn. Lock Screen
@@ -21,5 +22,20 @@ struct WidgetBackground: View {
                 endPoint: .bottomTrailing
             )
         }
+    }
+}
+
+extension View {
+    /// Fills the widget, then draws `disc` behind it on the circular Lock Screen size, so the disc
+    /// spans the whole circle rather than hugging the content. The widget passes the system's
+    /// `AccessoryWidgetBackground`; the app's previews, where that draws nothing, a stand-in.
+    func circularBackdrop<Disc: View>(for family: WidgetFamily, @ViewBuilder disc: () -> Disc) -> some View {
+        let disc = disc()
+        return frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background {
+                if family == .accessoryCircular {
+                    disc
+                }
+            }
     }
 }

@@ -23,13 +23,13 @@ struct FeaturedDishView: View {
         }
     }
 
-    /// The station over the dish. Unless `canCutShort`, the name keeps its ideal height: this
-    /// layout is only shown when it fits whole.
+    /// The station over the dish, each wrapping as it needs to. Unless `canCutShort`, they keep
+    /// their ideal height: this layout is only shown when it fits whole.
     private func layout(font: Font, canCutShort: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             if showsStation, !dish.station.isEmpty {
                 Eyebrow(symbol: dish.symbol, text: dish.station, colors: colors)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: !canCutShort)
             }
             Text(dish.item.name)
                 .font(font)
@@ -63,20 +63,39 @@ struct CompactDishRow: View {
     }
 }
 
-/// Dishes by station: in one column, or two, in larger type when they all fit; otherwise in two
-/// columns of smaller type, as many as fit whole, then "+N more" for the rest.
+/// Dishes by station, laid out as generously as fits: in one column of large type, then of
+/// smaller type, then two columns; otherwise as many as fit whole in two columns of small type,
+/// then "+N more" for the rest.
 struct StationColumns: View {
     let stations: [MenuSection]
     let showsStations: Bool
     let colors: ThemeColors
 
+    /// One way to lay the dishes out.
+    private enum Arrangement {
+        case oneColumn(Font)
+        case twoColumns(Font)
+        /// The first `count` dishes in two columns of small type, then "+N more".
+        case firstDishes(count: Int)
+    }
+
     var body: some View {
         let rows = DishRow.rows(of: stations)
-        ViewThatFits(in: .vertical) {
-            column(rows, font: .subheadline)
-            columns(rows, font: .subheadline)
-            FittingPrefix(items: rows, capacity: 14, spacing: 8, overflowColor: colors.secondary) { shown in
-                columns(shown, font: .footnote)
+        let generous: [Arrangement] = [.oneColumn(.body), .oneColumn(.subheadline), .twoColumns(.subheadline)]
+        let compact = (0...min(rows.count, 14)).reversed().map { Arrangement.firstDishes(count: $0) }
+        FirstFitting(variants: generous + compact, axes: .vertical) { arrangement in
+            switch arrangement {
+            case .oneColumn(let font):
+                column(rows, font: font)
+            case .twoColumns(let font):
+                columns(rows, font: font)
+            case .firstDishes(let count):
+                VStack(alignment: .leading, spacing: 8) {
+                    columns(Array(rows.prefix(count)), font: .footnote)
+                    if count < rows.count {
+                        MoreLabel(count: rows.count - count, color: colors.secondary)
+                    }
+                }
             }
         }
     }

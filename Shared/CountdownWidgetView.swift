@@ -35,10 +35,10 @@ struct CountdownWidgetView: View {
             .minimumScaleFactor(0.4)
     }
 
-    /// "school days" under a count; nothing once there's nothing to count.
+    /// "school days left" under a count; nothing once there's nothing to count.
     @ViewBuilder private func unit(_ countdown: Countdown, font: Font) -> some View {
         if countdown.isCounting {
-            Text(SchoolFormat.unit(countdown.counting, count: countdown.remaining))
+            Text(countdown.unitText)
                 .font(font)
                 .foregroundStyle(colors.secondary)
                 .lineLimit(1)
@@ -134,7 +134,12 @@ struct CountdownWidgetView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     VStack(alignment: .leading, spacing: 3) {
-                        WidgetHeader(symbol: countdown.term.kind.symbolName, title: countdown.term.name, colors: colors)
+                        WidgetHeader(
+                            symbol: countdown.term.kind.symbolName,
+                            title: countdown.term.name,
+                            shortTitle: countdown.term.compactName,
+                            colors: colors
+                        )
                         Text(countdown.progressText)
                             .font(.caption)
                             .foregroundStyle(colors.secondary)
@@ -163,6 +168,7 @@ struct CountdownWidgetView: View {
                     .symbolVariant(.fill)
                     .font(.caption2)
                     .foregroundStyle(colors.accent)
+                    .frame(width: 16)
                 termName(countdown.term)
                     .font(.caption.weight(.medium))
                 Spacer(minLength: 4)

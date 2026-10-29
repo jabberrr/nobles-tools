@@ -152,7 +152,7 @@ private struct FeaturedDishSection: View {
         } header: {
             Text("Featured Dish")
         } footer: {
-            Text("Lock Screen widgets show one dish from this station, and Home Screen widgets lead with it. Automatic picks the first entrée.")
+            Text("Lock Screen widgets show one dish from this station, and Home Screen widgets lead with it. When the station isn't serving, or on Automatic, it's the first dish your menu filter keeps, entrées first.")
         }
     }
 }

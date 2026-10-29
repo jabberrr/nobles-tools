@@ -26,10 +26,8 @@ struct WidgetChrome<Content: View>: View {
     var body: some View {
         let colors = ThemeColors(theme: design.theme, colorScheme: colorScheme, family: family, showsBackground: showsBackground)
         content(family, colors)
-            .background {
-                if family == .accessoryCircular {
-                    AccessoryWidgetBackground()
-                }
+            .circularBackdrop(for: family) {
+                AccessoryWidgetBackground()
             }
             .widgetTheme(design.theme, colors: colors)
             .containerBackground(for: .widget) {

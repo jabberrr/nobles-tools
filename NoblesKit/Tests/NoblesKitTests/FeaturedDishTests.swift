@@ -12,27 +12,45 @@ struct FeaturedDishTests {
         let lunch = try await MenuFixtures.realMenu(.lunch, on: monday)
         let dinner = try await MenuFixtures.realMenu(.dinner, on: tuesday)
 
-        #expect(lunch.featuredDish(station: nil)?.name == "Revved Up Macaroni & Cheese")
-        #expect(dinner.featuredDish(station: nil)?.name == "Chicken Tikka Masala")
+        #expect(MenuConfiguration().featuredDish(in: lunch)?.name == "Revved Up Macaroni & Cheese")
+        #expect(MenuConfiguration().featuredDish(in: dinner)?.name == "Chicken Tikka Masala")
     }
 
-    @Test func aChosenStationMatchesLoosely() async throws {
+    @Test func stationsMatchLoosely() async throws {
         let lunch = try await MenuFixtures.realMenu(.lunch, on: monday)
         let halloween = try await MenuFixtures.realMenu(.lunch, on: friday)
 
-        #expect(lunch.featuredDish(station: "Vegan Entree")?.name == "Tomato, Kale, Red Bean & Pasta Toss, Chive Oil")
-        #expect(lunch.featuredDish(station: "vegan entrée")?.name == "Tomato, Kale, Red Bean & Pasta Toss, Chive Oil")
-        #expect(lunch.featuredDish(station: "Soup")?.name == "Cream of Broccoli & Cheddar Soup")
-        #expect(halloween.featuredDish(station: "Dracula's Cookie Extravaganza")?.name == "Chocolate Chip, Snickerdoodle, Oatmeal")
+        #expect(lunch.firstDish(atStation: "Vegan Entree")?.name == "Tomato, Kale, Red Bean & Pasta Toss, Chive Oil")
+        #expect(lunch.firstDish(atStation: "vegan entrée")?.name == "Tomato, Kale, Red Bean & Pasta Toss, Chive Oil")
+        #expect(lunch.firstDish(atStation: "Soup")?.name == "Cream of Broccoli & Cheddar Soup")
+        #expect(halloween.firstDish(atStation: "Dracula's Cookie Extravaganza")?.name == "Chocolate Chip, Snickerdoodle, Oatmeal")
     }
 
-    @Test func aStationThatIsNotServingFallsBackToTheFirstEntree() async throws {
+    @Test func stationsMatchAcrossMealsByTheirDistinctiveWords() async throws {
+        let lunch = try await MenuFixtures.realMenu(.lunch, on: tuesday)
+        let dinner = try await MenuFixtures.realMenu(.dinner, on: tuesday)
+
+        #expect(dinner.firstDish(atStation: "Vegan Entree")?.name == "Red Curry Tofu & Bok Choy")
+        #expect(lunch.firstDish(atStation: "Vegan Option")?.name == "Chili-Cumin Root Vegetable Taco Medley")
+        #expect(dinner.firstDish(atStation: "Hot Entree")?.name == "Chicken Tikka Masala")
+        #expect(dinner.firstDish(atStation: "Weekly Composed Salad") == nil)
+    }
+
+    @Test func stationsThatAreNotServingHaveNoDish() async throws {
         let halloween = try await MenuFixtures.realMenu(.lunch, on: friday)
 
-        #expect(halloween.featuredDish(station: "Vegan Entree")?.name == "Monster Chicken Fingers")
-        #expect(halloween.featuredDish(station: "Pizza")?.name == "Monster Chicken Fingers")
-        #expect(halloween.featuredDish(station: "  ")?.name == "Monster Chicken Fingers")
-        #expect(DailyMenu(date: friday, meal: .lunch, sections: []).featuredDish(station: "Hot Entree") == nil)
+        #expect(halloween.firstDish(atStation: "Vegan Entree") == nil)
+        #expect(halloween.firstDish(atStation: "Pizza") == nil)
+        #expect(halloween.firstDish(atStation: "  ") == nil)
+    }
+
+    @Test func aStationThatIsNotServingFallsBackToTheFilteredMenu() async throws {
+        let halloween = try await MenuFixtures.realMenu(.lunch, on: friday)
+        let noHotEntree = MenuConfiguration(filter: .excluding(sections: ["Hot Entree"]), featuredStation: "Vegan Entree")
+
+        #expect(MenuConfiguration(featuredStation: "Vegan Entree").featuredDish(in: halloween)?.name == "Monster Chicken Fingers")
+        #expect(noHotEntree.featuredDish(in: halloween)?.name == "Black Widow Soup, Sour Cream & Scallions")
+        #expect(MenuConfiguration(featuredStation: "Vegan Entree").featuredDish(in: DailyMenu(date: friday, meal: .lunch, sections: [])) == nil)
     }
 
     @Test func automaticFollowsTheFilter() async throws {

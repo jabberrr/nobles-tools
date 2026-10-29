@@ -26,7 +26,8 @@ struct ScoresLockScreenView: View {
 
     // MARK: Inline
 
-    /// "W 3–0 vs Concord Academy", shortening the opponent's name, then cutting it, to fit.
+    /// "W 3–0 vs Concord Academy", shortening the opponent's name (down to initials, "vs BB&N"),
+    /// then naming the sport instead, then cutting the name at a word, to fit.
     private var inline: some View {
         FirstFitting(variants: inlineTexts) { text in
             Label(text, systemImage: symbol)
@@ -37,8 +38,11 @@ struct ScoresLockScreenView: View {
         guard content.isAvailable else { return ["Scores unavailable", "Unavailable"] }
         guard let game = content.featured else { return ["No recent games", "No games"] }
         let lead = leadText(game)
-        let matchups = [game.matchupText, game.shortMatchupText] + game.shortMatchupText.cutsAtWords(limit: 2)
-        return matchups.filter { !$0.isEmpty }.map { "\(lead) \($0)" } + [lead]
+        let cuts = game.matchupVariants.last?.cutsAtWords(limit: 2) ?? []
+        return game.matchupVariants.map { "\(lead) \($0)" }
+            + ["\(lead) · \(game.shortSport)"]
+            + cuts.map { "\(lead) \($0)" }
+            + [lead]
     }
 
     // MARK: Circular
@@ -57,7 +61,7 @@ struct ScoresLockScreenView: View {
                         .font(.caption2.weight(.semibold))
                         .monospacedDigit()
                 } else {
-                    Text(dayWord(game))
+                    Text(SchoolFormat.shortRelativeDay(LocalDate(game.start), from: content.today))
                         .font(.headline)
                     if game.hasStartTime {
                         Text(SchoolFormat.time(game.start))
@@ -75,12 +79,6 @@ struct ScoresLockScreenView: View {
         }
     }
 
-    /// "Today", or the weekday: "Wed".
-    private func dayWord(_ game: Game) -> String {
-        let day = LocalDate(game.start)
-        return day == content.today ? "Today" : SchoolFormat.weekday(day)
-    }
-
     // MARK: Rectangular
 
     /// The team; the result (or the day of the next game) large, with its date (or time); then
@@ -89,7 +87,7 @@ struct ScoresLockScreenView: View {
         if !content.isAvailable {
             rectangularMessage("Unavailable", detail: "Will try again soon")
         } else if let game = content.featured {
-            FirstFitting(variants: [game.matchupText, game.shortMatchupText], axes: .vertical) { matchup in
+            FirstFitting(variants: game.matchupVariants.isEmpty ? [""] : game.matchupVariants, axes: .vertical) { matchup in
                 rectangularGame(game, matchup: matchup)
             }
         } else {

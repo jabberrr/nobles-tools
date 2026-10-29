@@ -3,7 +3,8 @@ import WidgetKit
 import NoblesKit
 
 /// Every kind of widget at every size, drawn from fixed sample data at a fixed moment, in several
-/// themes, and with the long names and empty states layouts must hold up to. Shown in Xcode's
+/// themes, and with the long names and empty states layouts must hold up to; some also on a
+/// smaller iPhone ("-compact") and in the Home Screen's tinted mode ("-tinted"). Shown in Xcode's
 /// canvas, and rendered to `docs/widgets` by the `WidgetSnapshots` tests so layouts can be
 /// checked without a device.
 enum WidgetGallery {
@@ -34,6 +35,8 @@ enum WidgetGallery {
         let design: WidgetDesign
         let families: [WidgetFamily]
         var colorScheme: ColorScheme = .light
+        var screen = PreviewScreen.large
+        var isTinted = false
         /// The menu a menu design shows; `nil` shows it as unavailable.
         var menu: UpcomingMenu? = nil
         /// The games a scores design shows; `nil` shows them as unavailable.
@@ -58,15 +61,31 @@ enum WidgetGallery {
             theme: Theme(palette: .graphite, background: .solid)
         )
         let closed = design(.menu(MenuConfiguration(meal: .dinner)), theme: Theme(palette: .paper))
+        let salad = design(.menu(MenuConfiguration(featuredStation: "Weekly Composed Salad")))
         let lunchMenu = GallerySamples.menu(.lunch)
         return [
             Variant(name: "menu-lunch", design: lunch, families: WidgetKind.menu.widgetFamilies, menu: lunchMenu),
+            Variant(
+                name: "menu-lunch-compact",
+                design: lunch,
+                families: homeScreen + [.accessoryCircular, .accessoryRectangular],
+                screen: .compact,
+                menu: lunchMenu
+            ),
+            Variant(name: "menu-lunch-tinted", design: lunch, families: [.systemMedium], isTinted: true, menu: lunchMenu),
             Variant(name: "menu-dinner-navy", design: dinner, families: homeScreen, menu: GallerySamples.menu(.dinner)),
-            Variant(name: "menu-lunch-dark", design: lunch, families: [.systemMedium], colorScheme: .dark, menu: lunchMenu),
+            Variant(name: "menu-salad-dark", design: salad, families: [.systemSmall, .systemMedium], colorScheme: .dark, menu: lunchMenu),
             Variant(
                 name: "menu-halloween-sunset",
                 design: halloween,
                 families: homeScreen + [.accessoryRectangular],
+                menu: GallerySamples.halloweenLunch
+            ),
+            Variant(
+                name: "menu-halloween-sunset-compact",
+                design: halloween,
+                families: [.systemMedium],
+                screen: .compact,
                 menu: GallerySamples.halloweenLunch
             ),
             Variant(
@@ -89,7 +108,10 @@ enum WidgetGallery {
         let semester = design(.countdown(CountdownConfiguration(target: .semester, style: .number)))
         return [
             Variant(name: "countdown-year", design: year, families: WidgetKind.countdown.widgetFamilies),
+            Variant(name: "countdown-year-compact", design: year, families: [.systemMedium], screen: .compact),
+            Variant(name: "countdown-year-tinted", design: year, families: [.systemLarge], isTinted: true),
             Variant(name: "countdown-quarter-forest", design: quarter, families: homeScreen),
+            Variant(name: "countdown-quarter-forest-compact", design: quarter, families: [.systemSmall, .systemMedium], screen: .compact),
             Variant(name: "countdown-semester-dark", design: semester, families: [.systemSmall, .accessoryCircular], colorScheme: .dark),
         ]
     }
@@ -102,6 +124,7 @@ enum WidgetGallery {
         let sample = GallerySamples.scoreboard
         return [
             Variant(name: "scores", design: scores, families: WidgetKind.scores.widgetFamilies, scoreboard: sample),
+            Variant(name: "scores-tinted", design: scores, families: [.systemSmall, .systemMedium], isTinted: true, scoreboard: sample),
             Variant(name: "scores-crimson", design: crimson, families: [.systemSmall], scoreboard: sample),
             Variant(
                 name: "scores-stale-dark",
@@ -117,6 +140,13 @@ enum WidgetGallery {
                 scoreboard: GallerySamples.longNamesScoreboard
             ),
             Variant(
+                name: "scores-long-paper-compact",
+                design: allLevels,
+                families: [.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular],
+                screen: .compact,
+                scoreboard: GallerySamples.longNamesScoreboard
+            ),
+            Variant(
                 name: "scores-empty",
                 design: design(.scores(squash)),
                 families: [.systemSmall],
@@ -129,7 +159,7 @@ enum WidgetGallery {
     // MARK: Drawing
 
     private static func tile(_ variant: Variant, _ family: WidgetFamily) -> some View {
-        WidgetPreviewFrame(family: family, theme: variant.design.theme) { colors in
+        WidgetPreviewFrame(family: family, theme: variant.design.theme, screen: variant.screen, isTinted: variant.isTinted) { colors in
             DesignWidgetContent(
                 design: variant.design,
                 family: family,

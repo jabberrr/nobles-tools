@@ -136,15 +136,16 @@ public enum Palette: String, Codable, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// `nil` for `.classic`, which uses system colors instead of fixed ones.
+    /// `nil` for `.classic`, which uses system colors instead of fixed ones. Text colors keep a
+    /// contrast of at least 4.5:1, and the accent 3:1, against both ends of the background.
     public var colors: PaletteColors? {
         switch self {
         case .classic: nil
         case .navy: PaletteColors(background: 0x0B2545, backgroundEnd: 0x13315C, primary: 0xFFFFFF, secondary: 0xB8C7DC, accent: 0x8DB3F2)
         case .crimson: PaletteColors(background: 0x7A0E1F, backgroundEnd: 0xA4161A, primary: 0xFFFFFF, secondary: 0xF2C6CB, accent: 0xFFD166)
         case .forest: PaletteColors(background: 0x1B4332, backgroundEnd: 0x2D6A4F, primary: 0xFFFFFF, secondary: 0xB7E4C7, accent: 0xFFE66D)
-        case .sunset: PaletteColors(background: 0xF2545B, backgroundEnd: 0xF7A072, primary: 0xFFFFFF, secondary: 0xFFE8D6, accent: 0x3D0C11)
-        case .graphite: PaletteColors(background: 0x1C1C1E, backgroundEnd: 0x2C2C2E, primary: 0xF2F2F7, secondary: 0x8E8E93, accent: 0x64D2FF)
+        case .sunset: PaletteColors(background: 0xC2334D, backgroundEnd: 0xB54516, primary: 0xFFFFFF, secondary: 0xFFEDE0, accent: 0xFFE08A)
+        case .graphite: PaletteColors(background: 0x1C1C1E, backgroundEnd: 0x2C2C2E, primary: 0xF2F2F7, secondary: 0x98989D, accent: 0x64D2FF)
         case .paper: PaletteColors(background: 0xFAF7F0, backgroundEnd: 0xF1EBDD, primary: 0x1F1F1F, secondary: 0x6B6459, accent: 0xB0413E)
         }
     }

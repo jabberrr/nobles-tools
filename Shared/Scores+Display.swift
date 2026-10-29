@@ -16,11 +16,22 @@ extension Game {
         return sport
     }
 
+    /// The team from fullest to shortest, for fitting: "Girls Field Hockey · Middle School",
+    /// "Girls Field Hockey · MS", "Field Hockey · MS". Varsity teams go without a level.
+    var teamVariants: [String] {
+        guard let level = shortLevel else { return [sport, shortSport] }
+        return [teamText, "\(sport) · \(level)", "\(shortSport) · \(level)"]
+    }
+
     /// "vs Thayer Academy", "at Tabor Academy", or empty for a meet with no single opponent.
     var matchupText: String { matchup(against: opponent) }
 
-    /// "vs Thayer", "at Tabor": `matchupText` with the opponent's `shortOpponent`.
-    var shortMatchupText: String { matchup(against: shortOpponent) }
+    /// The matchup from fullest to shortest, for fitting: "vs Buckingham Browne & Nichols School",
+    /// "vs Buckingham Browne & Nichols", "vs BB&N". Empty for a meet with no single opponent.
+    var matchupVariants: [String] {
+        guard !opponent.isEmpty else { return [] }
+        return [opponent, shortOpponent, opponentInitials].compactMap { $0 }.map(matchup(against:))
+    }
 
     /// "W 3–0", or "W" when only the outcome was posted; `nil` without a result.
     var resultText: String? {
@@ -44,9 +55,13 @@ extension Game {
 
     /// "Wed 4:00 PM", "Today 4:00 PM", or just the day when no time is known.
     func whenText(today: LocalDate) -> String {
-        let day = LocalDate(start)
-        let dayText = today.days(until: day) <= 1 ? SchoolFormat.relativeDay(day, from: today) : SchoolFormat.weekday(day)
-        return hasStartTime ? "\(dayText) \(SchoolFormat.time(start))" : dayText
+        let day = SchoolFormat.shortRelativeDay(LocalDate(start), from: today)
+        return hasStartTime ? "\(day) \(SchoolFormat.time(start))" : day
+    }
+
+    /// "3:15 PM", or the day when no time is known.
+    var startText: String {
+        hasStartTime ? SchoolFormat.time(start) : SchoolFormat.weekday(LocalDate(start))
     }
 
     /// Stands in for a score when there isn't one, e.g. "Awaiting result" or "Postponed".

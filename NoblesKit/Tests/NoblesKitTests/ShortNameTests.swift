@@ -66,7 +66,23 @@ struct ShortNameTests {
         #expect(game(opponent: "").shortOpponent == "")
     }
 
-    private func game(opponent: String) -> Game {
-        Game(id: "1", sport: "Boys Soccer", opponent: opponent, start: .now, status: .scheduled)
+    @Test func longOpponentsGoByTheirInitials() {
+        #expect(game(opponent: "Buckingham Browne & Nichols School").opponentInitials == "BB&N")
+        #expect(game(opponent: "The Cambridge School of Weston").opponentInitials == "CSW")
+        #expect(game(opponent: "Beaver Country Day School").opponentInitials == "BCD")
+        #expect(game(opponent: "Dexter Southfield").opponentInitials == nil)
+        #expect(game(opponent: "Austin Preparatory School").opponentInitials == nil)
+    }
+
+    @Test func levelsAreShortAndVarsityGoesUnsaid() {
+        #expect(game(level: "Middle School").shortLevel == "MS")
+        #expect(game(level: "JV A").shortLevel == "JV A")
+        #expect(game(level: "3rd").shortLevel == "3rd")
+        #expect(game(level: "Varsity").shortLevel == nil)
+        #expect(game(level: nil).shortLevel == nil)
+    }
+
+    private func game(opponent: String = "Thayer Academy", level: String? = nil) -> Game {
+        Game(id: "1", sport: "Boys Soccer", level: level, opponent: opponent, start: .now, status: .scheduled)
     }
 }

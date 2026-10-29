@@ -40,19 +40,26 @@ struct WidgetHeader: View {
     }
 }
 
-/// A filled symbol on an accent-colored disc, marking what a widget or row is about.
+/// A filled symbol cut out of an accent-colored disc, marking what a widget or row is about.
+///
+/// The symbol is cut out rather than drawn on top: the Home Screen's tinted and clear modes keep
+/// only each view's shape, so a symbol drawn over the disc would vanish into it.
 struct IconChip: View {
     let symbol: String
     var size: CGFloat = 20
     let colors: ThemeColors
 
     var body: some View {
-        Image(systemName: symbol)
-            .symbolVariant(.fill)
-            .font(.system(size: size * 0.5, weight: .bold))
-            .foregroundStyle(colors.onAccent)
+        Circle()
+            .fill(colors.accent)
+            .overlay {
+                Image(systemName: symbol)
+                    .symbolVariant(.fill)
+                    .font(.system(size: size * 0.5, weight: .bold))
+                    .blendMode(.destinationOut)
+            }
+            .compositingGroup()
             .frame(width: size, height: size)
-            .background(colors.accent, in: Circle())
             .widgetAccentable()
     }
 }

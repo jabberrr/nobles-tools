@@ -60,9 +60,9 @@ enum SchoolFormat {
     }
 
     /// "1 school day", "12 school days": `DayCounting.unit` made singular for a count of one.
-    /// `compact` shortens school days to "sch. days", to fit a Lock Screen circle.
+    /// `compact` shortens school days to "days", to fit a Lock Screen circle.
     static func unit(_ counting: DayCounting, count: Int, compact: Bool = false) -> String {
-        let unit = compact && counting == .schoolDays ? "sch. days" : counting.unit
+        let unit = compact && counting == .schoolDays ? "days" : counting.unit
         return count == 1 && unit.hasSuffix("s") ? String(unit.dropLast()) : unit
     }
 

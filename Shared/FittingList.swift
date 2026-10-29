@@ -3,14 +3,14 @@ import SwiftUI
 /// Lays out the longest run of `items` from the start that fits whole, then a "+N more" line
 /// for the rest.
 ///
-/// Rows keep their natural size instead of being cut off mid-line: `ViewThatFits` tries counts
-/// from `capacity` (the most that could ever fit) down to none, and shows the first that fits.
+/// Rows keep their natural size instead of being cut off mid-line: every count from `capacity`
+/// (the most that could ever fit) down to none is tried, and the first that fits is shown.
 /// Give rows no line limit, so a row that would need more lines counts as not fitting, and pin
 /// text that wraps to its ideal height (`fixedSize(horizontal: false, vertical: true)`): a stack
 /// shares its height out by its own rules and can cut one row short even when all of them fit.
 struct FittingPrefix<Item, Content: View>: View {
     let items: [Item]
-    /// The most items this space could hold; keeps the candidate counts close together.
+    /// The most items this space could ever hold, which bounds the counts tried.
     let capacity: Int
     var spacing: CGFloat = 4
     /// Color of the "+N more" line, or `nil` to leave it out.
@@ -19,18 +19,9 @@ struct FittingPrefix<Item, Content: View>: View {
     @ViewBuilder let content: ([Item]) -> Content
 
     var body: some View {
-        let counts = Self.candidateCounts(total: items.count, capacity: capacity)
-        ViewThatFits(in: .vertical) {
-            layout(showing: counts[0])
-            layout(showing: counts[1])
-            layout(showing: counts[2])
-            layout(showing: counts[3])
-            layout(showing: counts[4])
-            layout(showing: counts[5])
-            layout(showing: counts[6])
-            layout(showing: counts[7])
-            layout(showing: counts[8])
-            layout(showing: counts[9])
+        let most = max(0, min(items.count, capacity))
+        FirstFitting(variants: Array((0...most).reversed()), axes: .vertical) { count in
+            layout(showing: count)
         }
     }
 
@@ -41,20 +32,22 @@ struct FittingPrefix<Item, Content: View>: View {
                 content(Array(items.prefix(count)))
             }
             if let overflowColor, count < items.count {
-                Text("+\(items.count - count) more")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(overflowColor)
+                MoreLabel(count: items.count - count, color: overflowColor)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
 
-    /// Ten counts (`ViewThatFits` needs a fixed number of children), descending to zero: every
-    /// count up to nine items, and evenly spaced ones above that.
-    private static func candidateCounts(total: Int, capacity: Int) -> [Int] {
-        let top = max(0, min(total, capacity))
-        let step = max(1, (top + 8) / 9)
-        return (0..<10).map { max(0, top - $0 * step) }
+/// "+3 more", quietly, after a list that couldn't show everything.
+struct MoreLabel: View {
+    let count: Int
+    let color: Color
+
+    var body: some View {
+        Text("+\(count) more")
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(color)
     }
 }
 

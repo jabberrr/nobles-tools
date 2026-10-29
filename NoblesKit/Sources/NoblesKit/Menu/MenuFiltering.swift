@@ -49,13 +49,17 @@ extension DailyMenu {
         return ordered.filter { seen.insert($0.id).inserted }
     }
 
-    /// The one dish to show where only one fits: the first dish of the first station whose title
-    /// matches `station` the way "Just…" matches stations, or the first highlight when `station`
-    /// is `nil` or isn't serving on this menu.
-    public func featuredDish(station: String?) -> MenuItem? {
-        let names = MenuKeywords.selection(station.map { [$0] } ?? [])
-        let chosen = names.isEmpty ? nil : sections.first { $0.isSelected(by: names) && !$0.items.isEmpty }
-        return chosen?.items.first ?? highlights.first
+    /// The first dish of the station `station` names, or `nil` when no such station is serving.
+    /// Titles match loosely, the way "Just…" matches them, and failing that by their distinctive
+    /// words, so "Vegan Entree" also finds dinner's "Vegan Option".
+    public func firstDish(atStation station: String) -> MenuItem? {
+        let names = MenuKeywords.selection([station])
+        guard !names.isEmpty else { return nil }
+        let serving = sections.filter { !$0.items.isEmpty }
+        let words = station.distinctiveWords
+        let match = serving.first { $0.isSelected(by: names) }
+            ?? serving.first { !words.isDisjoint(with: $0.title.distinctiveWords) }
+        return match?.items.first
     }
 }
 
@@ -63,13 +67,10 @@ extension MenuConfiguration {
     /// The dish this design features: the only one on Lock Screen widgets, and the first on Home
     /// Screen ones.
     ///
-    /// A chosen station is looked up on the whole menu, so choosing one overrides the filter; on a
-    /// day it isn't serving, the menu's first highlight stands in. Automatic (`featuredStation`
-    /// `nil`) follows the filter: the first highlight of the filtered menu.
+    /// A chosen station is looked up on the whole menu, so choosing one overrides the filter. When
+    /// it isn't serving, or none is chosen, the first highlight of the filtered menu stands in.
     public func featuredDish(in menu: DailyMenu) -> MenuItem? {
-        featuredStation == nil
-            ? menu.filtered(by: filter).highlights.first
-            : menu.featuredDish(station: featuredStation)
+        featuredStation.flatMap(menu.firstDish(atStation:)) ?? menu.filtered(by: filter).highlights.first
     }
 }
 
@@ -78,9 +79,22 @@ private enum MenuKeywords {
     static let soupOrSaladStation = ["soup", "salad"]
     static let soupOrSaladDish = ["soup", "salad", "chowder", "bisque", "gazpacho"]
 
+    /// Words that say what kind of station a title is rather than what it serves.
+    static let genericStationWords: Set<String> = [
+        "entree", "entrees", "option", "options", "station", "hot", "weekly", "composed", "daily",
+        "bar", "special", "specials", "main", "the", "of", "and", "&",
+    ]
+
     /// The user's chosen station names as match keys, without blanks.
     static func selection(_ names: [String]) -> [String] {
         names.map(\.matchKey).filter { !$0.isEmpty }
+    }
+}
+
+private extension String {
+    /// The words of a station title that say what it serves: "Vegan Entree" → ["vegan"].
+    var distinctiveWords: Set<String> {
+        Set(matchKey.split(separator: " ").map(String.init)).subtracting(MenuKeywords.genericStationWords)
     }
 }
 

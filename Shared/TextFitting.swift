@@ -1,30 +1,21 @@
 import SwiftUI
 
-/// Draws the first of `variants` (longest first) that fits, using `content`. When none fits, the
-/// last is drawn anyway, so end with the shortest. Up to six variants are tried.
+/// Draws the first of `variants` (most generous first) that fits, using `content`. When none
+/// fits, the last is drawn anyway, so end with the most compact.
 ///
-/// Keep variants in one list rather than nesting this in another `ViewThatFits`: an outer one
-/// measures only an inner one's first child.
+/// Keep the variants in one list rather than nesting this in another `ViewThatFits`: an outer one
+/// measures only an inner one's first choice.
 struct FirstFitting<Variant, Content: View>: View {
     let variants: [Variant]
     var axes: Axis.Set = [.horizontal, .vertical]
     @ViewBuilder let content: (Variant) -> Content
 
     var body: some View {
-        if !variants.isEmpty {
-            ViewThatFits(in: axes) {
-                content(variant(0))
-                content(variant(1))
-                content(variant(2))
-                content(variant(3))
-                content(variant(4))
-                content(variant(5))
+        ViewThatFits(in: axes) {
+            ForEach(variants.indices, id: \.self) { index in
+                content(variants[index])
             }
         }
-    }
-
-    private func variant(_ index: Int) -> Variant {
-        variants[min(index, variants.count - 1)]
     }
 }
 

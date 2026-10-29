@@ -21,8 +21,6 @@ struct ThemeColors {
     var primary: Color
     var secondary: Color
     var accent: Color
-    /// Text drawn on an `accent` fill, such as a win badge.
-    var onAccent: Color
 
     /// Colors for `theme` as it appears in `family`.
     ///
@@ -31,15 +29,14 @@ struct ThemeColors {
     /// system colors instead, because the system renders them over its own backdrop.
     init(theme: Theme, colorScheme: ColorScheme, family: WidgetFamily, showsBackground: Bool = true) {
         if family.isAccessory || !showsBackground {
-            self.init(background: .clear, backgroundEnd: .clear, primary: .primary, secondary: .secondary, accent: .primary, onAccent: .black)
+            self.init(background: .clear, backgroundEnd: .clear, primary: .primary, secondary: .secondary, accent: .primary)
         } else if let colors = theme.palette.colors {
             self.init(
                 background: Color(hex: colors.background),
                 backgroundEnd: Color(hex: colors.backgroundEnd),
                 primary: Color(hex: colors.primary),
                 secondary: Color(hex: colors.secondary),
-                accent: Color(hex: colors.accent),
-                onAccent: Color(hex: colors.background)
+                accent: Color(hex: colors.accent)
             )
         } else if colorScheme == .dark {
             self.init(
@@ -47,8 +44,7 @@ struct ThemeColors {
                 backgroundEnd: Color(hex: 0x2A2D34),
                 primary: .primary,
                 secondary: .secondary,
-                accent: Color(hex: 0x7EB0F7),
-                onAccent: Color(hex: 0x1C1C1E)
+                accent: Color(hex: 0x7EB0F7)
             )
         } else {
             self.init(
@@ -56,19 +52,17 @@ struct ThemeColors {
                 backgroundEnd: Color(hex: 0xEDF1F7),
                 primary: .primary,
                 secondary: .secondary,
-                accent: Color(hex: 0x1D4E89),
-                onAccent: .white
+                accent: Color(hex: 0x1D4E89)
             )
         }
     }
 
-    private init(background: Color, backgroundEnd: Color, primary: Color, secondary: Color, accent: Color, onAccent: Color) {
+    private init(background: Color, backgroundEnd: Color, primary: Color, secondary: Color, accent: Color) {
         self.background = background
         self.backgroundEnd = backgroundEnd
         self.primary = primary
         self.secondary = secondary
         self.accent = accent
-        self.onAccent = onAccent
     }
 
     /// A faint version of the primary color, for progress tracks, tiles and dividers.

@@ -17,12 +17,11 @@ struct MenuWidgetView: View {
     let now: Date
 
     var body: some View {
-        let configuration = design.menuConfiguration ?? MenuConfiguration()
-        let content = MenuContent(configuration: configuration, upcoming: upcoming, now: now)
+        let content = MenuContent(configuration: design.menuConfiguration ?? MenuConfiguration(), upcoming: upcoming, now: now)
         if family.isAccessory {
             MenuLockScreenView(content: content, family: family)
         } else {
-            MenuHomeScreenView(content: content, family: family, colors: colors, configuration: configuration)
+            MenuHomeScreenView(content: content, family: family, colors: colors)
         }
     }
 }
@@ -32,7 +31,6 @@ private struct MenuHomeScreenView: View {
     let content: MenuContent
     let family: WidgetFamily
     let colors: ThemeColors
-    let configuration: MenuConfiguration
 
     var body: some View {
         VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 10) {
@@ -52,7 +50,7 @@ private struct MenuHomeScreenView: View {
                 WidgetMessage(
                     symbol: "line.3.horizontal.decrease",
                     title: "No matching dishes",
-                    detail: configuration.filter.summaryText,
+                    detail: content.filterSummary,
                     colors: colors
                 )
             case .menu(let featured, let others, let stations):
@@ -66,7 +64,7 @@ private struct MenuHomeScreenView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    private var showsStations: Bool { configuration.showsSectionHeaders }
+    private var showsStations: Bool { content.showsStations }
 
     /// The featured dish, then one-line-icon rows for the rest.
     private func small(_ featured: Dish, _ others: [Dish]) -> some View {
