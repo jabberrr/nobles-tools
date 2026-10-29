@@ -3,8 +3,11 @@ import Foundation
 extension Scoreboard {
     /// A realistic scoreboard built from real October 2026 Nobles games, dated around now, for
     /// previews and placeholders. Like the real source it has no live games.
-    public static let sample: Scoreboard = {
-        let now = Date.now
+    public static var sample: Scoreboard { sample(now: .now) }
+
+    /// The sample scoreboard with games dated around `now`, for renders that must not change
+    /// from day to day.
+    public static func sample(now: Date) -> Scoreboard {
         let today = LocalDate(now)
         func day(_ offset: Int, at hour: Int = 12, _ minute: Int = 0) -> Date {
             today.adding(days: offset).at(hour: hour, minute: minute)
@@ -28,5 +31,5 @@ extension Scoreboard {
                  start: day(4, at: 14), location: "Nobles-Burr Field", status: .scheduled),
         ]
         return Scoreboard(games: games, configuration: ScoresConfiguration(), now: now)
-    }()
+    }
 }

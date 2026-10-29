@@ -15,8 +15,18 @@ struct DesignPreview: View {
     @Environment(DesignLibrary.self) private var library
 
     var body: some View {
+        let now = Date.now
         WidgetPreviewFrame(family: family, theme: design.theme) { colors in
-            content(colors: colors)
+            DesignWidgetContent(
+                design: design,
+                family: family,
+                colors: colors,
+                menu: menu.value ?? UpcomingMenu.placeholder(for: mealSelection, now: now),
+                scoreboard: scoreboard(now: now),
+                calendar: library.calendar,
+                now: now
+            )
+            .redacted(reason: isLoading ? .placeholder : [])
         }
         .task(id: request) {
             if let request {
@@ -35,42 +45,23 @@ struct DesignPreview: View {
         }
     }
 
-    /// The design's games once real ones load. Until then, or when they can't load, the sample
-    /// scoreboard unfiltered, so a sample preview is never empty because of the design's filters.
-    private func scoreboard(for configuration: ScoresConfiguration, now: Date) -> Scoreboard {
-        guard case .fetched(let feed) = data.feed else { return .sample }
-        return Scoreboard(feed: feed, configuration: configuration, now: now)
+    private var mealSelection: MealSelection { design.menuConfiguration?.meal ?? .lunch }
+
+    private var menu: PreviewContent<UpcomingMenu> { data.menu(for: mealSelection) }
+
+    /// Whether the design's data is still loading, so the preview shows a redacted placeholder.
+    private var isLoading: Bool {
+        switch design.content {
+        case .menu: menu.value == nil
+        case .scores: data.feed.value == nil
+        case .countdown: false
+        }
     }
 
-    @ViewBuilder private func content(colors: ThemeColors) -> some View {
-        let now = Date.now
-        switch design.content {
-        case .menu(let configuration):
-            let menu = data.menu(for: configuration.meal)
-            MenuWidgetView(
-                design: design,
-                family: family,
-                colors: colors,
-                upcoming: menu.value ?? UpcomingMenu.placeholder(for: configuration.meal, now: now),
-                now: now
-            )
-            .redacted(reason: menu.value == nil ? .placeholder : [])
-        case .countdown(let configuration):
-            CountdownWidgetView(
-                design: design,
-                family: family,
-                colors: colors,
-                snapshot: CountdownSnapshot(configuration: configuration, calendar: library.calendar, date: LocalDate(now))
-            )
-        case .scores(let configuration):
-            ScoresWidgetView(
-                design: design,
-                family: family,
-                colors: colors,
-                scoreboard: scoreboard(for: configuration, now: now),
-                now: now
-            )
-            .redacted(reason: data.feed.value == nil ? .placeholder : [])
-        }
+    /// The design's games once real ones load. Until then, or when they can't load, the sample
+    /// scoreboard unfiltered, so a sample preview is never empty because of the design's filters.
+    private func scoreboard(now: Date) -> Scoreboard {
+        guard case .fetched(let feed) = data.feed, let configuration = design.scoresConfiguration else { return .sample }
+        return Scoreboard(feed: feed, configuration: configuration, now: now)
     }
 }

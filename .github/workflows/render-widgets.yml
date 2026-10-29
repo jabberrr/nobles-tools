@@ -1,0 +1,63 @@
+name: Render widget previews
+
+# Renders every widget at every size from fixed sample data (App/Previews/WidgetGallery.swift)
+# and commits the PNGs to docs/widgets. They make layouts checkable by eye, including from a
+# Claude Code session, which can't run Xcode, and illustrate the README.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+    paths:
+      - "Shared/**"
+      - "App/Previews/**"
+      - "Snapshots/**"
+      - "NoblesKit/Sources/**"
+      - "project.yml"
+      - ".github/workflows/render-widgets.yml"
+      - ".github/scripts/commit-renders.sh"
+
+concurrency:
+  group: render-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Generate Xcode project
+        run: brew install xcodegen && xcodegen generate
+
+      - name: Render the widget gallery
+        run: |
+          # The newest iPhone simulator, preferring a Pro model.
+          device=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          runtimes = json.load(sys.stdin)["devices"]
+          def version(runtime): return [int(n) for n in runtime.rsplit("iOS-", 1)[-1].split("-") if n.isdigit()]
+          phones = [(version(r), "Pro" in d["name"], d["udid"]) for r, ds in runtimes.items() if "iOS" in r
+                    for d in ds if d["name"].startswith("iPhone")]
+          print(max(phones)[2])')
+          rm -rf docs/widgets
+          TEST_RUNNER_SNAPSHOT_OUTPUT_DIR="$PWD/docs/widgets" xcodebuild test \
+            -project NoblesTools.xcodeproj \
+            -scheme NoblesTools \
+            -destination "id=$device" \
+            -only-testing:WidgetSnapshots \
+            -derivedDataPath build/DerivedData \
+            -quiet
+          ls docs/widgets
+
+      - name: Commit the renders
+        if: github.ref_type == 'branch'
+        run: .github/scripts/commit-renders.sh "$GITHUB_REF_NAME"

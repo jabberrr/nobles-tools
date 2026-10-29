@@ -104,6 +104,21 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: app.dabora.noblestools.widgets
         SKIP_INSTALL: YES
 
+  # Renders WidgetGallery to PNGs for the "Render widget previews" workflow.
+  WidgetSnapshots:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Snapshots
+    dependencies:
+      - target: NoblesTools
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.dabora.noblestools.snapshots
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/NoblesTools.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NoblesTools"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
 schemes:
   NoblesTools:
     build:
@@ -114,6 +129,8 @@ schemes:
       config: Debug
     test:
       config: Debug
+      targets:
+        - WidgetSnapshots
     profile:
       config: Release
     analyze:
