@@ -49,7 +49,8 @@ struct MenuLockScreenView: View {
 
     // MARK: Circular
 
-    /// The meal's icon over the dish's name on up to three lines, or over a word when it's not on.
+    /// The meal's icon over the dish's name on up to three lines, or over a word when there's no
+    /// dish to show.
     @ViewBuilder private var circular: some View {
         switch content.state {
         case .menu(let featured, _, _):

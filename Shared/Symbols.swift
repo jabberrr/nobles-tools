@@ -100,6 +100,7 @@ enum BreakSymbol {
         table: [
             ("thanksgiving", "leaf"),
             ("winter", "snowflake"),
+            ("holiday", "snowflake"),
             ("march", "sun.max"),
             ("spring", "sun.max"),
             ("day", "flag"),
