@@ -31,7 +31,7 @@ CLAUDE.md                   Imports this file, so Claude Code loads it automatic
 project.yml                 XcodeGen spec: the source of truth for the Xcode project.
 NoblesTools.xcodeproj       GENERATED from project.yml by CI and committed (with App|Widgets Info.plist and
                             entitlements), so users just pull and open. Never hand-edit; change project.yml.
-Config/Signing.xcconfig     Signing settings; includes the gitignored Config/Local.xcconfig (DEVELOPMENT_TEAM).
+Config/Signing.xcconfig     Signing: the user's DEVELOPMENT_TEAM, then the optional, gitignored Config/Local.xcconfig.
 NoblesKit/                  Swift package, Foundation-only (no SwiftUI). Builds on iOS, macOS and Linux.
   Sources/NoblesKit/
     Core/                   LocalDate/DateSpan (school-time-zone days), HTTPClient, AppGroup, ResponseCache
@@ -58,7 +58,11 @@ Widgets/                    Widget extension: WidgetBundle, three AppIntentConfi
 .github/scripts/            Helpers for those workflows (extract-schedule.py cuts the schedule sidebar out)
 ```
 
-Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools.widgets`; app group `group.com.jabberrr.noblestools` (`AppGroup.identifier`); URL scheme `noblestools://design/<uuid>`, which opens that design's editor.
+Identifiers:
+- Bundle IDs `app.dabora.noblestools` and `app.dabora.noblestools.widgets`.
+- Team `6W4ZKDHBVD`, set in `Config/Signing.xcconfig`.
+- App group `group.app.dabora.noblestools` (`AppGroup.identifier`).
+- URL scheme `noblestools://design/<uuid>`, which opens that design's editor.
 
 ## Architecture
 
@@ -119,7 +123,7 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 
 ## Building and testing
 
-- macOS: pull, then `open NoblesTools.xcodeproj`. The committed project runs on a simulator with no setup. For a device, put `DEVELOPMENT_TEAM = …` in the gitignored `Config/Local.xcconfig`. After changing `project.yml` locally, regenerate with `xcodegen generate`, or push and let CI do it.
+- macOS: pull, then `open NoblesTools.xcodeproj`. It's signed with the user's team, so it runs on a simulator or their iPhone with no setup. Another team can be set on one Mac via the gitignored `Config/Local.xcconfig`. After changing `project.yml` locally, regenerate with `xcodegen generate`, or push and let CI do it.
 - Package tests: `swift test --package-path NoblesKit`.
 - **Linux or cloud sandbox (no Xcode):** NoblesKit can still be built and tested with Docker:
   ```sh
@@ -149,7 +153,7 @@ Identifiers: bundle IDs `com.jabberrr.noblestools` and `com.jabberrr.noblestools
 - Tests use swift-testing (`import Testing`, `@Test`, `#expect`). Never touch the network in tests: inject a fake `HTTPClient` (`Tests/NoblesKitTests/Support/FakeHTTPClient.swift`). Prefer the `real-*` fixtures.
 - Model enums expose `displayName` (and `symbolName` where useful) for UI. Keep UI strings in the models only when they are shared between app and widget.
 - The committed `NoblesTools.xcodeproj` is generated output. Change `project.yml`, and let CI regenerate the project (or run `xcodegen generate` on a Mac) rather than editing it in Xcode.
-- Keep the development team out of the project file. It belongs in the gitignored `Config/Local.xcconfig`, so pulls never conflict with local signing.
+- Signing lives in `Config/Signing.xcconfig`, never in the project file. When a push edits generated project files directly, CI regenerates them and then **fails**, listing the replaced lines (`commit-xcode-project.sh`). Port those settings into `project.yml` or the xcconfig. This happened once: the user set the team and bundle ID in Xcode, and a regeneration silently undid them before the guard existed.
 
 ## Open questions and next steps
 

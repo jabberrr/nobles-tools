@@ -21,13 +21,7 @@ open NoblesTools.xcodeproj
 
 Pick an iPhone simulator and press Run. That's all the setup there is: CI generates the Xcode project from `project.yml` and commits it every time it changes.
 
-**To run on your own iPhone,** create `Config/Local.xcconfig` with your Apple Developer Team ID. Xcode shows the ID under Settings → Accounts.
-
-```
-DEVELOPMENT_TEAM = ABCDE12345
-```
-
-The file is gitignored. Don't pick the team in Xcode's Signing & Capabilities tab: that edits the project file, and later pulls would conflict. If the bundle IDs or the app group `group.com.jabberrr.noblestools` are taken, change them in `project.yml` and in `AppGroup.identifier` (`NoblesKit/Sources/NoblesKit/Core/AppGroup.swift`).
+**Signing:** the project signs with team `6W4ZKDHBVD` and bundle ID `app.dabora.noblestools`, so it runs on your iPhone too. Both are set in `project.yml` and `Config/Signing.xcconfig`, which CI generates the project from. Don't change signing in Xcode's Signing & Capabilities tab, because CI's next regeneration replaces edits made there (CI fails and lists them if that happens). To use a different team on one Mac only, create the gitignored `Config/Local.xcconfig` containing `DEVELOPMENT_TEAM = <team ID>`.
 
 **Changing the project:** edit `project.yml` rather than Xcode's project settings, and push. CI regenerates `NoblesTools.xcodeproj` a few minutes later; pull to get it. To regenerate locally, run `brew install xcodegen && xcodegen generate`.
 

@@ -2,7 +2,7 @@ import Foundation
 
 /// The app group shared by the app and its widget extension.
 public enum AppGroup {
-    public static let identifier = "group.com.jabberrr.noblestools"
+    public static let identifier = "group.app.dabora.noblestools"
 
     /// The group's shared defaults, or standard defaults if the suite can't be opened.
     public static var defaults: UserDefaults {

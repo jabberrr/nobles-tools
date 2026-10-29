@@ -1,9 +1,11 @@
-// Code signing for Nobles Tools. Simulator builds need nothing here.
+// Code signing for Nobles Tools.
 //
-// To run on your iPhone, create Config/Local.xcconfig (it's gitignored) with your Apple
-// Developer Team ID, which Xcode shows under Settings → Accounts:
+// The project is generated from project.yml, so set signing here rather than in Xcode's
+// Signing & Capabilities tab: edits made there are replaced the next time CI regenerates the
+// project. To sign with a different team on your Mac only, create Config/Local.xcconfig (it's
+// gitignored) with your Team ID, which Xcode shows under Settings → Accounts:
 //
 //     DEVELOPMENT_TEAM = ABCDE12345
-//
-// Keeping the team out of the project file means `git pull` never conflicts with it.
+DEVELOPMENT_TEAM = 6W4ZKDHBVD
+
 #include? "Local.xcconfig"
