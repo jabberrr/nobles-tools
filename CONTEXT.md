@@ -47,7 +47,11 @@ NoblesKit/                  Swift package, Foundation-only (no SwiftUI). Builds 
   Tests/NoblesKitTests/     swift-testing tests. Fixtures/real-* are REAL captured responses; synthetic-* are hand-written.
 Shared/                     SwiftUI widget views, theme mapping and formatting, compiled into BOTH app and widget
 App/                        App target: DesignLibrary (state), design list, editor with live previews,
-                            PreviewData (loads real data once for previews), Settings (calendar editor)
+                            PreviewData (loads real data once for previews), Settings (calendar editor).
+                            Previews/DesignWidgetContent draws a design from given data (editor + gallery);
+                            Previews/WidgetGallery is every widget × size from fixed sample data.
+Snapshots/                  WidgetSnapshots test target: renders WidgetGallery to PNGs (when SNAPSHOT_OUTPUT_DIR is set).
+docs/widgets/               The rendered PNGs, committed by CI. Look at them to check layouts; the README shows them.
 Widgets/                    Widget extension: WidgetBundle, three AppIntentConfiguration widgets and their
                             timeline providers, Intents/ (configuration intents and design entities)
 .github/workflows/
@@ -55,7 +59,8 @@ Widgets/                    Widget extension: WidgetBundle, three AppIntentConfi
                             (default signing, like a fresh clone) → commits the regenerated project on push
   api-smoke.yml             Weekly live check of the menu API and the athletics sources (prints response shapes)
   capture-fixtures.yml      Manual: commits real menu and athletics responses into NoblesKit test fixtures
-.github/scripts/            Helpers for those workflows (extract-schedule.py cuts the schedule sidebar out)
+  render-widgets.yml        Renders WidgetGallery on a simulator and commits PNGs to docs/widgets (on view changes)
+.github/scripts/            Workflow helpers: commit-xcode-project.sh, commit-renders.sh, extract-schedule.py
 ```
 
 Identifiers:
@@ -133,6 +138,10 @@ Identifiers:
   ```
   The App, Widgets and Shared targets (SwiftUI/WidgetKit/AppIntents) only compile in CI on macOS.
 - CI builds with `xcodebuild build -project NoblesTools.xcodeproj -scheme NoblesTools -destination 'generic/platform=iOS Simulator'`. There's no signing override, so the build proves a fresh clone builds as-is. Then `.github/scripts/commit-xcode-project.sh` commits the regenerated project. When the branch moves mid-run, the script regenerates from the new tip instead of replaying an older project. As of 2026-10-25 the `macos-15` runner's latest stable Xcode is **26.3, with the iOS 26.2 SDK**. A full CI run takes about 3 minutes.
+- **Seeing the widgets without Xcode:** push a change under `Shared/`, `App/Previews/`, `Snapshots/`, `NoblesKit/Sources/` or `project.yml`.
+  - The "Render widget previews" workflow renders `WidgetGallery` and commits the PNGs to `docs/widgets/` (about 6 minutes). Then `git pull --rebase` and open the PNGs with the Read tool.
+  - Renders are @2x, on an opaque backdrop, and quantized with pngquant to keep the repo small. The sample data and the moment are fixed (Tue 2026-10-27 11:30), so a render only changes when the views do.
+  - Add a gallery variant for any new layout or stress case.
 - **Watching CI from the sandbox:** the repo is public, so `curl https://api.github.com/repos/jabberrr/nobles-tools/actions/runs/<id>` works. Poll it in a background `until` loop rather than sleeping. Read failure logs with `mcp__github__get_job_logs`.
 - **Intermediate commits:** add `[skip ci]` to the commit message when pushing work-in-progress that isn't meant to build yet. It skips every push-triggered workflow.
 
