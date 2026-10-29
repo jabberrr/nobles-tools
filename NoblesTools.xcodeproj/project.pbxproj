@@ -354,9 +354,11 @@
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					335B2DFB93C23B3C9B649C86 = {
+						DevelopmentTeam = 6W4ZKDHBVD;
 						ProvisioningStyle = Automatic;
 					};
 					4EDF433FBF7B19724B06676D = {
+						DevelopmentTeam = 6W4ZKDHBVD;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -477,7 +479,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -495,7 +497,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -511,7 +513,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools.widgets;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -590,7 +592,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jabberrr.noblestools.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dabora.noblestools.widgets;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
