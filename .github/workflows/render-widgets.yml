@@ -56,7 +56,10 @@ jobs:
             -only-testing:WidgetSnapshots \
             -derivedDataPath build/DerivedData \
             -quiet
-          ls docs/widgets
+          # Quantized PNGs are a fraction of the size and look the same at this scale.
+          brew install pngquant
+          pngquant --force --ext .png --quality 80-95 --skip-if-larger docs/widgets/*.png || true
+          ls -l docs/widgets
 
       - name: Commit the renders
         if: github.ref_type == 'branch'

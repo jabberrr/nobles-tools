@@ -16,6 +16,7 @@ struct WidgetSnapshotTests {
         for entry in WidgetGallery.entries {
             let renderer = ImageRenderer(content: entry.view)
             renderer.scale = 2
+            renderer.isOpaque = true
             let png = try #require(renderer.uiImage?.pngData(), "Couldn't render \(entry.name)")
             try png.write(to: directory.appending(path: "\(entry.name).png"))
         }

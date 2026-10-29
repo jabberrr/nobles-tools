@@ -89,6 +89,7 @@ enum WidgetGallery {
             )
         }
         .padding(16)
+        .background(variant.colorScheme == .dark ? Color(hex: 0x1C1C1E) : Color(hex: 0xE9EDF2))
         .environment(\.colorScheme, variant.colorScheme)
     }
 }
