@@ -28,7 +28,11 @@ Visual language (Shared/):
 - A common header: an icon in an accent circle, the title, and a detail that shortens when space is tight.
 - Small uppercase section labels with icons.
 - Icons for stations (`Symbols.swift`, keyword-mapped), sports (`SportSymbol`) and terms (`Term.Kind.symbolName`).
-- Lists show fewer items in full plus "+N more", never truncated names. `MenuItem.shortName` and `Game.shortOpponent` provide short forms where space is tiny.
+- Lists show fewer items in full plus "+N more" instead of truncating.
+- Where space is tiny, names step down through short forms before any cut: `MenuItem.shortName`, `Game.shortOpponent`/`opponentInitials` ("BB&N"), `Game.teamVariants` ("Girls Field Hockey · MS" → "Field Hockey · MS"). Only an inline Lock Screen dish too long even in short form is cut, and then at a word.
+- Icon chips and W/L badges cut their symbol out of the accent fill, so they survive iOS's tinted and clear Home Screen modes (which keep only alpha).
+- Circular Lock Screen widgets fill the widget before drawing the disc: `circularBackdrop(for:disc:)`, shared by `WidgetChrome` and the preview frame.
+- Palettes must pass `PaletteTests`: text at least 4.5:1 and accent at least 3:1 on both gradient ends.
 
 ## Repository map
 
@@ -147,7 +151,8 @@ Identifiers:
 - **Seeing the widgets without Xcode:** push a change under `Shared/`, `App/Previews/`, `Snapshots/`, `NoblesKit/Sources/` or `project.yml`.
   - The "Render widget previews" workflow renders `WidgetGallery` and commits the PNGs to `docs/widgets/` (about 6 minutes). Then `git pull --rebase` and open the PNGs with the Read tool.
   - Renders are @2x, on an opaque backdrop, and quantized with pngquant to keep the repo small. The sample data and the moment are fixed (Tue 2026-10-27 11:30), so a render only changes when the views do.
-  - Add a gallery variant for any new layout or stress case.
+  - The gallery covers every widget × size, themes in light and dark, compact iPhone sizes (`-compact`), a tinted-mode simulation (`-tinted`, approximate) and stress cases. About 64 images.
+  - Add a variant for any new layout or stress case.
 - **Watching CI from the sandbox:** the repo is public, so `curl https://api.github.com/repos/jabberrr/nobles-tools/actions/runs/<id>` works. Poll it in a background `until` loop rather than sleeping. Read failure logs with `mcp__github__get_job_logs`.
 - **Intermediate commits:** add `[skip ci]` to the commit message when pushing work-in-progress that isn't meant to build yet. It skips every push-triggered workflow.
 
@@ -167,7 +172,7 @@ Identifiers:
 - Inside `extension Binding`, a bare `max(...)` or `min(...)` resolves as a dynamic member lookup. Write `Swift.max`. CI caught this once.
 - **Widget layout gotchas** (learned from the renders):
   - Stacks can truncate wrapping text even when everything fits. Pin each wrapping `Text` with `.fixedSize(horizontal: false, vertical: true)`.
-  - Don't nest `ViewThatFits`: an outer one measures only the inner one's first child. Use `FirstFitting` (`TextFitting.swift`) with one flat list of variants.
+  - Don't nest `ViewThatFits`: an outer one measures only the inner one's first child. Use `FirstFitting` (`TextFitting.swift`), which takes one flat list of variants (a `ForEach` inside a single `ViewThatFits`).
   - The system linear `Gauge` renders broken in ImageRenderer, so progress bars are drawn (`ProgressViews.swift`).
   - The preview frame draws a stand-in for `AccessoryWidgetBackground` on circular Lock Screen previews.
 - Tests use swift-testing (`import Testing`, `@Test`, `#expect`). Never touch the network in tests: inject a fake `HTTPClient` (`Tests/NoblesKitTests/Support/FakeHTTPClient.swift`). Prefer the `real-*` fixtures.
@@ -199,3 +204,13 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
   - CI then commits `NoblesTools.xcodeproj`, the Info.plists and the entitlements whenever they change.
   - Signing moved to `Config/Signing.xcconfig`, plus the gitignored `Config/Local.xcconfig`.
   - A critic pass hardened the commit step (`.github/scripts/commit-xcode-project.sh`). It regenerates on push races, skips tags and deleted branches, and commits every generated file. Tested against a local bare repo with a fake xcodegen.
+- **2026-10-29: widget redesign.**
+  - Fixed signing first: the user's team and bundle ID (`app.dabora.noblestools`), edited in Xcode, had been undone by CI's project regeneration. They now live in `project.yml` and `Config/Signing.xcconfig`, and CI fails loudly on hand-edits to the generated project.
+  - Built the render pipeline (`WidgetGallery`, the `WidgetSnapshots` target, `render-widgets.yml` → `docs/widgets`) so layouts can be checked by eye.
+  - A designer agent iterated against the renders:
+    - a shared header and icon style, with station, sport and term icons;
+    - all six sizes for every widget;
+    - the featured dish (a station picked in the editor, or Automatic), which is the only dish on Lock Screen sizes.
+  - A critic pass found a real-device bug the renders couldn't show (the circular disc sized to its content), a featured-dish fallback that ignored the filter, glyphs lost in tinted mode, Sunset contrast, and scores losing gender and level. All fixed and re-rendered.
+  - NoblesKit has 118 tests. CI and the renders are green.
+
