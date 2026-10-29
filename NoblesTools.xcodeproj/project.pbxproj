@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0218A4DE19C1CD3D2D8723A2 /* TextFitting.swift in Sources */ = {isa = PBXBuildFile; fileRef = F904F4E9AEE2D7981FAE3171 /* TextFitting.swift */; };
 		023864092E9CCD9B04544DF6 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5830B591DC7CB8F48A685C /* PreviewData.swift */; };
 		078FE43DF2A5CE86243D3C8F /* CountdownWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC1CE01F355EA8F5D7212FE /* CountdownWidgetView.swift */; };
 		0CC789C1DFA39CD1DDBCE2BA /* NoblesWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55049156F16DE494AAB5AD62 /* NoblesWidgetsBundle.swift */; };
@@ -39,6 +40,7 @@
 		6DB3C961B58E03BE7980E6F2 /* CountdownSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADCCEEEC683C3B0793403BF5 /* CountdownSnapshot.swift */; };
 		6DD6E36544E2AA6C4D2A70B8 /* FittingList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A25C54FDA34BC529501DE3 /* FittingList.swift */; };
 		73C66311926BDCB34A7F6184 /* ScoresWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */; };
+		7E5D26B310B6D86835FBA0A2 /* TextFitting.swift in Sources */ = {isa = PBXBuildFile; fileRef = F904F4E9AEE2D7981FAE3171 /* TextFitting.swift */; };
 		7F6A9E7696243D0FAA3FFD00 /* DesignWidgetContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4D089E1E8D3DAF884D4294 /* DesignWidgetContent.swift */; };
 		815762789AD853D498187026 /* DesignPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = E159999D57E7A167320B8E16 /* DesignPreview.swift */; };
 		840B3C0B4EBFB52E5EB63B70 /* ScoresLockScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F814F319454D3F1AE89EB51B /* ScoresLockScreenView.swift */; };
@@ -174,6 +176,7 @@
 		EE5830B591DC7CB8F48A685C /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
 		F3E05BDCD0B0151D8E0AAC28 /* NoblesTools.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoblesTools.entitlements; sourceTree = "<group>"; };
 		F814F319454D3F1AE89EB51B /* ScoresLockScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoresLockScreenView.swift; sourceTree = "<group>"; };
+		F904F4E9AEE2D7981FAE3171 /* TextFitting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFitting.swift; sourceTree = "<group>"; };
 		FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Theme+SwiftUI.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -265,6 +268,7 @@
 				F814F319454D3F1AE89EB51B /* ScoresLockScreenView.swift */,
 				7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */,
 				E9ADF38CC1E71025D0537B7B /* Symbols.swift */,
+				F904F4E9AEE2D7981FAE3171 /* TextFitting.swift */,
 				FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */,
 				86D3D9BC3080A7906BE9F2E2 /* WidgetBackground.swift */,
 				1317E033DD7378C1E9855A17 /* WidgetComponents.swift */,
@@ -516,6 +520,7 @@
 				1CC41ABAE161E83A06A7B3DB /* ScoresWidget.swift in Sources */,
 				73C66311926BDCB34A7F6184 /* ScoresWidgetView.swift in Sources */,
 				F43B1A74FE03A1A57364BD70 /* Symbols.swift in Sources */,
+				7E5D26B310B6D86835FBA0A2 /* TextFitting.swift in Sources */,
 				D81C55535E22209CAA7E0DA6 /* Theme+SwiftUI.swift in Sources */,
 				EBF49AD57954905AC64EC8C4 /* WidgetBackground.swift in Sources */,
 				9AA43E3C5434E5F62F190311 /* WidgetComponents.swift in Sources */,
@@ -570,6 +575,7 @@
 				C16DBB719BF417B820C8123B /* ScoresWidgetView.swift in Sources */,
 				5F9E0A013E7752731D02C5D8 /* SettingsView.swift in Sources */,
 				A20959F5B3C803C33C0A9A6B /* Symbols.swift in Sources */,
+				0218A4DE19C1CD3D2D8723A2 /* TextFitting.swift in Sources */,
 				97E072E8A7DD7F537721AF24 /* Theme+SwiftUI.swift in Sources */,
 				982D5A9A95465277B4564730 /* WidgetBackground.swift in Sources */,
 				F96F9C2FA9B9741BCF11369B /* WidgetComponents.swift in Sources */,
