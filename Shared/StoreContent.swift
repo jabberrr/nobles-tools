@@ -40,9 +40,9 @@ struct StoreContent {
     /// cached copy is shown; `nil` when the data is fresh.
     private static func note(status: StoreStatus, fetchedAt: Date, now: Date) -> String? {
         switch status {
-        case .offline: SchoolFormat.age(of: fetchedAt, now: now).map { "Updated \($0)" }
-        case .signedOut: "Sign in to refresh"
-        case .live, .disconnected: nil
+        case .offline: return SchoolFormat.age(of: fetchedAt, now: now).map { "Updated \($0)" }
+        case .signedOut: return "Sign in to refresh"
+        case .live, .disconnected: return nil
         }
     }
 

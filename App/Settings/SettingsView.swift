@@ -18,6 +18,8 @@ struct SettingsView: View {
                     Text("Countdowns use these term dates and breaks.")
                 }
 
+                StoreAccountSection()
+
                 Section {
                     ForEach(Array(Self.homeScreenSteps.enumerated()), id: \.offset) { index, step in
                         Label(step, systemImage: "\(index + 1).circle")

@@ -16,13 +16,16 @@ struct DesignPreview: View {
 
     var body: some View {
         let now = Date.now
+        let isSpending = design.kind == .spending
         WidgetPreviewFrame(family: family, theme: design.theme) { colors in
             DesignWidgetContent(
                 design: design,
                 family: family,
                 colors: colors,
-                menu: menu.value ?? UpcomingMenu.placeholder(for: mealSelection, now: now),
-                scoreboard: scoreboard(now: now),
+                menu: isSpending ? nil : (menu.value ?? UpcomingMenu.placeholder(for: mealSelection, now: now)),
+                scoreboard: isSpending ? nil : scoreboard(now: now),
+                statement: isSpending ? .sample : nil,
+                storeStatus: isSpending ? .live : .disconnected,
                 calendar: library.calendar,
                 now: now
             )
@@ -42,6 +45,7 @@ struct DesignPreview: View {
         case .menu(let configuration): .menu(configuration.meal)
         case .scores: .scores
         case .countdown: nil
+        case .spending: nil
         }
     }
 
@@ -55,6 +59,7 @@ struct DesignPreview: View {
         case .menu: menu.value == nil
         case .scores: data.feed.value == nil
         case .countdown: false
+        case .spending: false
         }
     }
 

@@ -40,7 +40,10 @@ private struct DesignEditorForm: View {
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
             } footer: {
-                if previewData.isShowingSample(for: design) {
+                if design.kind == .spending {
+                    Label("Preview shows sample spending. Connect your Nobles account in Settings to use your own.", systemImage: "creditcard")
+                        .frame(maxWidth: .infinity)
+                } else if previewData.isShowingSample(for: design) {
                     Label("Showing sample data: \(sourceName) couldn't be reached.", systemImage: "wifi.slash")
                         .frame(maxWidth: .infinity)
                 }
@@ -59,6 +62,9 @@ private struct DesignEditorForm: View {
             }
             if let scores = Binding($design.scoresConfiguration) {
                 ScoresSettingsSections(configuration: scores)
+            }
+            if let store = Binding($design.storeConfiguration) {
+                StoreSettingsSections(configuration: store)
             }
 
             AppearanceSection(theme: $design.theme)
@@ -95,6 +101,7 @@ private struct DesignEditorForm: View {
         case .menu: "the dining menu"
         case .scores: "Nobles Athletics"
         case .countdown: "the calendar"
+        case .spending: "the Nobles school store"
         }
     }
 }

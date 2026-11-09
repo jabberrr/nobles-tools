@@ -70,6 +70,8 @@ final class PreviewData {
         case .menu(let configuration): menu(for: configuration.meal).isSample
         case .scores: feed.isSample
         case .countdown: false
+        // Spending previews always show sample data (no network); the editor labels them itself.
+        case .spending: false
         }
     }
 

@@ -76,7 +76,7 @@ struct DesignListView: View {
         ContentUnavailableView {
             Label("No Designs", systemImage: "square.grid.2x2")
         } description: {
-            Text("Design a menu, countdown or scores widget here, then add Nobles Tools to your Home Screen or Lock Screen.")
+            Text("Design a menu, countdown, scores or spending widget here, then add Nobles Tools to your Home Screen or Lock Screen.")
         } actions: {
             newDesignMenu {
                 Text("New Design")
@@ -139,6 +139,8 @@ extension WidgetDesign {
             "\(configuration.target.displayName) · \(configuration.counting.displayName)"
         case .scores(let configuration):
             configuration.summaryText
+        case .spending(let configuration):
+            "\(configuration.stores.isEmpty ? "All stores" : configuration.stores.joined(separator: ", ")) · \(configuration.highlight.displayName)"
         }
     }
 }
