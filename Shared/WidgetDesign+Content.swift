@@ -34,6 +34,17 @@ extension WidgetDesign {
             if let newValue { content = .scores(newValue) }
         }
     }
+
+    /// The spending settings, or `nil` for other kinds. Assigning a value makes this a spending design.
+    var storeConfiguration: StoreConfiguration? {
+        get {
+            guard case .spending(let configuration) = content else { return nil }
+            return configuration
+        }
+        set {
+            if let newValue { content = .spending(newValue) }
+        }
+    }
 }
 
 extension WidgetKind {
@@ -49,6 +60,7 @@ extension WidgetKind {
         case .menu: "MenuWidget"
         case .countdown: "CountdownWidget"
         case .scores: "ScoresWidget"
+        case .spending: "StoreWidget"
         }
     }
 }

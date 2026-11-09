@@ -5,6 +5,7 @@ public enum WidgetKind: String, Codable, CaseIterable, Identifiable, Sendable {
     case menu
     case countdown
     case scores
+    case spending
 
     public var id: String { rawValue }
 
@@ -13,6 +14,7 @@ public enum WidgetKind: String, Codable, CaseIterable, Identifiable, Sendable {
         case .menu: "Dining Menu"
         case .countdown: "Countdown"
         case .scores: "Scores"
+        case .spending: "Spending"
         }
     }
 
@@ -21,6 +23,7 @@ public enum WidgetKind: String, Codable, CaseIterable, Identifiable, Sendable {
         case .menu: "Lunch, dinner or the next meal, from the dining hall."
         case .countdown: "Days left in the quarter, semester or year."
         case .scores: "Recent results and upcoming games."
+        case .spending: "Your cafe and school-store spending."
         }
     }
 
@@ -30,6 +33,7 @@ public enum WidgetKind: String, Codable, CaseIterable, Identifiable, Sendable {
         case .menu: "fork.knife"
         case .countdown: "calendar.badge.clock"
         case .scores: "sportscourt"
+        case .spending: "creditcard"
         }
     }
 }
@@ -67,6 +71,7 @@ public struct WidgetDesign: Codable, Hashable, Identifiable, Sendable {
         case .menu: WidgetDesign(name: "Lunch", content: .menu(MenuConfiguration()))
         case .countdown: WidgetDesign(name: "Year Countdown", content: .countdown(CountdownConfiguration()))
         case .scores: WidgetDesign(name: "Scores", content: .scores(ScoresConfiguration()))
+        case .spending: WidgetDesign(name: "Spending", content: .spending(StoreConfiguration()))
         }
     }
 }
@@ -76,12 +81,14 @@ public enum WidgetContent: Codable, Hashable, Sendable {
     case menu(MenuConfiguration)
     case countdown(CountdownConfiguration)
     case scores(ScoresConfiguration)
+    case spending(StoreConfiguration)
 
     public var kind: WidgetKind {
         switch self {
         case .menu: .menu
         case .countdown: .countdown
         case .scores: .scores
+        case .spending: .spending
         }
     }
 }
