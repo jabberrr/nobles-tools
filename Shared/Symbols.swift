@@ -89,6 +89,31 @@ enum StationSymbol {
     )
 }
 
+/// SF Symbols for school stores, matched loosely against names like "Cafe at Gleason Hall" or
+/// "Athletic Store". Accents and case are ignored, so "Café" matches "cafe".
+enum StoreSymbol {
+    static func name(for store: String) -> String {
+        symbols.symbol(for: store)
+    }
+
+    private static let symbols = KeywordSymbols(
+        table: [
+            ("cafe", "cup.and.saucer"),
+            ("coffee", "cup.and.saucer"),
+            ("snack", "cup.and.saucer"),
+            ("smoothie", "cup.and.saucer"),
+            ("dining", "fork.knife"),
+            ("grill", "fork.knife"),
+            ("kitchen", "fork.knife"),
+            ("athletic", "tshirt"),
+            ("spirit", "tshirt"),
+            ("book", "book"),
+            ("tech", "laptopcomputer"),
+        ],
+        fallback: "bag"
+    )
+}
+
 /// SF Symbols for school breaks, by name: "Thanksgiving Break" gets a leaf, "Winter Break" a
 /// snowflake.
 enum BreakSymbol {

@@ -91,3 +91,18 @@ struct ScoresDesignEntity: DesignEntity {
 struct ScoresDesignQuery: DesignEntityQuery {
     typealias Entity = ScoresDesignEntity
 }
+
+// MARK: - Spending
+
+struct StoreDesignEntity: DesignEntity {
+    static let kind = WidgetKind.spending
+    static var typeDisplayRepresentation: TypeDisplayRepresentation { TypeDisplayRepresentation(name: "Spending Design") }
+    static var defaultQuery: StoreDesignQuery { StoreDesignQuery() }
+
+    let id: UUID
+    let name: String
+}
+
+struct StoreDesignQuery: DesignEntityQuery {
+    typealias Entity = StoreDesignEntity
+}

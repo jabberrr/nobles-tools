@@ -12,6 +12,10 @@ struct DesignWidgetContent: View {
     let menu: UpcomingMenu?
     /// The games a scores design shows; `nil` shows them as unavailable.
     let scoreboard: Scoreboard?
+    /// The spending a spending design shows; `nil` shows a connect prompt or an unavailable state.
+    let statement: StoreStatement?
+    /// How current and connected `statement` is.
+    let storeStatus: StoreStatus
     /// The school calendar a countdown design counts against.
     let calendar: SchoolCalendar
     let now: Date
@@ -29,6 +33,8 @@ struct DesignWidgetContent: View {
             )
         case .scores:
             ScoresWidgetView(design: design, family: family, colors: colors, scoreboard: scoreboard, now: now)
+        case .spending:
+            StoreWidgetView(design: design, family: family, colors: colors, statement: statement, status: storeStatus, now: now)
         }
     }
 }

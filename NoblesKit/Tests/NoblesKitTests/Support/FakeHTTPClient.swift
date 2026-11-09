@@ -11,6 +11,8 @@ actor FakeHTTPClient: HTTPClient {
 
     private var responses: [URL: Response]
     private(set) var requests: [URL] = []
+    /// The headers of the most recent request to each URL, for tests that check them.
+    private(set) var lastHeaders: [URL: [String: String]] = [:]
 
     init(_ responses: [URL: Response] = [:]) {
         self.responses = responses
@@ -24,8 +26,14 @@ actor FakeHTTPClient: HTTPClient {
         requests.filter { $0 == url }.count
     }
 
-    func data(from url: URL) async throws -> Data {
+    /// The headers of the last request to `url`, if any.
+    func headers(for url: URL) -> [String: String]? {
+        lastHeaders[url]
+    }
+
+    func data(from url: URL, headers: [String: String]) async throws -> Data {
         requests.append(url)
+        lastHeaders[url] = headers
         switch responses[url] {
         case .data(let data): return data
         case .failure(let error): throw error

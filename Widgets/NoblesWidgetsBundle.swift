@@ -7,5 +7,6 @@ struct NoblesWidgetsBundle: WidgetBundle {
         MenuWidget()
         CountdownWidget()
         ScoresWidget()
+        StoreWidget()
     }
 }

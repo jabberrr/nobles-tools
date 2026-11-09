@@ -64,6 +64,16 @@ enum GallerySamples {
         return Scoreboard(games: games, configuration: ScoresConfiguration(varsityOnly: false), now: WidgetGallery.now)
     }
 
+    /// The sample spending statement (Cafe at Gleason Hall, Cafe 2000, Athletic Store).
+    static var storeStatement: StoreStatement { .sample(now: WidgetGallery.now) }
+
+    /// The sample statement as a copy cached five hours ago, which the widget flags as out of date.
+    static var staleStoreStatement: StoreStatement {
+        var statement = storeStatement
+        statement.fetchedAt = WidgetGallery.now.addingTimeInterval(-5 * 60 * 60)
+        return statement
+    }
+
     private static func upcoming(_ meal: Meal, on date: LocalDate, _ menu: DailyMenu) -> UpcomingMenu {
         UpcomingMenu(meal: meal, date: date, menu: menu, validUntil: meal.serviceEnd(on: date))
     }

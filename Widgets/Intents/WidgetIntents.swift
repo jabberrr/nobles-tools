@@ -27,3 +27,12 @@ struct ScoresWidgetIntent: WidgetConfigurationIntent {
     @Parameter(title: "Design")
     var design: ScoresDesignEntity?
 }
+
+/// "Edit Widget" options for the Spending widget.
+struct StoreWidgetIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource { "Spending" }
+    static var description: IntentDescription { IntentDescription("Shows one of your spending designs.") }
+
+    @Parameter(title: "Design")
+    var design: StoreDesignEntity?
+}

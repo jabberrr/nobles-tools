@@ -20,7 +20,7 @@ enum WidgetGallery {
     static let now = LocalDate(year: 2026, month: 10, day: 27).at(hour: 11, minute: 30)
 
     static var entries: [Entry] {
-        (menuVariants + countdownVariants + scoresVariants).flatMap { variant in
+        (menuVariants + countdownVariants + scoresVariants + storeVariants).flatMap { variant in
             variant.families.map { family in
                 Entry(name: "\(variant.name)-\(family.galleryName)", view: AnyView(tile(variant, family)))
             }
@@ -41,6 +41,10 @@ enum WidgetGallery {
         var menu: UpcomingMenu? = nil
         /// The games a scores design shows; `nil` shows them as unavailable.
         var scoreboard: Scoreboard? = nil
+        /// The spending a spending design shows; `nil` shows a connect prompt or unavailable state.
+        var statement: StoreStatement? = nil
+        /// How current and connected `statement` is.
+        var storeStatus: StoreStatus = .live
     }
 
     private static var homeScreen: [WidgetFamily] { [.systemSmall, .systemMedium, .systemLarge] }
@@ -156,6 +160,57 @@ enum WidgetGallery {
         ]
     }
 
+    private static var storeVariants: [Variant] {
+        let spending = design(.spending(StoreConfiguration()))
+        let limited = design(
+            .spending(StoreConfiguration(highlight: .remaining, limit: 300)),
+            theme: Theme(palette: .forest, font: .serif)
+        )
+        let cafe = design(
+            .spending(StoreConfiguration(stores: ["Cafe at Gleason Hall"], highlight: .latestCharge)),
+            theme: Theme(palette: .navy, font: .rounded)
+        )
+        let noList = design(
+            .spending(StoreConfiguration(showsRecentCharges: false)),
+            theme: Theme(palette: .crimson, background: .solid)
+        )
+        let sample = GallerySamples.storeStatement
+        return [
+            Variant(name: "spending", design: spending, families: WidgetKind.spending.widgetFamilies, statement: sample),
+            Variant(
+                name: "spending-compact",
+                design: spending,
+                families: homeScreen + [.accessoryCircular, .accessoryRectangular],
+                screen: .compact,
+                statement: sample
+            ),
+            Variant(name: "spending-tinted", design: spending, families: [.systemSmall, .systemMedium], isTinted: true, statement: sample),
+            Variant(
+                name: "spending-limit-forest",
+                design: limited,
+                families: homeScreen + [.accessoryCircular, .accessoryRectangular, .accessoryInline],
+                statement: sample
+            ),
+            Variant(name: "spending-cafe-navy", design: cafe, families: [.systemSmall, .systemMedium], statement: sample),
+            Variant(name: "spending-nolist-crimson", design: noList, families: [.systemSmall, .systemMedium], statement: sample),
+            Variant(
+                name: "spending-offline-dark",
+                design: spending,
+                families: [.systemMedium],
+                colorScheme: .dark,
+                statement: GallerySamples.staleStoreStatement,
+                storeStatus: .offline
+            ),
+            Variant(
+                name: "spending-disconnected",
+                design: spending,
+                families: [.systemSmall, .systemMedium, .accessoryRectangular],
+                statement: nil,
+                storeStatus: .disconnected
+            ),
+        ]
+    }
+
     // MARK: Drawing
 
     private static func tile(_ variant: Variant, _ family: WidgetFamily) -> some View {
@@ -166,6 +221,8 @@ enum WidgetGallery {
                 colors: colors,
                 menu: variant.menu,
                 scoreboard: variant.scoreboard,
+                statement: variant.statement,
+                storeStatus: variant.storeStatus,
                 calendar: .nobles2026_27,
                 now: now
             )
