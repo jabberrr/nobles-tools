@@ -148,20 +148,23 @@ private struct StoreHomeScreenView: View {
 
     // MARK: Large
 
-    /// The figure on a card, the recent charges, then per-store totals when more than one store.
+    /// The figure on a card, the per-store totals (there are only a few, so they lead), then the
+    /// recent charges filling whatever height is left.
     private func large(_ spending: StoreContent.Spending) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             figureCard(spending)
+            if spending.totals.count > 1 {
+                Eyebrow(symbol: "building.2", text: "By store", colors: colors)
+                VStack(spacing: 6) {
+                    ForEach(spending.totals, id: \.storeName) { total in
+                        StoreTotalRow(total: total, colors: colors)
+                    }
+                }
+            }
             if !spending.charges.isEmpty {
                 Eyebrow(symbol: "clock", text: "Recent", colors: colors)
                 charges(spending, capacity: 5)
                     .layoutPriority(1)
-            }
-            if spending.totals.count > 1 {
-                Eyebrow(symbol: "building.2", text: "By store", colors: colors)
-                FittingList(items: spending.totals, capacity: 4, spacing: 6, overflowColor: colors.secondary) { total in
-                    StoreTotalRow(total: total, colors: colors)
-                }
             }
             Spacer(minLength: 0)
             note
@@ -171,11 +174,11 @@ private struct StoreHomeScreenView: View {
 
     private func figureCard(_ spending: StoreContent.Spending) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            figure(spending, size: 44)
+            figure(spending, size: 38)
             limitBar(spending, height: 8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
+        .padding(13)
         .background(colors.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
