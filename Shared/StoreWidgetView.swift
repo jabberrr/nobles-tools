@@ -133,32 +133,17 @@ private struct StoreHomeScreenView: View {
 
     // MARK: Medium
 
-    /// The figure on the left, the recent charges on the right; or the figure alone when the list
-    /// is empty or turned off.
+    /// The figure, then the recent charges across the full width so item names aren't cut; the
+    /// figure alone when the list is empty or turned off.
     @ViewBuilder private func medium(_ spending: StoreContent.Spending) -> some View {
-        if spending.charges.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                figure(spending, size: 46)
-                limitBar(spending, height: 7)
-                Spacer(minLength: 0)
-                note
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        } else {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    figure(spending, size: 34)
-                    limitBar(spending, height: 6)
-                    Spacer(minLength: 0)
-                    note
-                }
-                .frame(width: 130, alignment: .topLeading)
-                Rectangle()
-                    .fill(colors.track)
-                    .frame(width: 1)
-                charges(spending, capacity: 4)
-            }
+        figure(spending, size: spending.charges.isEmpty ? 46 : 38)
+        limitBar(spending, height: 7)
+        if !spending.charges.isEmpty {
+            charges(spending, capacity: 4)
+                .layoutPriority(1)
         }
+        Spacer(minLength: 0)
+        note
     }
 
     // MARK: Large

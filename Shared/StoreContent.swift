@@ -60,8 +60,9 @@ struct StoreContent {
         let progress: Double?
         /// "$82 of $300" for under a progress bar, or `nil` when no limit is set.
         let limitCaption: String?
-        /// "of $300", for beside a figure, or `nil` when no limit is set.
-        let limitText: String?
+        /// The amount spent, without cents, for the Lock Screen gauge, which always reads
+        /// spent-against-limit so its ring and centre agree.
+        let spentCompact: String
         /// The most recent charge's item, or `nil` when there are no charges.
         let latestItem: String?
         /// The store filter in words: "All stores" or the chosen stores joined.
@@ -76,14 +77,13 @@ struct StoreContent {
             charges = configuration.showsRecentCharges ? statement.charges(in: stores) : []
             totals = Self.totals(statement.totalsByStore, in: stores)
             latestItem = latest?.detail
+            spentCompact = spent.usd(showsCents: false)
             if let limit = configuration.limit, limit > 0 {
                 progress = Self.fraction(spent, of: limit)
                 limitCaption = "\(spent.usd(showsCents: false)) of \(limit.usd(showsCents: false))"
-                limitText = "of \(limit.usd(showsCents: false))"
             } else {
                 progress = nil
                 limitCaption = nil
-                limitText = nil
             }
             storeSummary = stores.isEmpty ? "All stores" : stores.joined(separator: ", ")
         }

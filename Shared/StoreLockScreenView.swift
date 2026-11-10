@@ -42,10 +42,12 @@ struct StoreLockScreenView: View {
         switch content.state {
         case .spending(let spending):
             if let progress = spending.progress {
+                // The ring fills with what's been spent, so its centre shows the spent amount too
+                // (not the design's highlight) — otherwise ring and number would measure opposites.
                 Gauge(value: progress) {
                     Text("Spending")
                 } currentValueLabel: {
-                    Text(spending.figure.compactAmount)
+                    Text(spending.spentCompact)
                         .monospacedDigit()
                 }
                 .gaugeStyle(.accessoryCircularCapacity)
@@ -100,6 +102,12 @@ struct StoreLockScreenView: View {
                     ProgressBar(progress: progress, colors: colors)
                         .frame(height: 5)
                         .padding(.top, 2)
+                    if let caption = spending.limitCaption {
+                        Text(caption)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -110,9 +118,11 @@ struct StoreLockScreenView: View {
         }
     }
 
-    /// "of $300", or the latest item when there's no limit.
+    /// With a limit, the figure's own label ("Left"/"Spent") so the big number is never mistaken
+    /// for a spent-of-limit figure; the spent-against-limit context then sits under the bar. With
+    /// no limit, the latest item instead.
     private func rectangularDetail(_ spending: StoreContent.Spending) -> String? {
-        spending.limitText ?? spending.latestItem
+        spending.progress == nil ? spending.latestItem : spending.figure.caption
     }
 
     private func rectangularMessage(_ text: String) -> some View {
