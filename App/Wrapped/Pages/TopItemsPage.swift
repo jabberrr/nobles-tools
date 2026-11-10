@@ -71,22 +71,37 @@ private struct TopItemRow: View {
     }
 }
 
-/// #1, still hidden: a strip of crinkled foil.
+/// #1, still hidden: a strip of crinkled foil, lightly washed, with "? ? ?" and a gift set on
+/// white so they read over its darkest creases.
 private struct NumberOneTeaser: View {
+    private static let cornerRadius: CGFloat = 16
+    private static let chipHeight: CGFloat = 38
+
     var body: some View {
         HStack(spacing: 12) {
             RankNumber(rank: 1)
             HStack {
                 Text("? ? ?")
-                    .font(WrappedStyle.number(24))
+                    .font(WrappedStyle.number(22))
+                    .padding(.horizontal, 14)
+                    .frame(height: Self.chipHeight)
+                    .background(Color.white.opacity(0.85), in: Capsule())
                 Spacer()
                 Image(systemName: "gift.fill")
-                    .font(WrappedStyle.symbol(22))
+                    .font(WrappedStyle.symbol(17))
+                    .frame(width: Self.chipHeight, height: Self.chipHeight)
+                    .background(Color.white.opacity(0.85), in: Circle())
             }
             .foregroundStyle(WrappedStyle.ink)
-            .padding(.horizontal, 18)
+            .padding(.horizontal, 12)
             .frame(height: 62)
-            .background { FoilSurface(cornerRadius: 16) }
+            .background {
+                FoilSurface(cornerRadius: Self.cornerRadius)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                            .fill(Color.white.opacity(0.3))
+                    }
+            }
         }
         .padding(.horizontal, 10)
     }

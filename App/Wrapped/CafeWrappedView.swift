@@ -17,6 +17,8 @@ struct CafeWrappedView: View {
     @State private var isMovingForward = true
     /// Kept across visits, so going back to the favorite doesn't wrap it up again.
     @State private var isFavoriteUnwrapped: Bool
+    /// Kept across visits, so going back to the persona doesn't turn its card face down again.
+    @State private var isPersonaRevealed = false
     private let initialFoilTaps: Int
 
     @AccessibilityFocusState private var isPageFocused: Bool
@@ -114,7 +116,7 @@ struct CafeWrappedView: View {
         case .records:
             RecordsPage(wrapped: wrapped, isActive: isActive)
         case .persona:
-            PersonaPage(wrapped: wrapped, isActive: isActive)
+            PersonaPage(wrapped: wrapped, isActive: isActive, isRevealed: $isPersonaRevealed)
         case .summary:
             SummaryPage(wrapped: wrapped, isActive: isActive) { dismiss() }
         }

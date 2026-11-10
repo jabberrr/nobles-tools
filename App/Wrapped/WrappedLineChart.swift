@@ -2,9 +2,9 @@ import SwiftUI
 import NoblesKit
 
 /// Spending adding up over the semester: a line that draws itself in from left to right, the area
-/// under it fading in, then a dot popping up at its end with the total. The x-axis runs across
-/// the days given and marks where each month starts. Drawn complete in static mode; under Reduce
-/// Motion it fades in whole.
+/// under it fading in, then a dot popping up at its end with the recap's total. The x-axis runs
+/// from the semester's start through the recap's last day and marks where each month starts.
+/// Drawn complete in static mode; under Reduce Motion it fades in whole.
 struct WrappedLineChart: View {
     /// The running total over the days, in unit coordinates: x from the first day (0) to the last
     /// (1), y from zero (0) to the highest the total reached (1).
@@ -38,15 +38,17 @@ struct WrappedLineChart: View {
     }
 
     /// - Parameters:
-    ///   - days: Each purchase day's spending, in order (`CafeWrapped.days`).
-    ///   - span: The days the x-axis covers: the semester's start through the recap's last day.
+    ///   - wrapped: The recap. Its `days` hold every day with a charge, refund-only days
+    ///     included, so the line ends at the `total` it's labelled with.
     ///   - height: The plot's height, the total over its end included; the month names go under.
     ///   - delay: When the line starts drawing once `isActive`.
-    init(days: [CafeWrapped.Day], across span: DateSpan, isActive: Bool, height: CGFloat = 140, delay: Double = 0) {
+    init(wrapped: CafeWrapped, isActive: Bool, height: CGFloat = 140, delay: Double = 0) {
+        let span = DateSpan(start: wrapped.period.span.start, end: wrapped.period.through)
         var running: Decimal = 0
         var totals = [CGPoint(x: 0, y: 0)]
-        for day in days where span.contains(day.date) {
-            // Flat until the day before, then up over the day: weekends and gaps read as flat.
+        for day in wrapped.days {
+            // Flat until the day before, then up (or down, after a refund) over the day:
+            // weekends and gaps read as flat.
             let dayBefore = Self.fraction(of: day.date.adding(days: -1), in: span)
             if let last = totals.last, dayBefore > last.x {
                 totals.append(CGPoint(x: dayBefore, y: last.y))
@@ -55,10 +57,11 @@ struct WrappedLineChart: View {
             totals.append(CGPoint(x: Self.fraction(of: day.date, in: span), y: CGFloat(WrappedFormat.double(running))))
         }
         totals.append(CGPoint(x: 1, y: CGFloat(WrappedFormat.double(running))))
+        // A running total below zero (refunds first) sits on the baseline.
         let peak = totals.map(\.y).max() ?? 0
         points = totals.map { CGPoint(x: $0.x, y: peak > 0 ? max($0.y, 0) / peak : 0) }
         months = Self.monthTicks(across: span)
-        totalLabel = running.usd()
+        totalLabel = wrapped.total.usd()
         self.isActive = isActive
         self.height = height
         self.delay = delay
@@ -244,13 +247,7 @@ struct WrappedLineChart: View {
 }
 
 #Preview {
-    let wrapped = CafeWrapped.sample
-    WrappedLineChart(
-        days: wrapped.days,
-        across: DateSpan(start: wrapped.period.span.start, end: wrapped.period.through),
-        isActive: true,
-        delay: 0.5
-    )
-    .padding(24)
-    .background(Color(hex: 0x065F46))
+    WrappedLineChart(wrapped: .sample, isActive: true, delay: 0.5)
+        .padding(24)
+        .background(Color(hex: 0x065F46))
 }

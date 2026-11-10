@@ -124,7 +124,7 @@ private struct CafeCard: View {
     }
 }
 
-/// One of a cafe's most-bought items, on a single line: "🍪 Jumbo Chocolate Chip Cookie ×41".
+/// One of a cafe's most-bought items, on a single line: its picture, its name and how many you got.
 private struct CafeItemRow: View {
     let item: CafeWrapped.Item
 
@@ -146,21 +146,36 @@ private struct CafeItemRow: View {
     }
 }
 
-/// The overall #1 in a cafe's list: a strip of foil with no name, picture or count, so the
-/// favorite page is still a surprise.
+/// The overall #1 in a cafe's list: a strip of lightly washed foil with no name, picture or
+/// count, so the favorite page is still a surprise. "? ? ?" and a gift sit on white, so they read
+/// over the foil's creases.
 private struct HiddenItemRow: View {
+    private static let cornerRadius: CGFloat = 8
+    private static let chipHeight: CGFloat = 18
+
     var body: some View {
         HStack(spacing: 8) {
             Text("? ? ?")
+                .padding(.horizontal, 8)
+                .frame(height: Self.chipHeight)
+                .background(Color.white.opacity(0.85), in: Capsule())
             Spacer(minLength: 0)
             Image(systemName: "gift.fill")
-                .font(WrappedStyle.symbol(12))
+                .font(WrappedStyle.symbol(10))
+                .frame(width: Self.chipHeight, height: Self.chipHeight)
+                .background(Color.white.opacity(0.85), in: Circle())
         }
         .font(WrappedStyle.strongCaption)
         .foregroundStyle(WrappedStyle.ink)
-        .padding(.horizontal, 10)
-        .frame(height: 22)
-        .background { FoilSurface(cornerRadius: 7) }
+        .padding(.horizontal, 3)
+        .frame(height: 24)
+        .background {
+            FoilSurface(cornerRadius: Self.cornerRadius)
+                .overlay {
+                    RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                        .fill(Color.white.opacity(0.3))
+                }
+        }
     }
 }
 

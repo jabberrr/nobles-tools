@@ -3,8 +3,9 @@ import NoblesKit
 
 /// Every page of Cafe Wrapped in its finished state, phone-sized: the sample recap (the favorite
 /// under foil, three stages open and unwrapped), a recap whose #1 is a branded item with a
-/// product photo ("-branded"), a sparse recap and a one-purchase one, the tallest pages on a small
-/// iPhone ("-compact"), the empty and stopped-early messages, and the share poster. Rendered to
+/// product photo and whose purchases fall in two parts of the day ("-branded"), a sparse recap
+/// with one part of the day and a one-purchase recap, the tallest pages on a small iPhone
+/// ("-compact"), the empty and stopped-early messages, and the share poster. Rendered to
 /// `docs/widgets` by the `WidgetSnapshots` tests so layouts can be checked without a device.
 @MainActor
 enum WrappedGallery {
@@ -18,10 +19,11 @@ enum WrappedGallery {
                 entry("wrapped-branded-\(page.galleryName)", branded, page)
             }
             entries += favoriteEntries("wrapped-branded", branded)
+            entries.append(entry("wrapped-branded-\(WrappedPage.times.galleryName)", branded, .times))
             entries.append(WidgetGallery.Entry(name: "wrapped-branded-poster", view: AnyView(WrappedPoster(wrapped: branded, cornerRadius: 0))))
         }
         if let sparse = Self.sparse {
-            entries += [WrappedPage.total, .cafes, .topItems, .records, .summary].map { page in
+            entries += [WrappedPage.total, .cafes, .topItems, .times, .records, .summary].map { page in
                 entry("wrapped-sparse-\(page.galleryName)", sparse, page)
             }
         }
@@ -59,12 +61,12 @@ enum WrappedGallery {
         let name = "\(prefix)-\(WrappedPage.favorite.galleryName)"
         return [
             entry("\(name)-covered", wrapped, .favorite),
-            entry("\(name)-torn", wrapped, .favorite, favoriteTaps: 3),
+            entry("\(name)-stage-3", wrapped, .favorite, favoriteTaps: 3),
             entry("\(name)-unwrapped", wrapped, .favorite, favoriteTaps: FavoritePage.tapsToUnwrap),
         ]
     }
 
-    /// A thin semester as of the gallery's day: one cafe, three items over three days in one
+    /// A thin semester as of the gallery's day: one cafe, three items over three mornings in one
     /// month, no streak, and an athletic-store charge that doesn't count.
     private static var sparse: CafeWrapped? {
         recap(of: [
@@ -82,7 +84,8 @@ enum WrappedGallery {
     }
 
     /// A month whose #1 is a branded item (Body Armor), with more branded items (Doritos, Oreo
-    /// Cookies) among the rest, so product photos show under the foil and in the lists.
+    /// Cookies) among the rest, so product photos show under the foil, in the lists and on the
+    /// poster. Every purchase is in the morning or the afternoon.
     private static var branded: CafeWrapped? {
         let orders: [(store: String, item: String, price: String, days: [Int])] = [
             (cafe2000, "Body Armor", "3.00", [5, 6, 7, 8, 13, 14, 15, 19, 20, 22]),

@@ -61,13 +61,7 @@ struct TotalPage: View {
         VStack(alignment: .leading, spacing: 4) {
             WrappedEyebrow("How it added up", symbol: "chart.line.uptrend.xyaxis")
                 .wrappedReveal(isActive, delay: 2.8, style: .fade)
-            WrappedLineChart(
-                days: wrapped.days,
-                across: DateSpan(start: wrapped.period.span.start, end: wrapped.period.through),
-                isActive: isActive,
-                height: 130,
-                delay: 2.9
-            )
+            WrappedLineChart(wrapped: wrapped, isActive: isActive, height: 130, delay: 2.9)
         }
     }
 }

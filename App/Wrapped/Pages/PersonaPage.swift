@@ -4,34 +4,46 @@ import NoblesKit
 /// Your cafe personality, revealed like a show. A foil card waits face down until you tap it.
 /// Then it charges up, shaking and glowing, and flips over in a burst of light and confetti. The
 /// persona's emoji, title and tagline come in one by one, with the numbers behind it below.
-/// Static mode shows it face up; under Reduce Motion it cross-fades.
+/// Once turned, it stays face up on later visits. Static mode shows it face up; under Reduce
+/// Motion it cross-fades.
 struct PersonaPage: View {
     let wrapped: CafeWrapped
     let isActive: Bool
+    /// Whether the card has been turned over, kept by the story across visits.
+    @Binding var isRevealed: Bool
 
     @Environment(\.wrappedIsStatic) private var isStatic
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Whether the card has been tapped, which starts the show.
-    @State private var isTapped = false
+    @State private var isTapped: Bool
     /// Whether the card's front has come into view: the light bursts, confetti flies, and taps
     /// on the card go back to turning the page.
-    @State private var hasLanded = false
+    @State private var hasLanded: Bool
 
     private static let cardSize = CGSize(width: 290, height: 370)
 
+    /// A visit that begins with the card already turned shows it face up, with no show.
+    init(wrapped: CafeWrapped, isActive: Bool, isRevealed: Binding<Bool>) {
+        self.wrapped = wrapped
+        self.isActive = isActive
+        _isRevealed = isRevealed
+        _isTapped = State(initialValue: isRevealed.wrappedValue)
+        _hasLanded = State(initialValue: isRevealed.wrappedValue)
+    }
+
     var body: some View {
         let isFaceUp = isStatic || isTapped
-        let isRevealed = isStatic || hasLanded
+        let isLit = isStatic || hasLanded
         ZStack {
             VStack(spacing: 24) {
                 WrappedEyebrow("Your cafe personality", symbol: "sparkles")
                     .wrappedReveal(isActive, delay: 0.1, style: .fade)
                 Spacer(minLength: 0)
-                card(isFaceUp: isFaceUp, isRevealed: isRevealed)
+                card(isFaceUp: isFaceUp, isLit: isLit)
                     .wrappedReveal(isActive, delay: 0.25, style: .pop)
                 // Both stay laid out, so the card doesn't move when one gives way to the other.
                 ZStack(alignment: .top) {
-                    hint
+                    WrappedHint("Tap the card to find out")
                         .opacity(isFaceUp ? 0 : 1)
                         .animation(.easeOut(duration: 0.2), value: isFaceUp)
                         .wrappedReveal(isActive, delay: 0.9, style: .fade)
@@ -40,7 +52,7 @@ struct PersonaPage: View {
                         .foregroundStyle(WrappedStyle.secondary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                        .wrappedReveal(isActive && isRevealed, delay: 0.7)
+                        .wrappedReveal(isActive && isLit, delay: 0.7)
                 }
                 Spacer(minLength: 0)
             }
@@ -64,14 +76,14 @@ struct PersonaPage: View {
 
     /// Both faces turn together, each showing only while it faces forward; they swap halfway
     /// through the turn. Under Reduce Motion they cross-fade instead.
-    private func card(isFaceUp: Bool, isRevealed: Bool) -> some View {
+    private func card(isFaceUp: Bool, isLit: Bool) -> some View {
         let turns = !reduceMotion
         return ZStack {
-            PersonaCardBack()
+            PersonaCardBack(isShimmering: !isFaceUp)
                 .opacity(isFaceUp ? 0 : 1)
                 .animation(faceSwap, value: isFaceUp)
                 .rotation3DEffect(.degrees(turns && isFaceUp ? 180 : 0), axis: (x: 0, y: 1, z: 0), perspective: 0.45)
-            PersonaCardFront(persona: wrapped.persona, isRevealed: isRevealed)
+            PersonaCardFront(persona: wrapped.persona, isRevealed: isLit)
                 .opacity(isFaceUp ? 1 : 0)
                 .animation(faceSwap, value: isFaceUp)
                 .rotation3DEffect(.degrees(turns && !isFaceUp ? -180 : 0), axis: (x: 0, y: 1, z: 0), perspective: 0.45)
@@ -79,34 +91,21 @@ struct PersonaPage: View {
         .animation(.easeInOut(duration: Show.flip).delay(Show.charge), value: isFaceUp)
         .frame(width: Self.cardSize.width, height: Self.cardSize.height)
         .modifier(ChargeUp(isTapped: isTapped, isEnabled: !isStatic && !reduceMotion))
-        .background { LightBurst(isLit: isRevealed, size: Self.cardSize) }
+        .background { LightBurst(isLit: isLit, size: Self.cardSize) }
         .contentShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
         // Until it has turned, the card takes taps; then they turn the page like anywhere else.
-        .gesture(TapGesture().onEnded { isTapped = true }, including: isRevealed ? .subviews : .all)
+        .gesture(TapGesture().onEnded { reveal() }, including: isLit ? .subviews : .all)
+    }
+
+    /// Starts the show, and has the story remember the card is turned even if you leave mid-show.
+    private func reveal() {
+        guard !isTapped else { return }
+        isTapped = true
+        isRevealed = true
     }
 
     private var faceSwap: Animation {
         reduceMotion ? .easeInOut(duration: 0.4) : .linear(duration: 0.01).delay(Show.landing)
-    }
-
-    @ViewBuilder
-    private var hint: some View {
-        let label = Label("Tap the card to find out", systemImage: "hand.tap.fill")
-            .font(WrappedStyle.caption)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 10)
-            .background(Color.white.opacity(0.16), in: Capsule())
-        if isStatic || reduceMotion {
-            label
-        } else {
-            label.phaseAnimator([false, true]) { content, isDimmed in
-                content
-                    .opacity(isDimmed ? 0.55 : 1)
-                    .scaleEffect(isDimmed ? 0.97 : 1)
-            } animation: { _ in
-                .easeInOut(duration: 1.1)
-            }
-        }
     }
 
     /// The numbers behind the persona, in a sentence.
@@ -205,8 +204,10 @@ private struct Charge: Sendable {
 /// The persona card's corners.
 private let cardCornerRadius: CGFloat = 32
 
-/// The side you see first: foil, with a question mark.
+/// The side you see first: foil, with a question mark. Its shimmer stops once it has turned away.
 private struct PersonaCardBack: View {
+    let isShimmering: Bool
+
     var body: some View {
         VStack(spacing: 12) {
             Text("?")
@@ -218,7 +219,7 @@ private struct PersonaCardBack: View {
         .foregroundStyle(WrappedStyle.ink)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background {
-            FoilSurface(cornerRadius: cardCornerRadius)
+            FoilSurface(cornerRadius: cardCornerRadius, isShimmering: isShimmering)
                 // A light wash, so the dark text stays clear over the foil's darkest creases.
                 .overlay { Color.white.opacity(0.22) }
                 .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
@@ -236,7 +237,7 @@ private struct PersonaCardFront: View {
         let shape = RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
         VStack(spacing: 16) {
             Text(persona.emoji)
-                .font(WrappedStyle.number(96))
+                .font(WrappedStyle.emoji(96))
                 .wrappedReveal(isRevealed, delay: 0.1, style: .pop)
             Text(persona.title)
                 .font(WrappedStyle.title(28))
@@ -274,8 +275,16 @@ private struct PersonaCardFront: View {
     }
 }
 
+private struct PersonaPagePreview: View {
+    @State private var isRevealed = false
+
+    var body: some View {
+        PersonaPage(wrapped: .sample, isActive: true, isRevealed: $isRevealed)
+            .foregroundStyle(.white)
+            .background(Color(hex: 0x9D174D))
+    }
+}
+
 #Preview {
-    PersonaPage(wrapped: .sample, isActive: true)
-        .foregroundStyle(.white)
-        .background(Color(hex: 0x9D174D))
+    PersonaPagePreview()
 }

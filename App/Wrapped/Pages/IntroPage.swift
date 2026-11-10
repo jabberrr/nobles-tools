@@ -7,9 +7,6 @@ struct IntroPage: View {
     let wrapped: CafeWrapped
     let isActive: Bool
 
-    @Environment(\.wrappedIsStatic) private var isStatic
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     var body: some View {
         ZStack {
             FloatingEmoji(emojis)
@@ -32,7 +29,7 @@ struct IntroPage: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .wrappedReveal(isActive, delay: 0.8)
                 Spacer()
-                hint
+                WrappedHint("Tap to start")
                     .wrappedReveal(isActive, delay: 1.4, style: .fade)
             }
             .padding(.horizontal, WrappedStyle.margin)
@@ -58,26 +55,6 @@ struct IntroPage: View {
             emojis.append(emoji)
         }
         return emojis
-    }
-
-    @ViewBuilder
-    private var hint: some View {
-        let label = Label("Tap to start", systemImage: "hand.tap.fill")
-            .font(WrappedStyle.strongCaption)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 10)
-            .background(Color.white.opacity(0.16), in: Capsule())
-        if isStatic || reduceMotion {
-            label
-        } else {
-            label.phaseAnimator([false, true]) { content, isDimmed in
-                content
-                    .opacity(isDimmed ? 0.55 : 1)
-                    .scaleEffect(isDimmed ? 0.97 : 1)
-            } animation: { _ in
-                .easeInOut(duration: 1.1)
-            }
-        }
     }
 }
 

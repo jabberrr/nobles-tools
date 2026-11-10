@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import NoblesKit
 
 /// The shareable recap: the semester's headline stats on one poster, shaped like a story (9:16).
@@ -23,7 +24,7 @@ struct WrappedPoster: View {
             }
             statGrid
             Spacer(minLength: 0)
-            WrappedCardLabel("Nobles Tools")
+            footer
         }
         .padding(24)
         .frame(width: Self.size.width, height: Self.size.height)
@@ -69,6 +70,29 @@ struct WrappedPoster: View {
                 .font(WrappedStyle.caption)
                 .foregroundStyle(WrappedStyle.secondary)
         }
+    }
+
+    /// The app's name, with the photo's credit beside it when the #1 shows an Open Food Facts
+    /// product photo, as its license (CC BY-SA) asks of anything that shares it.
+    private var footer: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            WrappedCardLabel("Nobles Tools")
+            if showsProductPhoto {
+                Spacer(minLength: 0)
+                Text("Photo: Open Food Facts, CC BY-SA")
+                    .font(WrappedStyle.cardLabel)
+                    .foregroundStyle(WrappedStyle.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+        }
+    }
+
+    /// Whether the #1 is drawn with a product photo: it's a branded item and the app has the photo
+    /// (`WrappedItemArt` falls back to the emoji otherwise).
+    private var showsProductPhoto: Bool {
+        guard let name = wrapped.favorite?.productImage else { return false }
+        return UIImage(named: name) != nil
     }
 
     /// Two tiles to a row; an odd last tile takes the whole row.

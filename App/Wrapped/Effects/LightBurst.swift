@@ -39,7 +39,8 @@ struct LightBurst: View {
     }
 
     /// The fan of rays: flung out on the reveal, then turning slowly while it's lit. One timeline
-    /// holds the fan whether it turns or not, so the fling animates.
+    /// holds the fan whether it turns or not, so the fling animates. The turn is slow enough that
+    /// ten frames a second look smooth.
     @ViewBuilder
     private func rays(_ isLit: Bool, diameter: CGFloat) -> some View {
         let fan = rayFan(diameter: diameter)
@@ -49,10 +50,10 @@ struct LightBurst: View {
         if isStatic || reduceMotion {
             fan
         } else {
-            TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !isLit)) { timeline in
-                // Four degrees a second: a full turn every 90 seconds.
-                let seconds = timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 90)
-                fan.rotationEffect(.degrees(isLit ? seconds * 4 : 0))
+            TimelineView(.animation(minimumInterval: 0.1, paused: !isLit)) { timeline in
+                // Two degrees a second: a full turn every three minutes.
+                let seconds = timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 180)
+                fan.rotationEffect(.degrees(isLit ? seconds * 2 : 0))
             }
         }
     }

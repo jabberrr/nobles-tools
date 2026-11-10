@@ -42,7 +42,7 @@ struct TimesPage: View {
             }
             Spacer(minLength: 12)
             HStack(spacing: 8) {
-                ForEach(Array(CafeTimeOfDay.allCases.enumerated()), id: \.element) { position, bucket in
+                ForEach(Array(usedBuckets.enumerated()), id: \.element) { position, bucket in
                     BucketChip(bucket: bucket, share: wrapped.share(ofHours: bucket.hours), isTop: bucket == wrapped.timeOfDay)
                         .wrappedReveal(isActive, delay: 2.2 + 0.12 * Double(position), style: .pop)
                 }
@@ -52,6 +52,12 @@ struct TimesPage: View {
         .padding(.top, 20)
         .padding(.bottom, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    /// The parts of the day with a purchase, in order. A part with none is left out (the cafes
+    /// aren't open at lunch), and the rest share the row.
+    private var usedBuckets: [CafeTimeOfDay] {
+        CafeTimeOfDay.allCases.filter { wrapped.share(ofHours: $0.hours) > 0 }
     }
 
     private func peakLine(_ peak: Int) -> some View {
