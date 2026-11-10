@@ -305,6 +305,23 @@ struct CafeWrappedTests {
         #expect(recapCharges([latte], asOf: LocalDate(2026, 9, 8)) != nil)
     }
 
+    @Test func keepsRefundOnlyDaysInTheDailySeries() throws {
+        let charges = [
+            Self.charge(1, Self.gleason, "Latte", "4.00", on: LocalDate(2026, 9, 8), at: 14),
+            Self.charge(2, Self.gleason, "Bagel", "3.00", on: LocalDate(2026, 9, 9), at: 14),
+            Self.charge(3, Self.gleason, "Latte", "-4.00", on: LocalDate(2026, 9, 10), at: 14),
+        ]
+        let wrapped = try #require(CafeWrapped(statement: Self.statement(charges), semester: try fall(), calendar: calendar, asOf: LocalDate(2026, 12, 18)))
+
+        #expect(wrapped.days.map(\.date) == [LocalDate(2026, 9, 8), LocalDate(2026, 9, 9), LocalDate(2026, 9, 10)])
+        #expect(wrapped.days.map(\.itemCount) == [1, 1, 0])
+        #expect(wrapped.days.reduce(0) { $0 + $1.total } == wrapped.total)
+        // A refund isn't a visit, so it counts toward neither the days nor the streak.
+        #expect(wrapped.dayCount == 2)
+        #expect(wrapped.longestStreak?.length == 2)
+        #expect(wrapped.biggestDay?.date == LocalDate(2026, 9, 8))
+    }
+
     // MARK: Personas
 
     @Test func personaRulesApplyInOrder() {

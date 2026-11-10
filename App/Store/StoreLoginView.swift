@@ -10,7 +10,7 @@ import NoblesKit
 /// `nobilis.nobles.edu/SchoolStoreNew/…` page, the view reads only the session cookie and the people
 /// linked on it. Nothing else is captured or kept.
 ///
-/// Only the sign-in pages are shown. The school-store pages are covered by a "Connecting" panel, so
+/// The school-store pages themselves are covered by a "Connecting" panel (sign-in pages show), so
 /// a reconnect that needs no typing goes straight to "Connected" instead of flashing the spending
 /// page on its way to closing.
 struct StoreLoginView: View {
@@ -77,7 +77,8 @@ struct StoreLoginView: View {
                 ForEach(capture.people) { person in
                     Button(person.displayName) { finish(cookie: capture.cookie, person: person) }
                 }
-                Button("Cancel", role: .cancel) {}
+                // Without a person there's nothing to connect, and the page underneath is covered.
+                Button("Cancel", role: .cancel) { dismiss() }
             } message: { _ in
                 Text("This account can see more than one person. Pick whose spending to show.")
             }
@@ -206,7 +207,7 @@ struct StorePerson: Identifiable, Hashable {
 private struct StoreLoginWebView: UIViewRepresentable {
     /// Reports page-load progress, to drive a spinner.
     let onLoadingChange: (Bool) -> Void
-    /// Reports whether the page is one for the user (a sign-in page) rather than the school store's.
+    /// Reports whether the page is one for the user rather than a school-store page.
     let onNeedsUser: (Bool) -> Void
     /// Reports the captured cookie header and the people on the page, once sign-in completes.
     let onCapture: (_ cookie: String, _ people: [StorePerson]) -> Void
@@ -257,7 +258,7 @@ private struct StoreLoginWebView: UIViewRepresentable {
             _ webView: WKWebView,
             decidePolicyFor navigationAction: WKNavigationAction
         ) async -> WKNavigationActionPolicy {
-            if navigationAction.targetFrame?.isMainFrame == true, Self.isSchoolStore(navigationAction.request.url) {
+            if navigationAction.targetFrame?.isMainFrame == true, Self.isSignedInStorePage(navigationAction.request.url) {
                 onNeedsUser(false)
             }
             return .allow
@@ -269,14 +270,16 @@ private struct StoreLoginWebView: UIViewRepresentable {
 
         /// Covers a school-store page reached by a server redirect, which asks no navigation policy.
         func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
-            if Self.isSchoolStore(webView.url) {
+            if Self.isSignedInStorePage(webView.url) {
                 onNeedsUser(false)
             }
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             onLoadingChange(false)
-            onNeedsUser(!Self.isSchoolStore(webView.url))
+            // Only school-store pages are covered, and each starts a capture, so any other page
+            // (a sign-in step, or a portal page the sign-in returned to) shows.
+            onNeedsUser(!Self.isSignedInStorePage(webView.url))
             guard !hasCaptured, Self.isSignedInStorePage(webView.url) else { return }
             hasCaptured = true
             Task { await captureSession(from: webView) }
@@ -302,14 +305,9 @@ private struct StoreLoginWebView: UIViewRepresentable {
             return nil
         }
 
-        /// Whether `url` is on the Nobles portal (`nobilis`), rather than a sign-in host.
-        private static func isSchoolStore(_ url: URL?) -> Bool {
-            url?.host == "nobilis.nobles.edu"
-        }
-
-        /// Whether `url` is a signed-in Nobles school-store page, not the Veracross login host.
+        /// Whether `url` is a Nobles school-store page (`nobilis…/SchoolStoreNew/`), not a sign-in page.
         private static func isSignedInStorePage(_ url: URL?) -> Bool {
-            guard let url, isSchoolStore(url) else { return false }
+            guard let url, url.host == "nobilis.nobles.edu" else { return false }
             return url.path.contains("SchoolStoreNew")
         }
 

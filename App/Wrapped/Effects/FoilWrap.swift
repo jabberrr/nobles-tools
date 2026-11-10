@@ -3,7 +3,8 @@ import SwiftUI
 /// Wraps an item in crumpled foil shaped like it, which comes off in stages, one per tap.
 ///
 /// The foil is a photo of real foil cut to the item's `silhouette`, grown a little and puffed up
-/// with light and shade, with folds where its three flaps overlap. The first tap loosens it, so
+/// with light and shade, with folds where its three flaps overlap. It covers only the item, so
+/// whatever `content` draws around it (a plate) stays in view. The first tap loosens it, so
 /// the flaps lift and the seams open. The next three peel back the top, then the left side, then
 /// the right, each rolling back from its seam to the item's edge and leaving the opened foil
 /// crumpled around the item. The last tap crumples it all into a ball that hops and drops away
@@ -88,7 +89,7 @@ struct FoilWrap<Content: View, Silhouette: View>: View {
             .accessibilityElement()
             .accessibilityLabel("Wrapped in foil")
             .accessibilityValue(tapsLeft == 1 ? "1 tap left" : "\(tapsLeft) taps left")
-            .accessibilityHint("Double-tap to peel off some foil.")
+            .accessibilityHint("Peels off some foil.")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { advance() }
             .accessibilityHidden(isOff)
@@ -187,7 +188,7 @@ private struct PreviewCookie: View {
 
     var body: some View {
         Text("🍪")
-            .font(WrappedStyle.number(110))
+            .font(WrappedStyle.emoji(110))
             .frame(width: 220, height: 220)
             .background {
                 if !isSilhouette {

@@ -73,14 +73,12 @@ extension CafeWrapped {
     }
 
     /// One day's spending.
-    public struct Day: Hashable, Sendable, Identifiable {
+    public struct Day: Hashable, Sendable {
         public var date: LocalDate
         /// Net spending, tax included.
         public var total: Decimal
-        /// Units bought that day.
+        /// Units bought that day; 0 on a day with only refunds.
         public var itemCount: Int
-
-        public var id: LocalDate { date }
     }
 
     /// Purchase days in a row, where only school days count as gaps: weekends, breaks and other
@@ -170,13 +168,15 @@ extension CafeWrapped.Month {
 }
 
 extension CafeWrapped.Day {
-    /// Each day among `charges` that has a purchase, in order.
+    /// Each day among `charges`, in order, including days with only refunds.
     static func all(in charges: [CafeWrapped.DatedCharge]) -> [Self] {
         Dictionary(grouping: charges, by: \.day)
-            .filter { $0.value.contains(where: \.isPurchase) }
             .map { Self(date: $0.key, total: $0.value.spent, itemCount: $0.value.units) }
             .sorted { $0.date < $1.date }
     }
+
+    /// Whether anything was bought that day, rather than only refunded.
+    var hasPurchase: Bool { itemCount > 0 }
 }
 
 extension CafeWrapped.Streak {

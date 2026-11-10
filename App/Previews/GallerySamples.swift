@@ -87,6 +87,33 @@ enum GallerySamples {
         )
     }
 
+    /// The sample statement as of yesterday evening, when the latest charge was the longest name on
+    /// the cafe menus: it fills the rectangular Lock Screen's two lines and is cut at the end.
+    static var longNameStoreStatement: StoreStatement {
+        let today = LocalDate(WidgetGallery.now)
+        let yesterday = today.adding(days: -1)
+        let sundae = StoreCharge(
+            id: 900_001,
+            storeName: "Cafe 2000",
+            transactionType: "Chit",
+            detail: "Strawberry Shortcake Ice Cream Sundae",
+            amount: 2.50,
+            madeAt: yesterday.at(hour: 16, minute: 12),
+            postedOn: nil
+        )
+        let charges = storeStatement.charges.filter { LocalDate($0.madeAt) < today } + [sundae]
+        let totals = Dictionary(grouping: charges, by: \.storeName).map { store, charges in
+            StoreTotal(storeName: store, amount: charges.reduce(0) { $0 + $1.amount }, total: charges.reduce(0) { $0 + $1.total })
+        }
+        .sorted { $0.storeName < $1.storeName }
+        return StoreStatement(
+            charges: charges,
+            totalsByStore: totals,
+            grandTotal: totals.reduce(0) { $0 + $1.total },
+            fetchedAt: WidgetGallery.now
+        )
+    }
+
     private static func upcoming(_ meal: Meal, on date: LocalDate, _ menu: DailyMenu) -> UpcomingMenu {
         UpcomingMenu(meal: meal, date: date, menu: menu, validUntil: meal.serviceEnd(on: date))
     }

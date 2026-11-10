@@ -37,7 +37,7 @@ struct ConfettiBurst: View {
                     } symbols: {
                         ForEach(emojis.indices, id: \.self) { index in
                             Text(emojis[index])
-                                .font(WrappedStyle.number(ConfettiShower.emojiSize))
+                                .font(WrappedStyle.emoji(ConfettiShower.emojiSize))
                                 .tag(index)
                         }
                     }

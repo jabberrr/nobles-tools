@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// The foil over an item at one stage, filling the content's frame plus `FoilGeometry.margin` on
-/// every side: its three flaps, squishing at each tap, and once it's off, the ball it crumples
-/// into, dropping out of sight.
+/// every side. Every piece is the foil photo cut to the item's grown silhouette with masks, so the
+/// foil is always shaped like the item and the item shows only where the foil has opened. Once
+/// the foil is off, it crumples into a ball that drops out of sight.
 struct FoilCover<Silhouette: View>: View {
     let silhouette: Silhouette
     let stage: FoilStage
@@ -12,25 +13,34 @@ struct FoilCover<Silhouette: View>: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let geometry = FoilGeometry(size: proxy.size)
+            let masks = FoilMasks(silhouette: silhouette, geometry: FoilGeometry(size: proxy.size))
             ZStack {
-                flaps(geometry)
+                foil(masks)
                 if motion == .full {
-                    FoilBall(diameter: geometry.ballDiameter)
-                        .modifier(BallDrop(isDropping: stage.isOff, distance: geometry.size.height * 0.75))
+                    FoilBall(diameter: masks.geometry.ballDiameter)
+                        .modifier(BallDrop(isDropping: stage.isOff, distance: masks.geometry.size.height * 0.75))
                 }
             }
         }
     }
 
-    /// The flaps, which crumple toward the middle and vanish into the ball once the foil is off.
-    private func flaps(_ geometry: FoilGeometry) -> some View {
+    /// The flaps over the opened foil and the gap, crumpling toward the middle and vanishing into
+    /// the ball once the foil is off.
+    private func foil(_ masks: FoilMasks<Silhouette>) -> some View {
         let isCrumpling = stage.isOff && motion == .full
         return ZStack {
+            if stage.step >= 2 {
+                opened(masks)
+                    .transition(.opacity)
+            }
+            if stage.isLoose && stage.step < 4 {
+                gap(masks)
+            }
             ForEach(FoilRegion.drawingOrder, id: \.self) { region in
-                FoilFlap(region: region, stage: stage, motion: motion, geometry: geometry, silhouette: silhouette)
+                FoilFlap(region: region, stage: stage, motion: motion, masks: masks)
             }
         }
+        .animation(openingAnimation, value: stage.step)
         .foilShimmer(isActive: !stage.isOff, strength: FoilArt.sweepStrength)
         .modifier(TapSquish(taps: taps, isEnabled: motion == .full))
         .scaleEffect(isCrumpling ? 0.3 : 1)
@@ -38,6 +48,44 @@ struct FoilCover<Silhouette: View>: View {
         .animation(.easeIn(duration: 0.3), value: stage.isOff)
         .opacity(stage.isOff ? 0 : 1)
         .animation(fadeAnimation, value: stage.isOff)
+    }
+
+    /// The foil opened out and left crumpled around the item, under every flap that has opened.
+    private func opened(_ masks: FoilMasks<Silhouette>) -> some View {
+        let unit = masks.geometry.unit
+        return FoilFinish(face: .inside, geometry: masks.geometry)
+            .mask { masks.ring(FoilGrowth.opened, rumple: 0.35, seed: 0x0FE2) }
+            .mask {
+                ZStack {
+                    ForEach(FoilRegion.allCases, id: \.self) { region in
+                        masks.region(region)
+                            .opacity(stage.isOpen(region) ? 1 : 0)
+                    }
+                }
+            }
+            .shadow(color: .black.opacity(0.25), radius: 3 * unit, y: 2 * unit)
+    }
+
+    /// The dark gap under the flaps still wrapped, which shows along the seams once they lift.
+    /// A flap's part goes the moment it starts to peel, so the item shows through its hole.
+    private func gap(_ masks: FoilMasks<Silhouette>) -> some View {
+        Color(white: 0.06, opacity: 0.85)
+            .mask { masks.grown(FoilGrowth.gap, rumple: FoilGrowth.wrapRumple, seed: FoilGrowth.wrapSeed) }
+            .mask {
+                ZStack {
+                    ForEach(FoilRegion.allCases, id: \.self) { region in
+                        if !stage.isOpen(region) {
+                            masks.region(region)
+                        }
+                    }
+                }
+            }
+            .transaction { $0.animation = nil }
+    }
+
+    /// The opened foil spreads out as a peel reaches the item's edge.
+    private var openingAnimation: Animation {
+        motion == .full ? .easeOut(duration: 0.4).delay(0.3) : .easeInOut(duration: 0.35)
     }
 
     /// The flaps fade as they shrink into the ball, or simply fade under Reduce Motion.
@@ -48,61 +96,92 @@ struct FoilCover<Silhouette: View>: View {
 
 /// One flap of the foil.
 ///
-/// Wrapped, it's a shiny piece over a dark gap that shows along the seams once it loosens and
-/// lifts. Opening, a hole in the item's shape grows from the flap's free edge out to the item's
-/// edge, with the foil's rolled edge riding along it, and the opened-out foil fades in around the
-/// item. Under Reduce Motion the wrapped piece fades out and the opened foil fades in.
+/// Wrapped, it's the shiny outside cut to the flap, its edges shaded so it looks puffed up and
+/// its folds creased. Loose, it lifts off its seams. Opening, a hole in the item's shape grows
+/// from the flap's free edge out to the item's edge, so the item shows through, and the foil's
+/// rolled edge rides along the hole. Under Reduce Motion the flap fades out and its rolled edge
+/// fades in.
 private struct FoilFlap<Silhouette: View>: View {
     let region: FoilRegion
     let stage: FoilStage
     let motion: FoilMotion
-    let geometry: FoilGeometry
-    let silhouette: Silhouette
+    let masks: FoilMasks<Silhouette>
 
     var body: some View {
         let isOpen = stage.isOpen(region)
-        let lift = FlapLift(region: region, geometry: geometry)
+        let lift = FlapLift(region: region, geometry: masks.geometry)
+        let anchor = masks.geometry.peelAnchor(of: region)
         ZStack {
-            piece(.opened(region))
-                .shadow(color: .black.opacity(0.25), radius: 3 * geometry.unit, y: 2 * geometry.unit)
-                .opacity(isOpen ? 1 : 0)
-                .animation(openingAnimation, value: isOpen)
-            ZStack {
-                piece(.gap(region))
-                piece(.wrapped(region))
-                    .offset(stage.isLoose ? lift.offset : .zero)
-                    .rotation3DEffect(
-                        .degrees(stage.isLoose && motion != .reduced ? lift.degrees : 0),
-                        axis: lift.axis,
-                        anchor: lift.anchor,
-                        perspective: 0.3
-                    )
-                    .brightness(stage.isLoose ? 0.03 : 0)
-                    .animation(liftAnimation, value: stage.isLoose)
+            wrapped
+                .offset(stage.isLoose ? lift.offset : .zero)
+                .rotation3DEffect(
+                    .degrees(stage.isLoose && motion != .reduced ? lift.degrees : 0),
+                    axis: lift.axis,
+                    anchor: lift.anchor,
+                    perspective: 0.3
+                )
+                .brightness(stage.isLoose ? 0.03 : 0)
+                .animation(liftAnimation, value: stage.isLoose)
+                .mask { peelMask(isOpen: isOpen, anchor: anchor) }
+                .opacity(motion == .reduced && isOpen ? 0 : 1)
+            // Built only once the flap opens: it grows out from the hole's start.
+            if isOpen {
+                curl
+                    .shadow(color: .black.opacity(0.35), radius: 2.5 * masks.geometry.unit, y: masks.geometry.unit)
+                    .transition(curlTransition(anchor: anchor))
             }
-            .mask { peelMask(isOpen: isOpen) }
-            .opacity(motion == .reduced && isOpen ? 0 : 1)
-            .animation(.easeInOut(duration: 0.35), value: isOpen)
-            piece(.curl(region))
-                .scaleEffect(motion == .reduced || isOpen ? 1 : peeledShut, anchor: geometry.peelAnchor(of: region))
-                .shadow(color: .black.opacity(0.35), radius: 2.5 * geometry.unit, y: geometry.unit)
-                .opacity(isOpen ? 1 : 0)
-                .animation(peelAnimation, value: isOpen)
         }
+        .animation(peelAnimation, value: isOpen)
     }
 
-    /// Everything but the hole peeled so far. Under Reduce Motion there's no hole: the flap fades.
-    private func peelMask(isOpen: Bool) -> some View {
-        Rectangle()
+    /// The flap's outside: the shiny face, its edges shaded so it looks puffed up, its folds
+    /// creased, cut to the wrap and to the flap.
+    private var wrapped: some View {
+        let unit = masks.geometry.unit
+        return FoilFinish(face: .outside, geometry: masks.geometry)
+            .overlay { rim(.black.opacity(0.4), shift: CGSize(width: -2.5 * unit, height: -3.5 * unit), blur: 3 * unit) }
+            .overlay { rim(.white.opacity(0.6), shift: CGSize(width: 1.5 * unit, height: 2 * unit), blur: unit) }
+            .overlay { FoilFolds(region: region, geometry: masks.geometry) }
+            .mask { masks.wrap() }
+            .mask { masks.region(region) }
+    }
+
+    /// `color` wherever the wrap lies outside its own outline moved by `shift`: a band along the
+    /// edges that face away from the shift.
+    private func rim(_ color: Color, shift: CGSize, blur: CGFloat) -> some View {
+        color
+            .foilCutout { masks.wrap(copies: 8).offset(shift) }
+            .blur(radius: blur)
+    }
+
+    /// The rolled edge of the peeled flap, hugging the item: the foil's inside, brightest along
+    /// the fold at its outer edge.
+    private var curl: some View {
+        FoilFinish(face: .inside, geometry: masks.geometry)
+            .overlay { Color.black.opacity(0.25) }
             .overlay {
+                Color.white.opacity(0.75)
+                    .foilCutout { masks.grown(FoilGrowth.curl - 2.5, copies: 8) }
+                    .blur(radius: masks.geometry.unit)
+            }
+            .mask { masks.ring(FoilGrowth.curl) }
+            .mask { masks.region(region) }
+    }
+
+    /// Everything but the part peeled so far: the item's shape, grown from the flap's free edge.
+    /// Under Reduce Motion there's no hole; the flap fades instead.
+    private func peelMask(isOpen: Bool, anchor: UnitPoint) -> some View {
+        Rectangle()
+            .foilCutout {
                 if motion != .reduced {
-                    piece(.hole)
-                        .scaleEffect(isOpen ? 1 : peeledShut, anchor: geometry.peelAnchor(of: region))
-                        .animation(peelAnimation, value: isOpen)
-                        .blendMode(.destinationOut)
+                    masks.grown(FoilGrowth.hole)
+                        .scaleEffect(isOpen ? 1 : peeledShut, anchor: anchor)
                 }
             }
-            .compositingGroup()
+    }
+
+    private func curlTransition(anchor: UnitPoint) -> AnyTransition {
+        motion == .reduced ? .opacity : .scale(scale: peeledShut, anchor: anchor).combined(with: .opacity)
     }
 
     private var liftAnimation: Animation {
@@ -111,15 +190,6 @@ private struct FoilFlap<Silhouette: View>: View {
 
     private var peelAnimation: Animation {
         motion == .full ? .spring(duration: 0.8, bounce: 0.1) : .easeInOut(duration: 0.35)
-    }
-
-    /// The opened foil spreads out as the peel reaches the item's edge.
-    private var openingAnimation: Animation {
-        motion == .full ? .easeOut(duration: 0.4).delay(0.3) : .easeInOut(duration: 0.35)
-    }
-
-    private func piece(_ spec: FoilPieceSpec) -> FoilPiece<Silhouette> {
-        FoilPiece(spec: spec, geometry: geometry, silhouette: silhouette)
     }
 }
 

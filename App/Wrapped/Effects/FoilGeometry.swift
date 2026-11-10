@@ -9,13 +9,13 @@ enum FoilRegion: CaseIterable, Sendable {
     static let drawingOrder: [FoilRegion] = [.right, .left, .top]
 }
 
-/// Where things are on the foil's canvas: the wrapped content's frame with `margin` all around,
-/// so the foil can puff out and open past the content's edges.
+/// Where things are on the foil's stage: the wrapped content's frame with `margin` all around,
+/// so foil around an item that reaches the content's edges isn't cut off.
 struct FoilGeometry: Sendable {
     /// Room around the content for the foil to spread into, in points.
-    static let margin: CGFloat = 40
+    static let margin: CGFloat = 28
 
-    /// The canvas: the content's frame plus `margin` on every side.
+    /// The stage: the content's frame plus `margin` on every side.
     let size: CGSize
 
     /// The content's frame, where the item's silhouette is laid out.
@@ -48,7 +48,7 @@ struct FoilGeometry: Sendable {
         min(itemFrame.width, itemFrame.height) * 0.28
     }
 
-    /// The part of the canvas a flap covers. Neighbors overlap by a hair, so no hairline of
+    /// The part of the stage a flap covers. Neighbors overlap by a hair, so no hairline of
     /// whatever is beneath shows between them.
     func rect(of region: FoilRegion) -> CGRect {
         let overlap: CGFloat = 0.5

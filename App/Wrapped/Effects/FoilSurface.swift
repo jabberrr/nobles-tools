@@ -1,12 +1,15 @@
 import SwiftUI
 
 /// A surface of real crumpled foil (the `FoilTexture` photo scan), with a light sweep now and
-/// then. Fills its frame, clipped to `cornerRadius`. Still in static mode and under Reduce Motion.
+/// then while `isShimmering`. Fills its frame, clipped to `cornerRadius`. Still in static mode and
+/// under Reduce Motion.
 struct FoilSurface: View {
     private let cornerRadius: CGFloat
+    private let isShimmering: Bool
 
-    init(cornerRadius: CGFloat = 0) {
+    init(cornerRadius: CGFloat = 0, isShimmering: Bool = true) {
         self.cornerRadius = cornerRadius
+        self.isShimmering = isShimmering
     }
 
     var body: some View {
@@ -24,26 +27,29 @@ struct FoilSurface: View {
                 )
             }
             .clipShape(shape)
-            .foilShimmer(strength: FoilArt.sweepStrength)
+            .foilShimmer(isActive: isShimmering, strength: FoilArt.sweepStrength)
             .accessibilityHidden(true)
     }
 }
 
 /// The foil photo filling its frame over plain silver, cropped and never stretched, lit from the
 /// upper left. It's never drawn smaller than `minimumSide`, so crinkles keep their size on small
-/// surfaces.
+/// surfaces. `isTurned` turns and mirrors it, for the foil's other face.
 struct FoilTextureFill: View {
     var minimumSide: CGFloat = 280
+    var isTurned = false
 
     var body: some View {
         GeometryReader { proxy in
             let side = max(proxy.size.width, proxy.size.height, minimumSide)
             FoilArt.texture
-                .saturation(FoilPainter.saturation)
+                .saturation(FoilArt.saturation)
                 .frame(width: side, height: side)
+                .rotationEffect(.degrees(isTurned ? 90 : 0))
+                .scaleEffect(x: isTurned ? -1 : 1, y: 1)
                 .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
         }
-        .background(FoilPainter.silver)
+        .background(FoilArt.silver)
         .overlay {
             LinearGradient(
                 stops: [
@@ -59,14 +65,19 @@ struct FoilTextureFill: View {
     }
 }
 
-/// The foil's photo and sheen, shared by everything made of it.
+/// The foil's photo, color and sheen, shared by everything made of it.
 @MainActor
 enum FoilArt {
-    /// A photo scan of crumpled aluminium foil (ambientCG, CC0).
+    /// A photo of crumpled tin foil: cropped from "Crumpled Tin Foil" by Kevin M. Gill (Wikimedia
+    /// Commons, CC BY 4.0), its light evened out.
     static var texture: Image {
         Image("FoilTexture").resizable().interpolation(.high)
     }
 
+    /// How much of the photo's color is kept, so the foil reads as silver.
+    static let saturation = 0.25
+    /// The foil's color under the photo.
+    static let silver = Color(white: 0.78)
     /// How bright the light sweeping across foil gets: softer than on plain metallic text, so
     /// the photo's crinkles show through.
     static let sweepStrength = 0.5

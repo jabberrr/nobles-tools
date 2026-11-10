@@ -57,7 +57,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Data Sources")
                 } footer: {
-                    Text("Scores are final results only (there's no live scoring) and can appear a week or so after a game. Menus are as Flik publishes them; Nobles has lunch and dinner menus, but no breakfast menu.")
+                    Text("Scores are final results only, with no live scoring. They can show up a week or so after a game. Menus are as Flik publishes them. Nobles has lunch and dinner menus, but no breakfast menu.")
                 }
 
                 Section {

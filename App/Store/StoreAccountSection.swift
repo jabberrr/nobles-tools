@@ -51,7 +51,7 @@ struct StoreAccountSection: View {
 
     private var footer: String {
         if account.isConnected {
-            return "If the widget asks you to sign in, tap Reconnect. Your spending stays on your device; disconnecting removes the saved sign-in and spending."
+            return "If the widget asks you to sign in, tap Reconnect. Your spending stays on your device. Disconnecting removes the saved sign-in and spending."
         }
         return "Sign in with Veracross to show your own cafe and store spending. Your login and data stay on your device."
     }

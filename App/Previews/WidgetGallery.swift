@@ -227,6 +227,13 @@ enum WidgetGallery {
             ),
             Variant(name: "spending-nolist-crimson", design: noList, families: [.systemSmall, .systemMedium], statement: sample),
             Variant(
+                name: "spending-longname-compact",
+                design: spending,
+                families: [.systemMedium, .accessoryRectangular],
+                screen: .compact,
+                statement: GallerySamples.longNameStoreStatement
+            ),
+            Variant(
                 name: "spending-offline-dark",
                 design: spending,
                 families: [.systemMedium],

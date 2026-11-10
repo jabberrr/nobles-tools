@@ -13,9 +13,10 @@ public struct CafeWrapped: Hashable, Sendable {
     public var purchaseCount: Int
     /// Units bought: the sum of positive charges' quantities.
     public var itemCount: Int
-    /// Distinct days with a purchase: `days.count`.
+    /// Distinct days with a purchase.
     public var dayCount: Int
-    /// Every day with a purchase, in date order.
+    /// Every day with a charge, in date order: each day with a purchase, and any day with only a
+    /// refund (`itemCount` 0, a negative `total`). Their totals add up to `total`.
     public var days: [Day]
     /// Distinct items (grouped by `String.matchKey` of the detail, whitespace collapsed).
     public var distinctItemCount: Int
@@ -60,12 +61,13 @@ public struct CafeWrapped: Hashable, Sendable {
         }
         let items = Item.ranked(purchases)
         let days = Day.all(in: charges)
+        let purchaseDays = days.filter(\.hasPurchase)
 
         period = Period(name: Self.periodName(for: span), span: span, through: through)
         total = charges.spent
         purchaseCount = purchases.count
         itemCount = purchases.units
-        dayCount = days.count
+        dayCount = purchaseDays.count
         self.days = days
         distinctItemCount = items.count
         cafes = Cafe.all(in: charges, overallTotal: total)
@@ -73,9 +75,9 @@ public struct CafeWrapped: Hashable, Sendable {
         self.hourCounts = hourCounts
         self.weekdayCounts = weekdayCounts
         months = Month.all(in: charges)
-        biggestDay = days.firstMax(by: \.total)
+        biggestDay = purchaseDays.firstMax(by: \.total)
         biggestPurchase = purchases.firstMax(by: \.charge.total)?.charge
-        longestStreak = Streak.runs(of: days.map(\.date), calendar: calendar).firstMax(by: \.length)
+        longestStreak = Streak.runs(of: purchaseDays.map(\.date), calendar: calendar).firstMax(by: \.length)
         firstPurchase = purchases.first?.charge
         persona = CafePersona(CafePersona.Evidence(
             favoriteUnits: items.first?.count ?? 0,
