@@ -237,6 +237,8 @@ Identifiers:
 - **Never compare `Date`s with `<=` or `>=`, and never pass them to `max(_:_:)`, which uses `>=`.** Use `Date.isAtOrBefore(_:)` and `Date.later(_:)` (`NoblesKit/Core/DateOrdering.swift`), or `<`, `>` and `==`.
   - Foundation marks `Date.<=`/`>=` `@backDeployed(before: FoundationPreview 6.4.2)`. iOS 27.2 beta claims that version but doesn't ship the symbols, so the call jumps to address 0.
   - TestFlight build 4 crashed this way at launch, in `Game.hasStarted`. `min(_:_:)` uses `<` and is safe.
+  - CI runs `.github/scripts/check-date-operators.sh` on the built app. It fails if any binary in it references either operator.
+  - The script first compiles a one-line canary to prove the SDK produces the reference at all. With an older SDK it only warns.
   - `LocalDate` is our own `Comparable` type, so its `<=` is fine.
 - In AppIntents types, use computed static properties (`static var title: LocalizedStringResource { "…" }`). Stored `static var` is a Swift 6 concurrency error.
 - **New persisted fields must decode with a default** (`container.decode(.key, or: default)` from `LenientDecoding.swift`), so designs saved by older builds keep loading.

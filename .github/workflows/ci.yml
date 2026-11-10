@@ -53,6 +53,12 @@ jobs:
             -derivedDataPath build/DerivedData \
             -quiet
 
+      # Date.<= and Date.>= crash on iOS 27.2 beta (see CONTEXT.md), so the app must not call them.
+      - name: Check for back-deployed Date operators
+        run: |
+          app=$(find build/DerivedData/Build/Products -maxdepth 2 -name NoblesTools.app -print -quit)
+          .github/scripts/check-date-operators.sh "${app:?no NoblesTools.app was built}"
+
       # Keeps the committed project in sync with project.yml, so a pull is all it takes to open
       # the app in Xcode. Pushes made with GITHUB_TOKEN don't trigger workflows.
       - name: Commit the regenerated Xcode project
