@@ -14,18 +14,18 @@ struct StoreServiceTests {
         let directory = temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let cache = ResponseCache(directory: directory)
-        let http = FakeHTTPClient([chargesURL: .data(try Fixture.data("real-store-charges.json"))])
+        let http = FakeHTTPClient([chargesURL: .data(try Fixture.data("synthetic-store-charges.json"))])
         let service = StoreService(http: http, cache: cache)
 
         let statement = try await service.statement(for: session, now: now)
-        #expect(statement.charges.count == 26)
+        #expect(statement.charges.count == 29)
         #expect(statement.fetchedAt == now)
-        #expect(statement.grandTotal == Decimal(string: "136.75"))
+        #expect(statement.grandTotal == Decimal(string: "222.19"))
         #expect(await http.headers(for: chargesURL) == ["Cookie": "PHPSESSID=abc123"])
 
         // The raw body was cached and parses back, stamped with when it was saved.
         let cached = try #require(await service.cachedStatement())
-        #expect(cached.charges.count == 26)
+        #expect(cached.charges.count == 29)
         #expect(abs(cached.fetchedAt.timeIntervalSinceNow) < 60)
     }
 

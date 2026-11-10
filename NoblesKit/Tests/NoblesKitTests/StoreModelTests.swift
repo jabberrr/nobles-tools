@@ -6,61 +6,92 @@ struct StoreModelTests {
     private let now = Date(timeIntervalSince1970: 1_793_000_000)
 
     private func statement() throws -> StoreStatement {
-        try StoreService.parse(Fixture.data("real-store-charges.json"), fetchedAt: now)
+        try StoreService.parse(Fixture.data("synthetic-store-charges.json"), fetchedAt: now)
     }
 
     // MARK: Fixture
 
-    @Test func parsesTheRealFixture() throws {
+    @Test func parsesTheFixture() throws {
         let statement = try statement()
 
-        #expect(statement.charges.count == 26)
+        #expect(statement.charges.count == 29)
         #expect(statement.totalsByStore.count == 3)
         #expect(statement.stores == ["Athletic Store", "Cafe 2000", "Cafe at Gleason Hall"])
-        #expect(statement.grandTotal == Decimal(string: "136.75"))
-        #expect(statement.grandTotal.usd() == "$136.75")
+        #expect(statement.grandTotal == Decimal(string: "222.19"))
+        #expect(statement.grandTotal.usd() == "$222.19")
         #expect(statement.fetchedAt == now)
 
         // Newest first, oldest last.
-        #expect(statement.charges.first?.id == 655959)
-        #expect(statement.charges.last?.id == 631716)
+        #expect(statement.charges.first?.id == 447649)
+        #expect(statement.charges.last?.id == 433123)
         #expect(zip(statement.charges, statement.charges.dropFirst()).allSatisfy { $0.madeAt >= $1.madeAt })
+
+        // The source's totals are the sums of its charges.
+        for total in statement.totalsByStore {
+            #expect(total.total == statement.charges(in: [total.storeName]).reduce(0) { $0 + $1.total })
+        }
+        #expect(statement.grandTotal == statement.charges.reduce(0) { $0 + $1.total })
     }
 
     @Test func parsesChargeFields() throws {
         let charges = try statement().charges
 
         let newest = try #require(charges.first)
-        #expect(newest.id == 655959)
+        #expect(newest.id == 447649)
         #expect(newest.storeName == "Cafe at Gleason Hall")
         #expect(newest.transactionType == "Chit")
-        #expect(newest.detail == "Egg, Bacon, American on Croissant")
-        #expect(newest.amount == Decimal(string: "4.00"))
+        #expect(newest.detail == "Turkey & Swiss Panini")
+        #expect(newest.quantity == 1)
+        #expect(newest.amount == Decimal(string: "6.00"))
         #expect(newest.tax == 0)
-        #expect(newest.madeAt == LocalDate(2026, 11, 9).at(hour: 14, minute: 59))
+        #expect(newest.madeAt == LocalDate(2026, 11, 9).at(hour: 12, minute: 42))
         #expect(newest.postedOn == nil)
         #expect(newest.isPending)
+        #expect(charges.filter(\.isPending).map(\.id) == [447649, 447281, 446936]) // only the newest
 
-        let posted = try #require(charges.first { $0.id == 653097 })
-        #expect(posted.postedOn == LocalDate(2026, 10, 29))
+        let posted = try #require(charges.first { $0.id == 446241 })
+        #expect(posted.postedOn == LocalDate(2026, 11, 3))
         #expect(!posted.isPending)
 
-        let shirt = try #require(charges.first { $0.storeName == "Athletic Store" })
-        #expect(shirt.detail == "UA MENS")
-        #expect(shirt.amount == Decimal(string: "55.00"))
-        #expect(shirt.madeAt == LocalDate(2026, 10, 6).at(hour: 21, minute: 3))
+        let socks = try #require(charges.first { $0.storeName == "Athletic Store" })
+        #expect(socks.detail == "Athletic Socks")
+        #expect(socks.amount == Decimal(string: "15.00"))
+        #expect(socks.madeAt == LocalDate(2026, 10, 28).at(hour: 11, minute: 8))
+
+        // `total_cost` is the whole line, so a quantity of two is already counted in the amount.
+        let pair = try #require(charges.first { $0.id == 442055 })
+        #expect(pair.detail == "Iced Tea")
+        #expect(pair.quantity == 2)
+        #expect(pair.amount == Decimal(string: "3.50"))
+    }
+
+    @Test func parsesSalesTax() throws {
+        let statement = try statement()
+
+        let taxed = try #require(statement.charges.first { $0.tax > 0 })
+        #expect(statement.charges.filter { $0.tax > 0 }.count == 1)
+        #expect(taxed.detail == "Team Practice Shorts")
+        #expect(taxed.amount == Decimal(string: "27.00"))
+        #expect(taxed.tax == Decimal(string: "1.69"))
+        #expect(taxed.total == Decimal(string: "28.69"))
+
+        let athletic = try #require(statement.totalsByStore.first { $0.storeName == "Athletic Store" })
+        #expect(athletic.amount == Decimal(string: "102.00"))
+        #expect(athletic.tax == Decimal(string: "1.69"))
+        #expect(athletic.total == Decimal(string: "103.69"))
     }
 
     @Test func statementHelpersFilterAndTotal() throws {
         let statement = try statement()
 
-        #expect(statement.charges(in: ["Athletic Store"]).map(\.detail) == ["UA MENS"])
+        #expect(statement.charges(in: ["Athletic Store"]).map(\.detail)
+            == ["Athletic Socks", "Nobles Quarter-Zip", "Team Practice Shorts"])
         #expect(statement.charges(in: ["cafe 2000"]).count == 4) // case-insensitive
-        #expect(statement.total(in: ["Cafe 2000"]) == Decimal(string: "9.75"))
-        #expect(statement.total(in: ["Athletic Store", "Cafe 2000"]) == Decimal(string: "64.75"))
+        #expect(statement.total(in: ["Cafe 2000"]) == Decimal(string: "11.50"))
+        #expect(statement.total(in: ["Athletic Store", "Cafe 2000"]) == Decimal(string: "115.19"))
         #expect(statement.total(in: []) == statement.grandTotal)
-        #expect(statement.latestCharge()?.id == 655959)
-        #expect(statement.latestCharge(in: ["Cafe 2000"])?.detail == "RX Bar")
+        #expect(statement.latestCharge()?.id == 447649)
+        #expect(statement.latestCharge(in: ["Cafe 2000"])?.detail == "Soft Pretzel")
         #expect(statement.latestCharge(in: ["Nowhere"]) == nil)
     }
 
@@ -69,7 +100,10 @@ struct StoreModelTests {
     @Test func formatsMoney() {
         #expect(Decimal(string: "4.00")!.usd() == "$4.00")
         #expect(Decimal(string: "3.5")!.usd() == "$3.50")
-        #expect(Decimal(string: "136.75")!.usd(showsCents: false) == "$137")
+        #expect(Decimal(string: "222.75")!.usd(showsCents: false) == "$223")
+        // Half-up, not NumberFormatter's default half-even.
+        #expect(Decimal(string: "222.50")!.usd(showsCents: false) == "$223")
+        #expect(Decimal(string: "0.125")!.usd() == "$0.13")
     }
 
     @Test func configurationDecodesLeniently() throws {
@@ -96,14 +130,21 @@ struct StoreModelTests {
 
     // MARK: Sample
 
-    @Test func sampleIsStableForAFixedNow() {
+    @Test func sampleIsStableForAFixedNow() throws {
         let fixed = LocalDate(2026, 11, 9).at(hour: 12)
 
         #expect(StoreStatement.sample(now: fixed) == StoreStatement.sample(now: fixed))
         let sample = StoreStatement.sample(now: fixed)
-        #expect(sample.charges.count == 26)
+        #expect(sample.charges.count == 24)
         #expect(sample.stores == ["Athletic Store", "Cafe 2000", "Cafe at Gleason Hall"])
-        #expect(sample.grandTotal == Decimal(string: "136.75"))
+        #expect(sample.grandTotal == Decimal(string: "158.25"))
         #expect(sample.charges.contains { $0.isPending })
+
+        // The gallery's Lock Screen stress case: today's pending charge, with a long name.
+        let newest = try #require(sample.latestCharge())
+        #expect(newest.detail == "Roasted Turkey & Cheddar Panini with Pesto")
+        #expect(newest.amount == Decimal(string: "7.25"))
+        #expect(LocalDate(newest.madeAt) == LocalDate(fixed))
+        #expect(newest.isPending)
     }
 }

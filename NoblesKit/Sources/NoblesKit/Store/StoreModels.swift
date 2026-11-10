@@ -8,7 +8,7 @@ public struct StoreCharge: Hashable, Identifiable, Sendable {
     public var storeName: String
     /// The source's `trans_type`, e.g. "Chit"; `nil` when it doesn't say.
     public var transactionType: String?
-    /// The item bought, e.g. "Strawberry-Banana Smoothie".
+    /// The item bought, e.g. "Iced Latte".
     public var detail: String
     public var quantity: Int
     /// The charge amount before tax.
