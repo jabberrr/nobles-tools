@@ -25,6 +25,22 @@ Widget kinds (`WidgetKind`):
 
 All kinds share a `Theme`: palette, font style and background style.
 
+**Cafe Wrapped** (an app feature, not a widget kind): a Spotify-Wrapped-style story recapping the semester's cafe purchases from the same charges as `spending`. Only cafes count (`CafeWrapped.isCafe`: whole-word cafe/snack/coffee/grill/deli/kitchen; anything "athletic" is out). Ten full-screen pages, tapped through (right ~65% forward, left back; nothing auto-advances):
+1. Intro.
+2. Total, with a month chart.
+3. Each cafe, with its top 3 items.
+4. Top 5 items.
+5. The #1 item under **foil that tears away a bit per tap** (5 taps, `FoilWrap`).
+6. Busiest hours.
+7. Days.
+8. Records: streak, items tried, biggest buy, first buy.
+9. A persona card that flips.
+10. A shareable poster.
+
+Every stat reveals with an animation. Each item's "picture" is an emoji (`CafeItemArt`); there are no photos.
+- **Opening it:** Settings → Cafe Wrapped has the testing buttons the user asked for "for now" (own data, or sample data).
+- **Banner:** the design list shows one when `CafeWrapped.isReady`, from 6 days before a semester ends to 21 days after, and an account is connected.
+
 The user files requests as cards on the Trello board **Nobles Tools** (https://trello.com/b/pxLsChDf/nobles-tools; the Trello MCP tools reach it). When asked to address new cards, comment on each one with what changed. Leave the **"Future (claude ignore this list)"** list alone.
 
 Visual language (Shared/):
@@ -61,18 +77,26 @@ NoblesKit/                  Swift package, Foundation-only (no SwiftUI). Builds 
                             AthleticsSchedule HTML + AthleticsParsing), ScoresService, preview data
     Store/                  Spending: StoreModels (charge/total/statement/session/config + StoreSessionStore in
                             the app group), StoreChargesResponse (get_charges.php JSON), StoreService (authed
-                            fetch + auth/offline classification + cache), Money (Decimal.usd), preview data
+                            fetch + auth/offline classification + cache), Money (Decimal.usd), preview data;
+                            Cafe Wrapped: CafeWrapped(+Types) (the semester recap's stats), CafePersona
+                            (time-of-day buckets + persona rules), CafeItemArt (item name → food emoji),
+                            CafeWrappedPreviewData (a seeded, deterministic sample semester)
   Tests/NoblesKitTests/     swift-testing tests. Fixtures/real-* are REAL captured responses; synthetic-* are hand-written.
 Shared/                     SwiftUI widget views, theme mapping and formatting, compiled into BOTH app and widget
 App/                        App target: DesignLibrary (state), design list, editor with live previews,
                             PreviewData (loads real data once for previews), Settings (calendar editor,
                             Nobles Account). Store/ holds the Veracross web sign-in (StoreLoginView),
                             the StoreAccount connection manager and its Settings section.
+                            Wrapped/ is Cafe Wrapped: CafeWrappedView (story container), CafeWrappedLauncher
+                            (loads the account's recap or the sample, with message screens), Pages/ (one per
+                            page), Effects/ (FoilWrap and its FoilSheet/FoilState/FoilFrame, reveals, counting
+                            text, confetti, backdrops, shimmer), WrappedStyle/WrappedPage (palettes, fonts).
                             Previews/DesignWidgetContent draws a design from given data (editor + gallery);
-                            Previews/WidgetGallery is every widget × size from fixed sample data.
+                            Previews/WidgetGallery is every widget × size from fixed sample data;
+                            Previews/WrappedGallery is every Wrapped page in its finished state.
 Snapshots/                  WidgetSnapshots test target: renders WidgetGallery to PNGs (when SNAPSHOT_OUTPUT_DIR is set).
 docs/widgets/               The rendered PNGs, committed by CI. Look at them to check layouts; the README shows them.
-Widgets/                    Widget extension: WidgetBundle, three AppIntentConfiguration widgets and their
+Widgets/                    Widget extension: WidgetBundle, four AppIntentConfiguration widgets and their
                             timeline providers, Intents/ (configuration intents and design entities)
 .github/workflows/
   ci.yml                    Linux `swift test` (swift:6.1 container); macOS: XcodeGen → `swift test` → xcodebuild
@@ -108,6 +132,7 @@ Identifiers:
 - **App previews:** `PreviewData` fetches each data source once and filters locally per design, so toggling settings never re-fetches. It falls back to sample data, labelled as such, when offline.
   - Spending previews show the connected account's own statement, or its cached copy badged as the widget would show it. They use the sample only when no account is connected.
   - `PreviewData.storeSession` is the account they show. Settings changes the account through its own `StoreAccount`, so `DesignListView` calls `refreshStoreSession()` when the Settings sheet closes. That drops the old account's spending and its load times, then every spending preview loads the new account (the request key carries the session). Anything else that ever connects or disconnects must call it too.
+- **Cafe Wrapped data:** `CafeWrappedLauncher` reads `PreviewData.spending` (the connected account's statement, or its cached copy), and the semester comes from `CafeWrapped.semester(in: library.calendar, on:)`. During the 21 days after a semester ends, the recap stays on that semester, even when the next one has started. A cached statement is recapped only up to the day it was fetched, and the launcher first says so ("Your recap stops at …"). All the stats math is in NoblesKit and tested; the app only draws it.
 - **Dates:** use `LocalDate` and `Calendar.school` (America/New_York) for anything that is a school day or a meal time. Never use the device time zone for school logic.
 
 ## Data sources (verified facts)
@@ -156,6 +181,7 @@ Identifiers:
 - **Limits and gift-card balance are NOT fetched.** They only appear in `parent_limits.php`'s server HTML (the sample we have is a macOS "Copy", not the real DOM), so the spending limit is entered in the app (`StoreConfiguration.limit`) for the progress bar/ring. To auto-read them later, capture the real View-Source of `parent_limits.php` and parse the Limits table (groups: Athletics = Athletic Store; "Cafe2000 + Gleason Hall Snack Bar" = Cafe 2000 + Cafe at Gleason Hall).
 - These are undocumented internal endpoints keyed to the signed-in account; only the user's own data is ever read. No weekly smoke test (it needs a login).
 - The sign-in web view uses the persistent `WKWebsiteDataStore.default()`, so a later Connect reconnects without typing anything. Disconnect, or a rejected sign-in, clears that store.
+- **Unknown until tested on a device:** whether `get_charges.php` returns the whole school year or only recent charges. Cafe Wrapped assumes the whole semester; the fixture's shape spans Sep 10 – Nov 9.
 - **Unknown until tested on a device:** how long a `nobilis` PHPSESSID stays valid for the widget. PHP's default idle lifetime is 24 minutes; once the session lapses, the widget shows "Sign in to refresh".
 
 ## Building and testing
@@ -173,8 +199,9 @@ Identifiers:
 - **Seeing the widgets without Xcode:** push a change under `Shared/`, `App/Previews/`, `Snapshots/`, `NoblesKit/Sources/` or `project.yml`.
   - The "Render widget previews" workflow renders `WidgetGallery` and commits the PNGs to `docs/widgets/` (about 6 minutes). Then `git pull --rebase` and open the PNGs with the Read tool.
   - Renders are @2x, on an opaque backdrop, and quantized with pngquant to keep the repo small. The sample data and the moment are fixed (Tue 2026-10-27 11:30), so a render only changes when the views do.
-  - The gallery covers every widget × size, themes in light and dark, compact iPhone sizes (`-compact`), a tinted-mode simulation (`-tinted`, approximate) and stress cases. About 64 images.
+  - The gallery covers every widget × size, themes in light and dark, compact iPhone sizes (`-compact`), a tinted-mode simulation (`-tinted`, approximate) and stress cases. About 100 widget images, plus about 30 of Cafe Wrapped.
   - Add a variant for any new layout or stress case.
+  - Cafe Wrapped's pages render too, as `wrapped-*` (from `WrappedGallery`): phone-sized, at 1× to keep the repo small, with simulated safe-area insets. In snapshots, `\.wrappedIsStatic` is true, so every reveal, counter and foil state draws its finished state on the first body evaluation. No time passes in `ImageRenderer`, and `onAppear`/tasks don't run. The render workflow also triggers on `App/Wrapped/**`.
   - To review many renders at once, tile them into labelled contact sheets with Pillow (installed in the sandbox), about 12 per image, and read those. Review every render of a widget you changed, not a sample.
 - **Watching CI from the sandbox:** the repo is public, so `curl https://api.github.com/repos/jabberrr/nobles-tools/actions/runs/<id>` works. Poll it in a background `until` loop rather than sleeping. Read failure logs with `mcp__github__get_job_logs`.
 - **Intermediate commits:** add `[skip ci]` to the commit message when pushing work-in-progress that isn't meant to build yet. It skips every push-triggered workflow.
@@ -199,7 +226,9 @@ Identifiers:
   - The system `Gauge` renders out of proportion in ImageRenderer, so progress is drawn with `ProgressViews.swift`: `ProgressBar` (home + rectangular lock) and `ProgressRing` (spending's circular lock). A capacity `Gauge` showed the spending ring's fill wrong in the snapshot renders; the drawn ring matches the bar and the centered amount exactly.
   - The preview frame draws a stand-in for `AccessoryWidgetBackground` on circular Lock Screen previews.
   - Never give secondary text `layoutPriority` over a figure on the same line: the figure gets squeezed to a single glyph (the spending rectangular showed "$" this way). Stack lines instead, and let a figure shrink (`minimumScaleFactor`) rather than ever truncate.
+  - **`accessibilityFocused` makes `ImageRenderer` draw nothing at all**, not even backgrounds. Every Wrapped page rendered blank until `CafeWrappedView` stopped applying it in static mode. A `.transition` or `.id` is fine.
   - **Check every render of a widget you change**, including the default design at each Lock Screen size and the `-compact` ones. The rectangular bug above was visible in its render, but only the limit variant was looked at.
+- **Animation under Swift 6:** don't conform a `View`/`ViewModifier` to `Animatable`, because its nonisolated `animatableData` clashes with main-actor isolation. Drive motion with `@State` + `withAnimation`, `TimelineView` (paused or throttled when idle), `PhaseAnimator`/`KeyframeAnimator`, or `Shape`s. Wrapped's particle effects draw in one `Canvas` each, not one view per particle. Every Wrapped effect honors Reduce Motion.
 - **Present sheets from a screen's `NavigationStack`, never from inside a `Form`/`List` row** (a `.sheet` on a `Section` lands on its rows). A row-attached sheet is dismissed as soon as the list refreshes that row: the spending sign-in sheet opened and closed at once this way. `SettingsView` owns `StoreAccount` and presents `StoreLoginView`; `StoreAccountSection` only asks to connect.
 - Tests use swift-testing (`import Testing`, `@Test`, `#expect`). Never touch the network in tests: inject a fake `HTTPClient` (`Tests/NoblesKitTests/Support/FakeHTTPClient.swift`). Prefer the `real-*` fixtures.
 - Model enums expose `displayName` (and `symbolName` where useful) for UI. Keep UI strings in the models only when they are shared between app and widget.
@@ -211,6 +240,7 @@ Identifiers:
 - Get the real 2026–27 calendar (quarter ends, breaks) and update `NoblesCalendar.swift`. Consider supporting an iCal URL import.
 - The athletics endpoints are unofficial. Ask Nobles Athletics (athletic_info@nobles.edu) for an official feed or blessing. For a longer upcoming window, consider parsing `calendar.php` games (skip `.is-practice`).
 - Confirm meal service end times with the dining hall.
+- Cafe Wrapped: on a device, check the foil's feel and performance, whether the charges endpoint covers the whole semester, and the share sheet. The Settings testing buttons are meant to go once it's trusted ("for now").
 
 ## Session log
 
@@ -275,4 +305,29 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
     - Medium with a limit labels its figure "left of $300" and drops the bar's caption, so a charge row fits.
     - A latest-charge design leaves that charge out of its list.
     - A rejected session isn't re-sent on every preview.
-
+- **2026-11-10: Cafe Wrapped.**
+  - The user asked for a semesterly "Cafe Wrapped" with:
+    - stats on favorite items and times, per cafe, with no athletic store;
+    - animations on every reveal;
+    - a foil "tap to unwrap" of the #1 item's picture;
+    - totals;
+    - a testing button.
+  - Built against a contract (`scratchpad/wrapped-contract.md`) by three parallel agents:
+    - CORE: NoblesKit stats, the emoji map and the seeded sample (+27 tests).
+    - FX: the foil, built from Canvas-drawn triangular facets that tear away near each tap and tumble off in 3D, plus the reveal, counting, confetti, backdrop and shimmer primitives.
+    - STORY: the ten pages, the launcher, the Settings section, the banner and the gallery.
+  - CI compiled on the first push. Every page rendered blank, which turned out to be `accessibilityFocused` (see Conventions).
+  - A critic pass found five real problems, all fixed:
+    - A quick 6th tap after the unwrap fell through and turned the page.
+    - A cached statement was recapped as the whole semester.
+    - The banner vanished, and the recap showed the empty new semester, on Jan 4–8.
+    - The #1 "Iced Vanilla Latte" got a steaming ☕️ (iced drinks are now 🧋).
+    - First and biggest purchase showed twice when they were the same charge.
+  - Also from that pass:
+    - Cafes are matched by whole words.
+    - The times headline follows the busiest hour.
+    - Each cafe lists its top 3 items.
+    - Secondary text on cards is brighter, now ≥ 4.5:1.
+    - Shimmers pause between sweeps.
+    - VoiceOver can tear the foil.
+  - NoblesKit has 166 tests.
