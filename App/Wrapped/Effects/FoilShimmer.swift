@@ -20,14 +20,16 @@ enum WrappedFX {
 
 extension View {
     /// A metallic highlight sweeping across the view's opaque pixels every few seconds (masked to
-    /// the view), for foil-ish titles and teasers. Still in static mode / Reduce Motion.
-    func foilShimmer(isActive: Bool = true) -> some View {
-        modifier(FoilShimmer(isActive: isActive))
+    /// the view), for foil-ish titles and teasers. `strength` is the band's peak opacity. Still in
+    /// static mode / Reduce Motion.
+    func foilShimmer(isActive: Bool = true, strength: Double = 0.85) -> some View {
+        modifier(FoilShimmer(isActive: isActive, strength: strength))
     }
 }
 
 private struct FoilShimmer: ViewModifier {
     let isActive: Bool
+    let strength: Double
 
     @Environment(\.wrappedIsStatic) private var isStatic
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -37,7 +39,7 @@ private struct FoilShimmer: ViewModifier {
             .overlay {
                 if isActive && !isStatic && !reduceMotion {
                     TimelineView(SweepSchedule()) { timeline in
-                        Self.highlight(at: timeline.date.timeIntervalSinceReferenceDate)
+                        Self.highlight(at: timeline.date.timeIntervalSinceReferenceDate, strength: strength)
                     }
                     .blendMode(.sourceAtop)
                     .allowsHitTesting(false)
@@ -47,14 +49,14 @@ private struct FoilShimmer: ViewModifier {
     }
 
     /// A diagonal band of light crossing the view, or nothing between sweeps.
-    private static func highlight(at time: TimeInterval) -> LinearGradient {
+    private static func highlight(at time: TimeInterval, strength: Double) -> LinearGradient {
         let progress = Sweep.elapsed(at: time) / Sweep.duration
         let eased = progress < 1 ? progress * progress * (3 - 2 * progress) : 2
         let center = -0.6 + 2.2 * eased
         return LinearGradient(
             stops: [
                 .init(color: .white.opacity(0), location: 0.38),
-                .init(color: .white.opacity(0.85), location: 0.5),
+                .init(color: .white.opacity(strength), location: 0.5),
                 .init(color: .white.opacity(0), location: 0.62),
             ],
             startPoint: UnitPoint(x: center - 0.6, y: 0),
@@ -103,16 +105,16 @@ private struct SweepSchedule: TimelineSchedule {
 #Preview("Foil shimmer") {
     VStack(spacing: 16) {
         Text("Cafe Wrapped")
-            .font(.system(size: 44, weight: .black, design: .rounded))
+            .font(WrappedStyle.title(44))
             .foregroundStyle(WrappedFX.foilGradient)
             .foilShimmer()
-        RoundedRectangle(cornerRadius: 20)
-            .fill(WrappedFX.foilGradient)
+        FoilSurface(cornerRadius: 20)
             .frame(width: 240, height: 64)
             .overlay {
-                Text("???").font(.title.bold()).foregroundStyle(.black.opacity(0.4))
+                Text("? ? ?")
+                    .font(WrappedStyle.number(26))
+                    .foregroundStyle(WrappedStyle.ink)
             }
-            .foilShimmer()
     }
     .padding(40)
     .background(.indigo)

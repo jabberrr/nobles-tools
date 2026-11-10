@@ -37,7 +37,7 @@ struct FloatingEmoji: View {
             ForEach(drifters) { drifter in
                 let pose = drifter.pose(at: time, in: proxy.size)
                 Text(emojis[(drifter.id + pose.cycle) % emojis.count])
-                    .font(.system(size: drifter.size))
+                    .font(WrappedStyle.number(drifter.size))
                     .rotationEffect(.degrees(pose.angle))
                     .opacity(pose.opacity)
                     .position(pose.point)

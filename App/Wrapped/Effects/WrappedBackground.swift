@@ -147,7 +147,7 @@ private struct WrappedBackgroundPreview: View {
             .ignoresSafeArea()
             .onTapGesture { index = (index + 1) % Self.palettes.count }
             .overlay {
-                Text("Tap to change colors").font(.headline).foregroundStyle(.white)
+                Text("Tap to change colors").font(WrappedStyle.lead).foregroundStyle(.white)
             }
     }
 }

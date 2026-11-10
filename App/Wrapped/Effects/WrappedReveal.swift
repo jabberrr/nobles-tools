@@ -138,10 +138,10 @@ private struct WrappedRevealPreview: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("Rise").font(.title.bold()).wrappedReveal(isActive)
-            Text("Pop").font(.title.bold()).wrappedReveal(isActive, delay: 0.3, style: .pop)
-            Text("Slide").font(.title.bold()).wrappedReveal(isActive, delay: 0.6, style: .slide(.leading))
-            Text("Blur").font(.title.bold()).wrappedReveal(isActive, delay: 0.9, style: .blur)
+            Text("Rise").font(WrappedStyle.title(28)).wrappedReveal(isActive)
+            Text("Pop").font(WrappedStyle.title(28)).wrappedReveal(isActive, delay: 0.3, style: .pop)
+            Text("Slide").font(WrappedStyle.title(28)).wrappedReveal(isActive, delay: 0.6, style: .slide(.leading))
+            Text("Blur").font(WrappedStyle.title(28)).wrappedReveal(isActive, delay: 0.9, style: .blur)
             HStack(alignment: .bottom, spacing: 8) {
                 ForEach(0..<5) { index in
                     RoundedRectangle(cornerRadius: 6)

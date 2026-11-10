@@ -79,10 +79,10 @@ private struct CountingTextPreview: View {
     var body: some View {
         VStack(spacing: 24) {
             CountingText(287.5, isActive: isActive) { $0.formatted(.currency(code: "USD")) }
-                .font(.system(size: 64, weight: .black, design: .rounded))
+                .font(WrappedStyle.number(64))
                 .monospacedDigit()
             CountingText(172, isActive: isActive, delay: 0.4) { "\(Int($0.rounded())) purchases" }
-                .font(.title2.weight(.semibold))
+                .font(WrappedStyle.lead)
             Button(isActive ? "Reset" : "Count") { isActive.toggle() }
                 .buttonStyle(.borderedProminent)
         }

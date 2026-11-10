@@ -1,181 +1,205 @@
 import SwiftUI
 
-/// Covers `content` in crinkled foil that tears away a little with each tap, until it's gone
-/// after `tapsToUnwrap` taps.
+/// Wraps an item in crumpled foil shaped like it, which comes off in stages, one per tap.
 ///
-/// Each tap crinkles and shakes the foil (with a haptic) and tears off a chunk near the finger,
-/// bigger each time, which tumbles away while the content shows through the hole. The last tap
-/// bursts off the rest, the content pops, and `onUnwrap` runs. The foil keeps swallowing taps
-/// until the last pieces land, so a quick extra tap can't reach what's behind it mid-burst; after
-/// that, taps pass through. `initialTaps` starts it part unwrapped, torn at fixed spots, for
-/// snapshots. In static mode it draws that state without moving; under Reduce Motion pieces fade
-/// instead of flying.
-struct FoilWrap<Content: View>: View {
+/// The foil is a photo of real foil cut to the item's `silhouette`, grown a little and puffed up
+/// with light and shade, with folds where its three flaps overlap. The first tap loosens it, so
+/// the flaps lift and the seams open. The next three peel back the top, then the left side, then
+/// the right, each rolling back from its seam to the item's edge and leaving the opened foil
+/// crumpled around the item. The last tap crumples it all into a ball that hops and drops away
+/// while the item pops, and `onUnwrap` runs. Other tap counts spread the same stages out. Every
+/// tap has a haptic and a squish.
+///
+/// The foil takes taps on the content's frame until it has dropped out of sight; then taps pass
+/// through. `initialTaps` starts it that far along, drawn at once, for snapshots. Static mode
+/// draws the stage without moving; under Reduce Motion stages cross-fade. VoiceOver finds one
+/// button that peels a stage each time it's activated.
+struct FoilWrap<Content: View, Silhouette: View>: View {
     private let tapsToUnwrap: Int
     private let onTap: (Int) -> Void
     private let onUnwrap: () -> Void
     private let content: Content
+    private let silhouette: Silhouette
 
     @Environment(\.wrappedIsStatic) private var isStatic
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var foil: FoilState
-    /// Whether the content has popped up to full size; it sits a little small under the foil.
-    @State private var isPopped: Bool
+    @State private var taps: Int
+    /// Whether the foil has dropped out of sight, so taps pass through.
+    @State private var isGone: Bool
 
+    /// - Parameters:
+    ///   - initialTaps: Stages already done, drawn at once (for snapshots).
+    ///   - content: The picture under the foil.
+    ///   - silhouette: The item's shape: opaque where the item is, laid out exactly like `content`.
     init(
         tapsToUnwrap: Int = 5,
         initialTaps: Int = 0,
         onTap: @escaping (_ taps: Int) -> Void = { _ in },
         onUnwrap: @escaping () -> Void = {},
-        @ViewBuilder content: () -> Content
+        @ViewBuilder content: () -> Content,
+        @ViewBuilder silhouette: () -> Silhouette
     ) {
-        let foil = FoilState(sheet: .standard, tapsToUnwrap: tapsToUnwrap, initialTaps: initialTaps)
-        self.tapsToUnwrap = foil.tapsToUnwrap
+        let tapsToUnwrap = max(tapsToUnwrap, 1)
+        let taps = min(max(initialTaps, 0), tapsToUnwrap)
+        self.tapsToUnwrap = tapsToUnwrap
         self.onTap = onTap
         self.onUnwrap = onUnwrap
         self.content = content()
-        _foil = State(initialValue: foil)
-        _isPopped = State(initialValue: foil.isUnwrapped)
+        self.silhouette = silhouette()
+        _taps = State(initialValue: taps)
+        _isGone = State(initialValue: taps == tapsToUnwrap)
     }
 
     var body: some View {
+        let stage = FoilStage(taps: taps, of: tapsToUnwrap)
+        let motion = FoilMotion(isStatic: isStatic, reduceMotion: reduceMotion)
         content
-            .scaleEffect(isPopped || reduceMotion ? 1 : 0.92)
-            .accessibilityHidden(!foil.isUnwrapped)
+            .modifier(UnwrapPop(isUnwrapped: stage.isOff, isEnabled: motion == .full))
+            .accessibilityHidden(!stage.isOff)
             .overlay {
-                // While it's here it takes every tap on it: until the last pieces have landed.
-                if !foil.isUnwrapped || !foil.pieces.isEmpty {
-                    foilLayer
-                        .padding(-FoilSheet.overhang)
+                if !isGone {
+                    FoilCover(silhouette: silhouette, stage: stage, taps: taps, motion: motion)
+                        .padding(-FoilGeometry.margin)
+                        .allowsHitTesting(false)
+                    tapTarget(isOff: stage.isOff)
                 }
             }
-            .sensoryFeedback(trigger: foil.taps) { _, taps in
+            .sensoryFeedback(trigger: taps) { _, taps in
                 taps >= tapsToUnwrap
                     ? SensoryFeedback.success
-                    : SensoryFeedback.impact(flexibility: .soft, intensity: 0.9)
+                    : SensoryFeedback.impact(flexibility: .soft, intensity: 0.8)
             }
-            .task(id: foil.taps) {
-                guard !foil.pieces.isEmpty else { return }
+            .task(id: stage.isOff) {
+                guard stage.isOff, !isGone else { return }
                 do {
-                    try await Task.sleep(for: .seconds(FoilPiece.longestFlight))
+                    try await Task.sleep(for: .seconds(motion.exitDuration))
                 } catch {
                     return
                 }
-                foil.dropLandedPieces(at: Date.now.timeIntervalSinceReferenceDate)
+                isGone = true
             }
     }
 
-    private var foilLayer: some View {
-        GeometryReader { proxy in
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture { location in
-                    guard proxy.size.width > 0, proxy.size.height > 0 else { return }
-                    tap(at: CGPoint(x: location.x / proxy.size.width, y: location.y / proxy.size.height))
-                }
-        }
-        .overlay {
-            foilDrawing
-                .allowsHitTesting(false)
-        }
-        .accessibilityElement()
-        .accessibilityLabel("Wrapped in foil")
-        .accessibilityValue(tapsLeftDescription)
-        .accessibilityHint("Double-tap to tear some off.")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction { tap(at: foil.nextPresetPoint) }
-        .accessibilityHidden(foil.isUnwrapped)
+    /// Takes taps on the content's frame, and is the foil's one VoiceOver button.
+    private func tapTarget(isOff: Bool) -> some View {
+        Color.clear
+            .contentShape(Rectangle())
+            .onTapGesture { advance() }
+            .accessibilityElement()
+            .accessibilityLabel("Wrapped in foil")
+            .accessibilityValue(tapsLeft == 1 ? "1 tap left" : "\(tapsLeft) taps left")
+            .accessibilityHint("Double-tap to peel off some foil.")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { advance() }
+            .accessibilityHidden(isOff)
     }
 
-    @ViewBuilder private var foilDrawing: some View {
-        if isStatic {
-            FoilLayers(frame: frame(at: 0))
-        } else {
-            TimelineView(.animation(minimumInterval: foil.pieces.isEmpty ? 1.0 / 30.0 : nil, paused: isStill)) { timeline in
-                FoilLayers(frame: frame(at: timeline.date.timeIntervalSinceReferenceDate))
-            }
-        }
+    private var tapsLeft: Int {
+        tapsToUnwrap - taps
     }
 
-    /// Nothing is moving: no pieces in flight, and no idling under Reduce Motion or once unwrapped.
-    private var isStill: Bool {
-        foil.pieces.isEmpty && (reduceMotion || foil.isUnwrapped)
-    }
-
-    private func frame(at time: TimeInterval) -> FoilFrame {
-        FoilFrame(
-            sheet: .standard,
-            state: foil,
-            time: time,
-            isIdle: !isStatic && !reduceMotion && !foil.isUnwrapped,
-            reduceMotion: reduceMotion
-        )
-    }
-
-    private var tapsLeftDescription: String {
-        let left = tapsToUnwrap - foil.taps
-        return left == 1 ? "1 tap left" : "\(left) taps left"
-    }
-
-    /// Tears off the next chunk around `point` (unit coordinates of the foil).
-    private func tap(at point: CGPoint) {
-        guard !foil.isUnwrapped else { return }
-        foil.tap(.standard, at: point, time: Date.now.timeIntervalSinceReferenceDate)
-        onTap(foil.taps)
-        if foil.isUnwrapped {
-            withAnimation(.spring(duration: 0.55, bounce: 0.55).delay(0.1)) { isPopped = true }
+    private func advance() {
+        guard taps < tapsToUnwrap else { return }
+        taps += 1
+        onTap(taps)
+        if taps == tapsToUnwrap {
             onUnwrap()
         }
     }
 }
 
-/// One frame of the foil: the sheet, with the pieces in flight above it while there are any.
-private struct FoilLayers: View {
-    let frame: FoilFrame
+/// How far the foil has come off: it loosens, its top, left and right flaps peel back in turn,
+/// and the last tap takes it off.
+struct FoilStage: Equatable, Sendable {
+    /// Peel steps done: 1 loosens it, then 2, 3 and 4 open the top, the left and the right.
+    let step: Int
+    let isOff: Bool
 
-    var body: some View {
-        ZStack {
-            FoilCanvas(frame: frame, layer: .sheet)
-            if !frame.state.pieces.isEmpty {
-                FoilCanvas(frame: frame, layer: .pieces)
-            }
+    /// The stage after `taps` of `total` taps: the last one takes the foil off, and the ones
+    /// before it spread over the four peel steps.
+    init(taps: Int, of total: Int) {
+        isOff = taps >= total
+        if isOff {
+            step = 4
+        } else if total <= 1 {
+            step = 0
+        } else {
+            step = min(Int((Double(max(taps, 0)) * 4 / Double(total - 1)).rounded(.up)), 4)
+        }
+    }
+
+    var isLoose: Bool {
+        step >= 1
+    }
+
+    func isOpen(_ region: FoilRegion) -> Bool {
+        switch region {
+        case .top: step >= 2
+        case .left: step >= 3
+        case .right: step >= 4
         }
     }
 }
 
-/// A canvas drawing one layer of the foil, reaching past the foil's frame by the layer's room.
-private struct FoilCanvas: View {
-    let frame: FoilFrame
-    let layer: FoilFrame.Layer
+/// How the foil moves: not at all in snapshots, in cross-fades under Reduce Motion, else fully.
+enum FoilMotion: Sendable {
+    case still, reduced, full
 
-    var body: some View {
-        let frame = self.frame
-        let layer = self.layer
-        let room = layer.room
-        Canvas { context, size in
-            frame.draw(layer, in: context, size: size)
+    init(isStatic: Bool, reduceMotion: Bool) {
+        self = isStatic ? .still : (reduceMotion ? .reduced : .full)
+    }
+
+    /// Seconds from the last tap until the foil is out of sight.
+    var exitDuration: Double {
+        self == .full ? 1.1 : 0.4
+    }
+}
+
+/// The item's pop as the foil comes off: a quick swell, then a bounce back.
+private struct UnwrapPop: ViewModifier {
+    let isUnwrapped: Bool
+    let isEnabled: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content.keyframeAnimator(initialValue: 1.0, trigger: isUnwrapped) { view, scale in
+                view.scaleEffect(scale)
+            } keyframes: { _ in
+                KeyframeTrack {
+                    LinearKeyframe(1, duration: 0.2)
+                    SpringKeyframe(1.12, duration: 0.18, spring: .snappy)
+                    SpringKeyframe(1, duration: 0.5, spring: .bouncy)
+                }
+            }
+        } else {
+            content
         }
-        .padding(EdgeInsets(top: -room.top, leading: -room.leading, bottom: -room.bottom, trailing: -room.trailing))
     }
 }
 
 // MARK: - Previews
 
-/// A stand-in for the favorite item's picture: an emoji on a soft plate.
-private struct PreviewPlate: View {
+/// A stand-in for the favorite's picture: a cookie on a plate, or (as its silhouette) the cookie
+/// alone.
+private struct PreviewCookie: View {
+    var isSilhouette = false
+
     var body: some View {
-        Text("🧋")
-            .font(.system(size: 120))
+        Text("🍪")
+            .font(WrappedStyle.number(110))
             .frame(width: 220, height: 220)
             .background {
-                Circle().fill(
-                    RadialGradient(
-                        colors: [.white.opacity(0.9), .white.opacity(0.25)],
-                        center: .center,
-                        startRadius: 10,
-                        endRadius: 110
+                if !isSilhouette {
+                    Circle().fill(
+                        RadialGradient(
+                            colors: [Color(hex: 0xFFF9EF), Color(hex: 0xF2AE63)],
+                            center: UnitPoint(x: 0.38, y: 0.32),
+                            startRadius: 0,
+                            endRadius: 160
+                        )
                     )
-                )
+                }
             }
     }
 }
@@ -187,23 +211,22 @@ private struct FoilWrapPreview: View {
     var body: some View {
         VStack(spacing: 36) {
             FoilWrap(onTap: { taps = $0 }) {
-                PreviewPlate()
+                PreviewCookie()
+            } silhouette: {
+                PreviewCookie(isSilhouette: true)
             }
             .id(wrapping)
-            Text(taps >= 5 ? "Unwrapped!" : "Tap the foil (\(5 - taps) to go)")
-                .font(.headline)
+            Text(taps >= 5 ? "It's off" : "Tap the foil (\(5 - taps) to go)")
+                .font(WrappedStyle.lead)
                 .foregroundStyle(.white)
-            Button("Wrap again") {
+            Button("Wrap it again") {
                 taps = 0
                 wrapping += 1
             }
             .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            WrappedBackground(colors: [Color(red: 0.30, green: 0.10, blue: 0.52), Color(red: 0.62, green: 0.10, blue: 0.38)])
-                .ignoresSafeArea()
-        }
+        .background(Color(hex: 0x2E1A87))
     }
 }
 
@@ -211,12 +234,20 @@ private struct FoilWrapPreview: View {
     FoilWrapPreview()
 }
 
-#Preview("Foil wrap, 0 and 3 of 5 taps (static)") {
-    VStack(spacing: 40) {
-        FoilWrap { PreviewPlate() }
-        FoilWrap(initialTaps: 3) { PreviewPlate() }
+#Preview("Foil wrap stages (static)") {
+    ScrollView {
+        VStack(spacing: 70) {
+            ForEach(0..<5) { taps in
+                FoilWrap(initialTaps: taps) {
+                    PreviewCookie()
+                } silhouette: {
+                    PreviewCookie(isSilhouette: true)
+                }
+            }
+        }
+        .padding(70)
+        .frame(maxWidth: .infinity)
     }
-    .padding(40)
-    .background(Color(red: 0.12, green: 0.22, blue: 0.45))
+    .background(Color(hex: 0x2E1A87))
     .environment(\.wrappedIsStatic, true)
 }
