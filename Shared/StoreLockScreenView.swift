@@ -29,16 +29,18 @@ struct StoreLockScreenView: View {
 
     private var inlineVariants: [String] {
         switch content.state {
-        case .connect: ["Spending · Connect in app", "Connect in app", "Connect"]
-        case .unavailable: ["Spending unavailable", "Unavailable"]
+        case .connect:
+            return ["Spending · Connect in app", "Connect in app", "Connect"]
+        case .unavailable:
+            return ["Spending unavailable", "Unavailable"]
         case .spending(let spending):
             let amount = spending.figure.amount
             if spending.leadsWithLatest {
-                ["Latest charge · \(amount)", "Latest · \(amount)", amount]
+                return ["Latest charge · \(amount)", "Latest · \(amount)", amount]
             } else if let context = spending.lockContext {
-                ["Spending · \(amount) \(context)", "Spending · \(amount)", amount]
+                return ["Spending · \(amount) \(context)", "Spending · \(amount)", amount]
             } else {
-                ["Spending · \(amount)", amount]
+                return ["Spending · \(amount)", amount]
             }
         }
     }
