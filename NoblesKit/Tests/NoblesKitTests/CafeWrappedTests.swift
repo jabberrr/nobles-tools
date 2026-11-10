@@ -202,6 +202,16 @@ struct CafeWrappedTests {
     @Test func groupsMonthsAndDays() throws {
         let wrapped = try mixed()
 
+        // Each purchase day, net of refunds: Sep 15's banana less the panini refund.
+        #expect(wrapped.days.map(\.date) == [
+            LocalDate(2026, 9, 8), LocalDate(2026, 9, 9), LocalDate(2026, 9, 11), LocalDate(2026, 9, 14),
+            LocalDate(2026, 9, 15), LocalDate(2026, 10, 9), LocalDate(2026, 10, 13),
+        ])
+        #expect(wrapped.days.map(\.total) == ["7.00", "8.50", "7.97", "4.00", "-6.47", "3.00", "1.50"].map(Self.money))
+        #expect(wrapped.days.map(\.itemCount) == [2, 3, 1, 1, 1, 1, 1])
+        #expect(wrapped.days.count == wrapped.dayCount)
+        #expect(wrapped.days.reduce(0) { $0 + $1.total } == wrapped.total)
+
         #expect(wrapped.months.map(\.id) == ["2026-09", "2026-10"])
         #expect(wrapped.months.map(\.name) == ["Sep", "Oct"])
         #expect(wrapped.months.map(\.total) == [Self.money("21.00"), Self.money("4.50")])
@@ -350,10 +360,17 @@ struct CafeWrappedTests {
         for persona in CafePersona.allCases {
             #expect(!persona.title.isEmpty && !persona.tagline.isEmpty && !persona.emoji.isEmpty)
         }
-        #expect(CafePersona.loyalist.title == "The Loyalist")
-        #expect(CafePersona.dropIn.title == "The Drop-In")
+        #expect(CafePersona.loyalist.title == "The Superfan")
+        #expect(CafePersona.regular.tagline == "You're at the cafe most days.")
         #expect(CafeTimeOfDay.allCases.flatMap { Array($0.hours) } == Array(0...23))
-        #expect(CafeTimeOfDay.midday.title == "Lunch Rush Regular")
+        #expect(CafeTimeOfDay.allCases.map(\.displayName) == ["Morning", "Lunch", "Afternoon", "Evening"])
+        #expect(CafeTimeOfDay.morning.title == "Morning person")
+
+        // Plain words: no dashes or semicolons in a sentence.
+        let copy = CafePersona.allCases.flatMap { [$0.title, $0.tagline] } + CafeTimeOfDay.allCases.map(\.title)
+        for text in copy {
+            #expect(!text.contains { "—–;".contains($0) }, "\(text)")
+        }
     }
 
     // MARK: Semesters and stores
@@ -462,8 +479,12 @@ struct CafeWrappedTests {
         ])
         #expect(wrapped.topItems.map(\.count) == [4, 3, 3, 3, 2])
         #expect(wrapped.months.map(\.total) == ["33.00", "54.00", "31.50"].map(Self.money))
-        #expect(wrapped.peakHour == 15)
-        #expect(wrapped.timeOfDay == .afternoon)
+        // Stamped in UTC on both sides of the daylight saving change, read as school time: Gleason
+        // in the morning, Cafe 2000 in the afternoon.
+        let hours = [8: 3, 9: 8, 10: 11, 15: 2, 16: 1, 17: 1]
+        #expect(wrapped.hourCounts == (0..<24).map { hours[$0] ?? 0 })
+        #expect(wrapped.peakHour == 10)
+        #expect(wrapped.timeOfDay == .morning)
         #expect(wrapped.weekdayCounts == [0, 6, 4, 5, 4, 7, 0])
         #expect(wrapped.favoriteWeekday == 6) // Friday
         #expect(wrapped.biggestDay == CafeWrapped.Day(date: LocalDate(2026, 11, 2), total: Self.money("15.00"), itemCount: 3))
@@ -481,20 +502,20 @@ struct CafeWrappedTests {
         let sample = StoreStatement.wrappedSample(semester: span, through: span.end, fetchedAt: fetchedAt)
 
         #expect(sample == StoreStatement.wrappedSample(semester: span, through: span.end, fetchedAt: fetchedAt))
-        #expect(sample.charges.count == 166)
-        #expect(sample.grandTotal == Self.money("844.88"))
+        #expect(sample.charges.count == 138)
+        #expect(sample.grandTotal == Self.money("591.13"))
         #expect(sample.stores == ["Athletic Store", Self.cafe2000, Self.gleason])
         #expect(sample.charges.first?.id == 452_317)
         #expect(Set(sample.charges.map(\.id)).count == sample.charges.count)
         #expect(zip(sample.charges, sample.charges.dropFirst()).allSatisfy { $0.id > $1.id }) // falling with age
 
-        // School days only, during school-store hours, with nothing the item art can't draw.
+        // School days only; at the cafes, real menu items at their prices, while the cafe is open.
         for charge in sample.charges {
             #expect(calendar.isSchoolDay(LocalDate(charge.madeAt)))
-            #expect((7...21).contains(Calendar.school.component(.hour, from: charge.madeAt)))
         }
         for charge in sample.charges where CafeWrapped.isCafe(charge.storeName) {
-            #expect(CafeItemArt.emoji(for: charge.detail) != "🍽️", "\(charge.detail)")
+            #expect(CafeMenus.isOnMenu(charge), "\(charge.detail)")
+            #expect(CafeMenus.isDuringHours(charge), "\(charge.detail) \(charge.madeAt)")
         }
 
         let athletic = sample.charges(in: ["Athletic Store"])
@@ -525,32 +546,39 @@ struct CafeWrappedTests {
 
         #expect(wrapped.period.name == "Fall 2026")
         #expect(wrapped.period.isComplete)
-        #expect(wrapped.total == Self.money("677.50"))
-        #expect(wrapped.purchaseCount == 162)
-        #expect(wrapped.itemCount == 168)
+        #expect(wrapped.total == Self.money("423.75"))
+        #expect(wrapped.purchaseCount == 134)
+        #expect(wrapped.itemCount == 142)
         #expect(wrapped.dayCount == 54)
-        #expect(wrapped.distinctItemCount == 33)
-        #expect(wrapped.averagePerDay == Self.money("12.55"))
+        #expect(wrapped.days.count == 54)
+        #expect(wrapped.days.first?.date == LocalDate(2026, 9, 8))
+        #expect(wrapped.distinctItemCount == 43)
+        #expect(wrapped.averagePerDay == Self.money("7.85"))
         #expect(wrapped.cafes.map(\.name) == [Self.gleason, Self.cafe2000])
-        #expect(wrapped.cafes.map(\.total) == [Self.money("618.50"), Self.money("59.00")])
+        #expect(wrapped.cafes.map(\.total) == [Self.money("221.00"), Self.money("202.75")])
         #expect(wrapped.cafes.map { $0.topItems.map(\.name) } == [
-            ["Iced Vanilla Latte", "Everything Bagel with Cream Cheese", "Turkey & Swiss Panini"],
-            ["Chocolate Chip Cookie", "Hot Chocolate", "Mozzarella Sticks"],
+            ["Jumbo Chocolate Chip Cookie", "Body Armor", "Doritos"],
+            ["Chicken Tenders", "Jumbo Chocolate Chip Cookie", "Body Armor"],
         ])
         #expect(wrapped.topItems.map(\.name) == [
-            "Iced Vanilla Latte", "Everything Bagel with Cream Cheese", "Chocolate Chip Cookie",
-            "Turkey & Swiss Panini", "Matcha Latte",
+            "Jumbo Chocolate Chip Cookie", "Body Armor", "Doritos", "Chicken Tenders", "Pepperoni Pizza",
         ])
-        #expect(wrapped.topItems.map(\.count) == [29, 22, 16, 13, 11])
-        #expect(wrapped.topItems.map(\.emoji) == ["🧋", "🥯", "🍪", "🥪", "🍵"])
+        #expect(wrapped.topItems.map(\.count) == [30, 16, 11, 8, 5])
+        #expect(wrapped.topItems.map(\.emoji) == ["🍪", "🥤", "🌽", "🍗", "🍕"])
+        #expect(wrapped.topItems.map(\.productImage) == [nil, "product-bodyarmor", "product-doritos", nil, nil])
         #expect(wrapped.months.map(\.name) == ["Sep", "Oct", "Nov", "Dec"])
+        // Mornings at Gleason, afternoons at Cafe 2000.
         #expect(wrapped.peakHour == 10)
-        #expect(wrapped.favoriteWeekday == 3)
+        #expect(wrapped.favoriteWeekday == 5) // Thursday
         #expect(wrapped.timeOfDay == .morning)
-        #expect(wrapped.biggestDay == CafeWrapped.Day(date: LocalDate(2026, 10, 15), total: Self.money("28.25"), itemCount: 7))
-        #expect(wrapped.biggestPurchase?.detail == "Chicken Pesto Panini")
+        #expect(wrapped.share(ofHours: CafeTimeOfDay.afternoon.hours) > 0.25)
+        #expect(wrapped.biggestDay == CafeWrapped.Day(date: LocalDate(2026, 10, 15), total: Self.money("29.00"), itemCount: 9))
+        let biggest = try #require(wrapped.biggestPurchase)
+        #expect(biggest.detail == "Cheese Pizza")
+        #expect(biggest.quantity == 2)
+        #expect(biggest.total == Self.money("12.00"))
         #expect(wrapped.longestStreak == Self.streak(LocalDate(2026, 10, 13), LocalDate(2026, 10, 26), 10))
-        #expect(wrapped.firstPurchase?.detail == "Iced Vanilla Latte")
+        #expect(wrapped.firstPurchase?.detail == "Nestle Hot Cocoa")
         #expect(wrapped.persona == .regular)
     }
 }

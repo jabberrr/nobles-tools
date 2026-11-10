@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import NoblesKit
 
@@ -113,23 +114,51 @@ struct CafeItemArtTests {
         #expect(CafeItemArt.emoji(for: item) == emoji)
     }
 
-    @Test func drawsEveryRealShapedItem() throws {
-        // The items of `StoreStatement.sample` and the charges fixture.
+    @Test func drawsEveryMenuItem() {
         let expected = [
-            "Roasted Turkey & Cheddar Panini with Pesto": "🥪",
-            "Oatmeal Raisin Cookie": "🍪",
-            "Kettle Chips": "🥔",
-            "Everything Bagel with Butter": "🥯",
-            "Coconut Water": "🥥",
-            "Pumpkin Bread": "🍞",
-            "Ham & Cheddar Melt": "🥪",
-            "Apple Cinnamon Oatmeal": "🥣",
-            "Cold Brew": "🧋",
-            "Orange Juice": "🧃",
-            "Vanilla Steamer": "☕️",
-            "Blackberry Yogurt Bowl": "🥣",
-            "Lemonade": "🍋",
-            "Matcha Latte": "🍵",
+            // Cafe at Gleason Hall
+            "Blueberry Crumb Muffin": "🧁", "Quaker Oatmeal Bowl": "🥣", "Chocolate Croissant": "🥐",
+            "Cinnamon Sugar Donut": "🍩", "Chobani Yogurt Drink": "🥤", "Cup of Grapes": "🍇", "Cup of Pineapple": "🍍",
+            "Cup of Strawberries": "🍓", "Chobani Yogurt-5.3 Oz.": "🥣", "Gatorade Whey Protein Bar": "🍫",
+            "Cheeto Puffs": "🧀", "Cheetos Crunchy Hot": "🌶️", "Dried Mango": "🥭", "Lays Chips": "🥔",
+            "Popcorners": "🍿", "Rice Krispie Treat": "🍪", "Candy": "🍬", "Cheezit": "🧀", "Chex mix": "🥨",
+            "Ms. Vicki Chips": "🥔", "Doritos": "🌽", "Goldfish": "🐠", "Haribo Gummy Bears": "🍬", "Oreo Cookies": "🍪",
+            "Smartfood Popcorn": "🍿", "Stacey's Pita Chips": "🫓", "Sunchips": "🥔", "Chicken Cup of Noodles": "🍜",
+            "Body Armor": "🥤", "Boxed Water": "💧", "Core Power": "🥛", "Fairlife Milk": "🥛", "IZZE Drink": "🥤",
+            "Naked Juice": "🧃", "Polar Seltzer": "💧", "Powerade": "🥤", "Nestle Hot Cocoa": "☕️",
+            "Strawberry-Banana Smoothie": "🥤", "Jumbo Chocolate Chip Cookie": "🍪", "Fudge Brownie": "🍫",
+            // Cafe 2000, beyond the items both cafes sell
+            "Whole Fruit": "🍎", "Chobani Yogurt": "🥣", "Fruit Cup": "🍇", "Nobles Yogurt Cup": "🥣",
+            "Apple Caramel Bar": "🍎", "Chocolate Cup Cake": "🧁", "Gluten Free Chocolate Torte": "🍰",
+            "Large Croissant": "🥐", "Lemon Square": "🍋", "Molten Chocolate Cake": "🍰", "Red Velvet Cup Cake": "🧁",
+            "Tira Misu Cake": "🍰", "Candy Bar": "🍫", "Cheese Puffs": "🧀", "Gummy Bears": "🍬",
+            "Jumbo Cheese Puffs": "🧀", "King Soft Baked Pretzel": "🥨", "Oh Snap Pickle": "🥒", "Pirate Booty": "🍿",
+            "Sunchips- Original & Garden Salsa": "🥔", "Apple Cider": "🧃", "Arnold Palmer 1/2&1/2": "🍋",
+            "Nestle Hot Chocolate": "☕️", "Power Water-Kiwi Strawberry": "🥤", "Swoon Beverage": "🥤",
+            "Bacon Mac n Cheese": "🧀", "Chicken Parmesan Sandwich": "🥪", "Chicken Tenders": "🍗",
+            "Cup of Noodles": "🍜", "Grilled Cheese Sandwich": "🥪", "Sunbutter & Jelly": "🥪",
+            "Gatorade Recovery Protein Bar": "🍫", "Brownie Ice Cream Sundae Cup": "🍨",
+            "Chips Galore Ice Cream Sandwich": "🍦", "Oreo Ice Cream Sandwich": "🍦",
+            "Strawberry Shortcake Ice Cream Sundae": "🍨", "Cheese Pizza": "🍕", "Pepperoni Pizza": "🍕",
+            // Off the printed menus
+            "Egg, Bacon, American on Croissant": "🥐", "RX Bar": "🍫",
+        ]
+        #expect(Set(expected.keys) == CafeMenus.allItems)
+        for (item, emoji) in expected {
+            #expect(CafeItemArt.emoji(for: item) == emoji, "\(item)")
+        }
+    }
+
+    @Test func readsFlavorsAfterADish() {
+        #expect(CafeItemArt.emoji(for: "Power Water-Kiwi Strawberry") == "🥤") // not 🍓
+        #expect(CafeItemArt.emoji(for: "Chobani Yogurt Strawberry") == "🥣")
+        #expect(CafeItemArt.emoji(for: "Strawberry-Banana Smoothie") == "🥤")
+        #expect(CafeItemArt.emoji(for: "Cup of Strawberries") == "🍓") // nothing but the fruit
+        #expect(CafeItemArt.emoji(for: "Dried Mango") == "🥭")
+    }
+
+    @Test func drawsTheChargesFixture() throws {
+        let expected = [
             "Turkey & Swiss Panini": "🥪",
             "Grilled Chicken Caesar Wrap with Parmesan": "🌯",
             "Chai Latte": "🍵",
@@ -145,15 +174,60 @@ struct CafeItemArtTests {
             "Chocolate Chip Cookie": "🍪",
             "Spinach, Feta & Egg White Breakfast Wrap": "🌯",
         ]
+        let statement = try StoreService.parse(Fixture.data("synthetic-store-charges.json"), fetchedAt: .now)
+        let cafeItems = statement.charges.filter { CafeWrapped.isCafe($0.storeName) }.map(\.detail)
+        #expect(Set(cafeItems) == Set(expected.keys))
         for (item, emoji) in expected {
             #expect(CafeItemArt.emoji(for: item) == emoji, "\(item)")
         }
+    }
 
-        let statement = try StoreService.parse(Fixture.data("synthetic-store-charges.json"), fetchedAt: .now)
-        let cafeItems = (statement.charges + StoreStatement.sample.charges)
-            .filter { CafeWrapped.isCafe($0.storeName) }
-            .map(\.detail)
-        #expect(Set(cafeItems).isSubset(of: expected.keys))
+    // MARK: Product photos
+
+    @Test func photographsEveryBrandedMenuItem() {
+        let expected = [
+            "Quaker Oatmeal Bowl": "quaker-oatmeal", "Chobani Yogurt Drink": "chobani-drink",
+            "Chobani Yogurt-5.3 Oz.": "chobani-yogurt", "Chobani Yogurt": "chobani-yogurt",
+            "Gatorade Whey Protein Bar": "gatorade-bar", "Gatorade Recovery Protein Bar": "gatorade-bar",
+            "Cheeto Puffs": "cheetos-puffs", "Cheetos Crunchy Hot": "cheetos-crunchy-hot", "Lays Chips": "lays",
+            "Popcorners": "popcorners", "Rice Krispie Treat": "rice-krispies-treat", "Cheezit": "cheez-it",
+            "Chex mix": "chex-mix", "Ms. Vicki Chips": "miss-vickies", "Doritos": "doritos", "Goldfish": "goldfish",
+            "Haribo Gummy Bears": "haribo", "Oreo Cookies": "oreo", "Oreo Ice Cream Sandwich": "oreo-ice-cream-sandwich",
+            "Smartfood Popcorn": "smartfood", "Stacey's Pita Chips": "stacys", "Sunchips": "sunchips",
+            "Sunchips- Original & Garden Salsa": "sunchips", "Chicken Cup of Noodles": "cup-noodles",
+            "Cup of Noodles": "cup-noodles", "Body Armor": "bodyarmor", "Boxed Water": "boxed-water",
+            "Core Power": "core-power", "Fairlife Milk": "fairlife", "IZZE Drink": "izze", "Naked Juice": "naked",
+            "Polar Seltzer": "polar", "Powerade": "powerade", "Nestle Hot Cocoa": "nestle-cocoa",
+            "Nestle Hot Chocolate": "nestle-cocoa", "Oh Snap Pickle": "oh-snap", "Pirate Booty": "pirates-booty",
+            "Swoon Beverage": "swoon", "Arnold Palmer 1/2&1/2": "arnold-palmer", "RX Bar": "rxbar",
+            "Chips Galore Ice Cream Sandwich": "chips-galore", "King Soft Baked Pretzel": "kings-pretzel",
+        ]
+        #expect(Set(expected.keys).isSubset(of: CafeMenus.allItems))
+        for item in CafeMenus.allItems {
+            #expect(CafeItemArt.productImage(for: item) == expected[item].map { "product-\($0)" }, "\(item)")
+        }
+    }
+
+    @Test(arguments: [
+        ("Pirate's Booty", "product-pirates-booty"),
+        ("Lay's Classic Potato Chips", "product-lays"),
+        ("Miss Vickie's Sea Salt", "product-miss-vickies"),
+        ("Stacy's Pita Chips", "product-stacys"),
+        ("Cheez-It", "product-cheez-it"),
+        ("BODYARMOR", "product-bodyarmor"),
+        ("Nestlé Hot Cocoa", "product-nestle-cocoa"),
+        ("Kings Soft Pretzel", "product-kings-pretzel"),
+        ("Chobani Drink", "product-chobani-drink"),
+    ])
+    func matchesBrandSpellings(item: String, image: String) {
+        #expect(CafeItemArt.productImage(for: item) == image)
+    }
+
+    @Test func leavesHouseItemsWithoutAPhoto() {
+        for item in ["Jumbo Chocolate Chip Cookie", "Cheese Puffs", "Gummy Bears", "Power Water-Kiwi Strawberry",
+                     "Chocolate Cup Cake", "Lemon Square", "Gatorade", "Cheetos", "Layer Cake", "Bodyguard", ""] {
+            #expect(CafeItemArt.productImage(for: item) == nil, "\(item)")
+        }
     }
 
     @Test func fallsBackToAPlate() {

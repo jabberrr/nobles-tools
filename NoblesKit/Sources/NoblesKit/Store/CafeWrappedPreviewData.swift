@@ -42,14 +42,6 @@ extension CafeWrapped {
     }()
 }
 
-extension LocalDate {
-    /// Whether the samples may put a purchase on this day: a weekday outside the built-in calendar's
-    /// breaks, in any year, so a sample dated around any day still lands on weekdays.
-    var isSampleSchoolDay: Bool {
-        !isWeekend && !SchoolCalendar.nobles2026_27.breaks.contains { $0.span.contains(self) }
-    }
-}
-
 // MARK: - Generator
 
 /// Builds the charges of `StoreStatement.wrappedSample`.
@@ -179,7 +171,7 @@ private struct WrappedSample {
         Order(minute: clock(17, 25), store: Cafe2000.name, item: Cafe2000.powerade),
     ]
 
-    /// Orders on top of a day's usual purchases: pizza for two, the semester's priciest charge, and
+    /// Orders on top of a day's usual purchases: pizza for two, the priciest cafe charge, and
     /// athletic-store charges, which Wrapped must leave out.
     private static let extraOrders: [(dayIndex: Int, order: Order)] = [
         (3, Order(minute: clock(15, 40), store: athletic, item: SampleItem("Nobles Water Bottle", "22.00"), tax: "1.38")),

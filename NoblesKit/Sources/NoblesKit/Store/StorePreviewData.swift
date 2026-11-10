@@ -76,3 +76,11 @@ extension StoreStatement {
         return StoreStatement(charges: charges, totalsByStore: totalsByStore, grandTotal: grandTotal, fetchedAt: now)
     }
 }
+
+extension LocalDate {
+    /// Whether the samples may put a purchase on this day: a weekday outside the built-in calendar's
+    /// breaks, in any year, so a sample dated around any day still lands on weekdays.
+    var isSampleSchoolDay: Bool {
+        !isWeekend && !SchoolCalendar.nobles2026_27.breaks.contains { $0.span.contains(self) }
+    }
+}
