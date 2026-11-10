@@ -35,7 +35,7 @@ public enum CafeItemArt {
     /// the most specific first: "Oreo Ice Cream Sandwich" → "product-oreo-ice-cream-sandwich", "Oreo
     /// Cookies" → "product-oreo".
     public static func productImage(for item: String) -> String? {
-        bestMatch(among: products, in: words(in: item)).map { "product-\($0.value)" }
+        bestMatch(among: products, in: words(in: item))?.value.map { "product-\($0)" }
     }
 
     /// The words of `name` for matching: lowercase and accent-free, apostrophes dropped ("Stacey's"
@@ -231,11 +231,12 @@ public enum CafeItemArt {
             + (table + fruit).flatMap { entry in entry.phrases.map { Entry($0, Art(emoji: entry.emoji, cold: nil)) } }
     }()
 
-    /// Branded items with a product photo: the asset's slug, then the names that mean it.
-    private static let products: [Entry<String>] = {
-        let table: [(slug: String, names: [String])] = [
+    /// Branded items with a product photo: the asset's slug, then the names that mean it. A `nil`
+    /// slug marks a product with no good photo, so a looser name can't lend it the wrong one.
+    private static let products: [Entry<String?>] = {
+        let table: [(slug: String?, names: [String])] = [
             ("quaker-oatmeal", ["quaker"]),
-            ("chobani-drink", ["chobani yogurt drink", "chobani drink"]),
+            (nil, ["chobani yogurt drink", "chobani drink"]),
             ("chobani-yogurt", ["chobani"]),
             ("gatorade-bar", ["gatorade whey protein bar", "gatorade recovery protein bar", "gatorade protein bar"]),
             ("cheetos-puffs", ["cheeto puff"]),
@@ -265,12 +266,9 @@ public enum CafeItemArt {
             ("powerade", ["powerade"]),
             ("nestle-cocoa", ["nestle"]),
             ("oh-snap", ["oh snap"]),
-            ("pirates-booty", ["pirate booty"]),
             ("swoon", ["swoon"]),
             ("arnold-palmer", ["arnold palmer"]),
             ("rxbar", ["rx bar", "rxbar"]),
-            ("chips-galore", ["chip galore"]),
-            ("kings-pretzel", ["king soft"]),
         ]
         return table.flatMap { product in product.names.map { Entry($0, product.slug) } }
     }()

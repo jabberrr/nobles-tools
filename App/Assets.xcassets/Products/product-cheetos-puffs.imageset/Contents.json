@@ -1,0 +1,12 @@
+{
+  "images": [
+    {
+      "filename": "product-cheetos-puffs.jpg",
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

@@ -61,6 +61,15 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    LabeledContent("Product photos", value: "Open Food Facts")
+                    LabeledContent("Foil photo", value: "Kevin M. Gill")
+                } header: {
+                    Text("Photo Credits")
+                } footer: {
+                    Text("Cafe Wrapped's product photos are by Open Food Facts contributors (CC BY-SA 3.0). Its foil is cropped from \u{201C}Crumpled Tin Foil\u{201D} by Kevin M. Gill (CC BY 4.0).")
+                }
+
+                Section {
                     LabeledContent("Version", value: Self.version)
                 }
             }

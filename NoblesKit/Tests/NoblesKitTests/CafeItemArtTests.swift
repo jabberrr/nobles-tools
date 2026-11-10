@@ -186,7 +186,7 @@ struct CafeItemArtTests {
 
     @Test func photographsEveryBrandedMenuItem() {
         let expected = [
-            "Quaker Oatmeal Bowl": "quaker-oatmeal", "Chobani Yogurt Drink": "chobani-drink",
+            "Quaker Oatmeal Bowl": "quaker-oatmeal",
             "Chobani Yogurt-5.3 Oz.": "chobani-yogurt", "Chobani Yogurt": "chobani-yogurt",
             "Gatorade Whey Protein Bar": "gatorade-bar", "Gatorade Recovery Protein Bar": "gatorade-bar",
             "Cheeto Puffs": "cheetos-puffs", "Cheetos Crunchy Hot": "cheetos-crunchy-hot", "Lays Chips": "lays",
@@ -198,9 +198,8 @@ struct CafeItemArtTests {
             "Cup of Noodles": "cup-noodles", "Body Armor": "bodyarmor", "Boxed Water": "boxed-water",
             "Core Power": "core-power", "Fairlife Milk": "fairlife", "IZZE Drink": "izze", "Naked Juice": "naked",
             "Polar Seltzer": "polar", "Powerade": "powerade", "Nestle Hot Cocoa": "nestle-cocoa",
-            "Nestle Hot Chocolate": "nestle-cocoa", "Oh Snap Pickle": "oh-snap", "Pirate Booty": "pirates-booty",
+            "Nestle Hot Chocolate": "nestle-cocoa", "Oh Snap Pickle": "oh-snap",
             "Swoon Beverage": "swoon", "Arnold Palmer 1/2&1/2": "arnold-palmer", "RX Bar": "rxbar",
-            "Chips Galore Ice Cream Sandwich": "chips-galore", "King Soft Baked Pretzel": "kings-pretzel",
         ]
         #expect(Set(expected.keys).isSubset(of: CafeMenus.allItems))
         for item in CafeMenus.allItems {
@@ -209,15 +208,12 @@ struct CafeItemArtTests {
     }
 
     @Test(arguments: [
-        ("Pirate's Booty", "product-pirates-booty"),
         ("Lay's Classic Potato Chips", "product-lays"),
         ("Miss Vickie's Sea Salt", "product-miss-vickies"),
         ("Stacy's Pita Chips", "product-stacys"),
         ("Cheez-It", "product-cheez-it"),
         ("BODYARMOR", "product-bodyarmor"),
         ("Nestlé Hot Cocoa", "product-nestle-cocoa"),
-        ("Kings Soft Pretzel", "product-kings-pretzel"),
-        ("Chobani Drink", "product-chobani-drink"),
     ])
     func matchesBrandSpellings(item: String, image: String) {
         #expect(CafeItemArt.productImage(for: item) == image)
@@ -225,7 +221,8 @@ struct CafeItemArtTests {
 
     @Test func leavesHouseItemsWithoutAPhoto() {
         for item in ["Jumbo Chocolate Chip Cookie", "Cheese Puffs", "Gummy Bears", "Power Water-Kiwi Strawberry",
-                     "Chocolate Cup Cake", "Lemon Square", "Gatorade", "Cheetos", "Layer Cake", "Bodyguard", ""] {
+                     "Chocolate Cup Cake", "Lemon Square", "Gatorade", "Cheetos", "Layer Cake", "Bodyguard",
+                     "Chobani Yogurt Drink", "Chobani Drink", "Pirate Booty", "Chips Galore Ice Cream Sandwich", ""] {
             #expect(CafeItemArt.productImage(for: item) == nil, "\(item)")
         }
     }

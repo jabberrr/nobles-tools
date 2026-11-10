@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import NoblesKit
 
 /// An item's picture: its product photo if it's a branded item, else its emoji, on a warm, softly
@@ -61,15 +62,18 @@ struct WrappedItemArt: View {
     private var isSilhouette = false
 
     init(item: CafeWrapped.Item, size: CGFloat) {
-        emoji = item.emoji
-        productImage = item.productImage
-        self.size = size
+        self.init(emoji: item.emoji, productImage: item.productImage, size: size)
     }
 
     /// The art for an item bought as `name`, picked as `CafeWrapped.Item` picks it.
     init(itemNamed name: String, size: CGFloat) {
-        emoji = CafeItemArt.emoji(for: name)
-        productImage = CafeItemArt.productImage(for: name)
+        self.init(emoji: CafeItemArt.emoji(for: name), productImage: CafeItemArt.productImage(for: name), size: size)
+    }
+
+    /// Falls back to the emoji for a product the app has no photo of.
+    private init(emoji: String, productImage: String?, size: CGFloat) {
+        self.emoji = emoji
+        self.productImage = productImage.flatMap { UIImage(named: $0) == nil ? nil : $0 }
         self.size = size
     }
 
