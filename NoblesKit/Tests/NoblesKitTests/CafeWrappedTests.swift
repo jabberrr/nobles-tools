@@ -26,12 +26,18 @@ struct CafeWrappedTests {
         )
     }
 
+    private static func streak(_ start: LocalDate, _ end: LocalDate, _ length: Int) -> CafeWrapped.Streak {
+        CafeWrapped.Streak(start: start, end: end, length: length)
+    }
+
     private static func statement(_ charges: [StoreCharge]) -> StoreStatement {
         StoreStatement(charges: charges, totalsByStore: [], grandTotal: 0, fetchedAt: LocalDate(2026, 12, 18).at(hour: 23))
     }
 
     /// The recap of purchases of `(detail, day, hour)` at Gleason, each costing $2.00.
-    private func recap(_ purchases: [(String, LocalDate, Int)], asOf: LocalDate = LocalDate(2026, 12, 18)) throws -> CafeWrapped? {
+    private func recap(
+        _ purchases: [(String, LocalDate, Int)], asOf: LocalDate = LocalDate(2026, 12, 18)
+    ) throws -> CafeWrapped? {
         let charges = purchases.enumerated().map { index, purchase in
             Self.charge(index + 1, Self.gleason, purchase.0, "2.00", on: purchase.1, at: purchase.2)
         }
@@ -60,7 +66,8 @@ struct CafeWrappedTests {
     ]
 
     private func mixed(asOf: LocalDate = LocalDate(2026, 10, 31)) throws -> CafeWrapped {
-        try #require(CafeWrapped(statement: Self.statement(Self.mixedCharges), semester: try fall(), calendar: calendar, asOf: asOf))
+        let statement = Self.statement(Self.mixedCharges)
+        return try #require(CafeWrapped(statement: statement, semester: try fall(), calendar: calendar, asOf: asOf))
     }
 
     @Test func totalsCountOnlyCafesInThePeriod() throws {
@@ -86,7 +93,9 @@ struct CafeWrappedTests {
     @Test func ranksItemsByUnitsThenSpendThenName() throws {
         let wrapped = try mixed()
 
-        #expect(wrapped.topItems.map(\.name) == ["Iced latte", "Everything Bagel", "Chocolate Chip Cookie", "Turkey Panini", "Apple"])
+        #expect(wrapped.topItems.map(\.name) == [
+            "Iced latte", "Everything Bagel", "Chocolate Chip Cookie", "Turkey Panini", "Apple",
+        ])
         #expect(wrapped.topItems.map(\.count) == [3, 2, 2, 1, 1])
         #expect(wrapped.topItems.map(\.total) == ["12.00", "6.00", "4.50", "7.97", "1.50"].map(Self.money))
         #expect(wrapped.topItems.map(\.emoji) == ["☕️", "🥯", "🍪", "🥪", "🍎"])
@@ -157,14 +166,14 @@ struct CafeWrappedTests {
     @Test func streaksSpanWeekendsButNotMissedSchoolDays() throws {
         // Sep 8–9, a missed Thursday, then Fri Sep 11 → Mon Sep 14 → Tue Sep 15 over the weekend.
         let streak = try #require(try mixed().longestStreak)
-        #expect(streak == CafeWrapped.Streak(start: LocalDate(2026, 9, 11), end: LocalDate(2026, 9, 15), length: 3))
+        #expect(streak == Self.streak(LocalDate(2026, 9, 11), LocalDate(2026, 9, 15), 3))
 
         // Thu Oct 8, Fri Oct 9, then Tue Oct 13 across the weekend and Indigenous Peoples' Day.
         let overBreak = try #require(try recap([
             ("Latte", LocalDate(2026, 10, 8), 10), ("Latte", LocalDate(2026, 10, 9), 10),
             ("Latte", LocalDate(2026, 10, 13), 10), ("Latte", LocalDate(2026, 10, 15), 10),
         ]))
-        #expect(overBreak.longestStreak == CafeWrapped.Streak(start: LocalDate(2026, 10, 8), end: LocalDate(2026, 10, 13), length: 3))
+        #expect(overBreak.longestStreak == Self.streak(LocalDate(2026, 10, 8), LocalDate(2026, 10, 13), 3))
 
         // A weekend purchase is a purchase day too.
         let weekend = try #require(try recap([
@@ -196,7 +205,7 @@ struct CafeWrappedTests {
         #expect(wrapped.timeOfDay == .morning) // two each; morning comes first
         #expect(wrapped.biggestDay?.date == LocalDate(2026, 9, 13))
         #expect(wrapped.biggestPurchase?.detail == "Muffin")
-        #expect(wrapped.longestStreak == CafeWrapped.Streak(start: LocalDate(2026, 9, 13), end: LocalDate(2026, 9, 14), length: 2)) // vs Sep 17–18
+        #expect(wrapped.longestStreak == Self.streak(LocalDate(2026, 9, 13), LocalDate(2026, 9, 14), 2)) // vs Sep 17–18
 
         let weekend = try #require(try recap([("Muffin", LocalDate(2026, 9, 12), 9), ("Scone", LocalDate(2026, 9, 13), 9)]))
         #expect(weekend.favoriteWeekday == 7) // Saturday before Sunday
@@ -309,7 +318,8 @@ struct CafeWrappedTests {
         #expect(semester(LocalDate(2026, 12, 25)) == "Fall Semester") // winter break: the one just ended
         #expect(semester(LocalDate(2027, 1, 4)) == "Spring Semester")
         #expect(semester(LocalDate(2027, 7, 1)) == "Spring Semester")
-        #expect(CafeWrapped.semester(in: SchoolCalendar(name: "Empty", terms: [], breaks: []), on: LocalDate(2026, 10, 1)) == nil)
+        let empty = SchoolCalendar(name: "Empty", terms: [], breaks: [])
+        #expect(CafeWrapped.semester(in: empty, on: LocalDate(2026, 10, 1)) == nil)
     }
 
     @Test func isReadyAroundTheSemesterEnd() throws {
@@ -334,7 +344,8 @@ struct CafeWrappedTests {
     }
 
     @Test func recognizesCafes() {
-        for store in ["Cafe 2000", "Cafe at Gleason Hall", "CAFÉ", "The Coffee Bar", "Snack Shack", "Grill", "Deli Counter", "Kitchen"] {
+        let cafes = ["Cafe 2000", "Cafe at Gleason Hall", "CAFÉ", "The Coffee Bar", "Snack Shack", "Grill", "Deli Counter", "Kitchen"]
+        for store in cafes {
             #expect(CafeWrapped.isCafe(store), "\(store)")
         }
         for store in ["Athletic Store", "Bookstore", "School Store", ""] {
@@ -346,7 +357,8 @@ struct CafeWrappedTests {
 
     @Test func recapsTheChargesFixture() throws {
         let statement = try StoreService.parse(Fixture.data("synthetic-store-charges.json"), fetchedAt: .now)
-        let wrapped = try #require(CafeWrapped(statement: statement, semester: try fall(), calendar: calendar, asOf: LocalDate(2026, 11, 10)))
+        let asOf = LocalDate(2026, 11, 10)
+        let wrapped = try #require(CafeWrapped(statement: statement, semester: try fall(), calendar: calendar, asOf: asOf))
 
         #expect(wrapped.total == Self.money("118.50"))
         #expect(wrapped.purchaseCount == 26) // every charge but the three athletic ones
@@ -367,7 +379,7 @@ struct CafeWrappedTests {
         #expect(wrapped.favoriteWeekday == 6) // Friday
         #expect(wrapped.biggestDay == CafeWrapped.Day(date: LocalDate(2026, 11, 2), total: Self.money("15.00"), itemCount: 3))
         #expect(wrapped.biggestPurchase?.id == 441008) // the first $6.75 wrap
-        #expect(wrapped.longestStreak == CafeWrapped.Streak(start: LocalDate(2026, 9, 30), end: LocalDate(2026, 10, 2), length: 3))
+        #expect(wrapped.longestStreak == Self.streak(LocalDate(2026, 9, 30), LocalDate(2026, 10, 2), 3))
         #expect(wrapped.firstPurchase?.id == 433123)
         #expect(wrapped.persona == .explorer)
     }
@@ -445,7 +457,7 @@ struct CafeWrappedTests {
         #expect(wrapped.timeOfDay == .morning)
         #expect(wrapped.biggestDay == CafeWrapped.Day(date: LocalDate(2026, 10, 15), total: Self.money("28.25"), itemCount: 7))
         #expect(wrapped.biggestPurchase?.detail == "Chicken Pesto Panini")
-        #expect(wrapped.longestStreak == CafeWrapped.Streak(start: LocalDate(2026, 10, 13), end: LocalDate(2026, 10, 26), length: 10))
+        #expect(wrapped.longestStreak == Self.streak(LocalDate(2026, 10, 13), LocalDate(2026, 10, 26), 10))
         #expect(wrapped.firstPurchase?.detail == "Iced Vanilla Latte")
         #expect(wrapped.persona == .regular)
     }

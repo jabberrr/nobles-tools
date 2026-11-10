@@ -52,7 +52,7 @@ private struct WrappedSample {
     private var random = SplitMix64(seed: 732)
     private var menus = Slot.all.map { Deck($0.menu) }
     private var addOns = Deck(Slot.addOns)
-    /// The semester's school days through the sample's last day, in order.
+    /// The semester's school days, in order.
     private let schoolDays: [LocalDate]
     private let lastDay: LocalDate
 
@@ -71,7 +71,9 @@ private struct WrappedSample {
         var charges: [StoreCharge] = []
         for (index, day) in schoolDays.enumerated() {
             if index == Self.bigDay {
-                charges += Self.bigDayOrders.map { charge($0.item, quantity: $0.quantity, at: $0.store, on: day, minute: $0.minute) }
+                charges += Self.bigDayOrders.map { order in
+                    charge(order.item, quantity: order.quantity, at: order.store, on: day, minute: order.minute)
+                }
             } else if !skipped.contains(index) {
                 charges += purchases(on: day)
             }
@@ -91,7 +93,9 @@ private struct WrappedSample {
     /// none in the streak, and the school days either side of it.
     private mutating func skippedDays() -> Set<Int> {
         var skipped: Set = [Self.streak.lowerBound - 1, Self.streak.upperBound]
-        let weeks = Dictionary(grouping: schoolDays.indices) { schoolDays[$0].adding(days: 1 - schoolDays[$0].weekday) }
+        let weeks = Dictionary(grouping: schoolDays.indices) { index in
+            schoolDays[index].adding(days: 1 - schoolDays[index].weekday)
+        }
         for sunday in weeks.keys.sorted() {
             let week = weeks[sunday] ?? []
             guard !week.contains(where: { skipped.contains($0) }) else { continue }
