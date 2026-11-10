@@ -21,7 +21,7 @@ struct DaysPage: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .wrappedReveal(isActive, delay: 0.3)
             }
-            Text("You stopped by on \(WrappedFormat.count(wrapped.dayCount, "different day")).")
+            Text(visits)
                 .font(WrappedStyle.body)
                 .foregroundStyle(WrappedStyle.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -37,6 +37,13 @@ struct DaysPage: View {
         .padding(.top, 20)
         .padding(.bottom, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    /// "You stopped by on 42 different days."
+    private var visits: String {
+        wrapped.dayCount == 1
+            ? "You stopped by on just one day."
+            : "You stopped by on \(wrapped.dayCount.formatted()) different days."
     }
 
     /// Monday to Friday, plus a weekend day only if you bought something on it.

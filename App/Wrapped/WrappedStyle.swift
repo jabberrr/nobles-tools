@@ -18,14 +18,15 @@ enum WrappedStyle {
     static var body: Font { .system(size: 18, weight: .semibold, design: .rounded) }
     static var caption: Font { .system(size: 14, weight: .semibold, design: .rounded) }
 
-    /// A warm yellow for the bar, figure or teaser a page is about: at least 4.5:1 on every page.
+    /// A warm yellow for the bar, figure or teaser a page is about: at least 4.5:1 on every page,
+    /// and 3:1 on cards, where it's only used for big figures.
     static var highlight: Color { Color(hex: 0xFDE047) }
     /// Dark text, for the highlight, white buttons and the foil.
     static var ink: Color { Color(hex: 0x1C1530) }
-    /// Secondary text: slightly dimmed white, still at least 4.5:1 on every page.
-    static var secondary: Color { Color.white.opacity(0.85) }
-    /// The fill of cards and chips.
-    static var cardFill: Color { Color.white.opacity(0.13) }
+    /// Secondary text: slightly dimmed white, still at least 4.5:1 on every page and on its cards.
+    static var secondary: Color { Color.white.opacity(0.92) }
+    /// The fill of cards and chips: faint enough that secondary text on it keeps 4.5:1.
+    static var cardFill: Color { Color.white.opacity(0.10) }
 
     /// Every page's side margin.
     static let margin: CGFloat = 24
@@ -53,6 +54,10 @@ struct WrappedEyebrow: View {
         .foregroundStyle(WrappedStyle.secondary)
         .lineLimit(1)
         .minimumScaleFactor(0.7)
+        // VoiceOver reads the label as written, without the symbol's name.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(text)
+        .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -146,10 +151,14 @@ enum WrappedFormat {
         NSDecimalNumber(decimal: value).doubleValue
     }
 
-    /// "$612.75", for a counting figure.
+    /// "$612.75", for a counting figure: as `Decimal.usd()` writes it, but with a format made once,
+    /// since a count asks for it every frame.
     static func dollars(_ value: Double) -> String {
-        Decimal(value).usd()
+        dollarFormat.format(value)
     }
+
+    private static let dollarFormat = FloatingPointFormatStyle<Double>.Currency(code: "USD", locale: Locale(identifier: "en_US"))
+        .rounded(rule: .toNearestOrAwayFromZero)
 
     /// A count of whole things as it counts up: "168".
     static func whole(_ value: Double) -> String {

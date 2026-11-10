@@ -2,10 +2,8 @@ import SwiftUI
 import NoblesKit
 
 /// One page of the Cafe Wrapped story, in the order they're told.
-enum WrappedPage: Int, CaseIterable, Identifiable {
+enum WrappedPage: Int, CaseIterable {
     case intro, total, cafes, topItems, favorite, times, days, records, persona, summary
-
-    var id: Int { rawValue }
 
     /// The pages `wrapped` has something to say on, in order.
     static func pages(for wrapped: CafeWrapped) -> [WrappedPage] {
@@ -24,8 +22,9 @@ enum WrappedPage: Int, CaseIterable, Identifiable {
         }
     }
 
-    /// The page's backdrop: vivid, but dark enough for white text (at least 4.5:1 on every color,
-    /// and on the cards drawn over them).
+    /// The page's backdrop: vivid, but dark enough for white text. White and
+    /// `WrappedStyle.secondary` are at least 4.5:1 on every color and blend of them, and on
+    /// `WrappedStyle.cardFill` cards drawn over them.
     var colors: [Color] {
         let hexes: [UInt32] = switch self {
         case .intro: [0x2A0A5E, 0x6B1FA0, 0x1A1360]

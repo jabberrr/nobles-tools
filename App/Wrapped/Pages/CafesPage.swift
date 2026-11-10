@@ -1,7 +1,8 @@
 import SwiftUI
 import NoblesKit
 
-/// Where the money went: a card per cafe, sliding in one after another, biggest first.
+/// Where the money went: a card per cafe, sliding in one after another, biggest first, each with
+/// what you got there most.
 struct CafesPage: View {
     let wrapped: CafeWrapped
     let isActive: Bool
@@ -19,7 +20,7 @@ struct CafesPage: View {
                 .minimumScaleFactor(0.6)
                 .wrappedReveal(isActive, delay: 0.25)
             ForEach(Array(cards.enumerated()), id: \.element.id) { rank, cafe in
-                CafeCard(cafe: cafe, isTop: rank == 0, isActive: isActive, delay: cardDelay(rank))
+                CafeCard(cafe: cafe, itemLimit: itemLimit, isTop: rank == 0, isActive: isActive, delay: cardDelay(rank))
             }
             if wrapped.cafes.count > Self.cardLimit {
                 Text("+ \(wrapped.cafes.count - Self.cardLimit) more")
@@ -44,6 +45,12 @@ struct CafesPage: View {
         Array(wrapped.cafes.prefix(Self.cardLimit))
     }
 
+    /// Items listed on each card: a cafe's top three while up to two cards share the page, which
+    /// still fits a 375 × 667 pt iPhone; only its top one when three do.
+    private var itemLimit: Int {
+        cards.count > 2 ? 1 : 3
+    }
+
     private func cardDelay(_ rank: Int) -> Double {
         0.6 + 0.5 * Double(rank)
     }
@@ -57,15 +64,17 @@ struct CafesPage: View {
     }
 }
 
-/// One cafe: what you spent there (counting up), its share of the total, and your go-to item.
+/// One cafe: what you spent there (counting up), its share of the total, and what you got there
+/// most.
 private struct CafeCard: View {
     let cafe: CafeWrapped.Cafe
+    let itemLimit: Int
     let isTop: Bool
     let isActive: Bool
     let delay: Double
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Text(cafe.name)
                     .font(WrappedStyle.lead)
@@ -88,15 +97,39 @@ private struct CafeCard: View {
             }
             .font(WrappedStyle.caption)
             .foregroundStyle(WrappedStyle.secondary)
-            if let item = cafe.topItem {
-                Text("Go-to: \(item.emoji) \(item.name)")
-                    .font(WrappedStyle.caption.weight(.bold))
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+            if !cafe.topItems.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(cafe.topItems.prefix(itemLimit)) { item in
+                        CafeItemRow(item: item)
+                    }
+                }
             }
         }
-        .wrappedCard()
+        .wrappedCard(padding: 14)
         .wrappedReveal(isActive, delay: delay, style: .slide(.trailing))
+    }
+}
+
+/// One of a cafe's most-bought items, on a single line: "🧋 Iced Vanilla Latte ×41".
+private struct CafeItemRow: View {
+    let item: CafeWrapped.Item
+
+    var body: some View {
+        HStack(spacing: 8) {
+            // A touch smaller than the name, so it doesn't make the row taller.
+            Text(item.emoji)
+                .font(.system(size: 13))
+                .frame(width: 22)
+            Text(item.name)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+            Spacer(minLength: 8)
+            Text("×\(item.count.formatted())")
+                .monospacedDigit()
+                .foregroundStyle(WrappedStyle.secondary)
+                .layoutPriority(1)
+        }
+        .font(WrappedStyle.caption.weight(.bold))
     }
 }
 

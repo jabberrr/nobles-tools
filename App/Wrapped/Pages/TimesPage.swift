@@ -43,7 +43,7 @@ struct TimesPage: View {
             Spacer(minLength: 12)
             HStack(spacing: 8) {
                 ForEach(Array(CafeTimeOfDay.allCases.enumerated()), id: \.element) { position, bucket in
-                    BucketChip(bucket: bucket, share: share(of: bucket), isTop: bucket == wrapped.timeOfDay)
+                    BucketChip(bucket: bucket, share: wrapped.share(ofHours: bucket.hours), isTop: bucket == wrapped.timeOfDay)
                         .wrappedReveal(isActive, delay: 2.2 + 0.12 * Double(position), style: .pop)
                 }
             }
@@ -77,16 +77,6 @@ struct TimesPage: View {
                 isHighlighted: hour == peak
             )
         }
-    }
-
-    /// The fraction of purchases made in `bucket`'s hours.
-    private func share(of bucket: CafeTimeOfDay) -> Double {
-        let total = wrapped.hourCounts.reduce(0, +)
-        guard total > 0 else { return 0 }
-        let count = bucket.hours.reduce(0) { sum, hour in
-            sum + (wrapped.hourCounts.indices.contains(hour) ? wrapped.hourCounts[hour] : 0)
-        }
-        return Double(count) / Double(total)
     }
 }
 

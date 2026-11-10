@@ -1,9 +1,10 @@
 import SwiftUI
+import UIKit
 import NoblesKit
 
 /// The reveal of #1: its picture wrapped in foil that comes off a little with each tap, then
 /// confetti, its name and its numbers. Taps on the foil unwrap it; taps anywhere else still turn
-/// the page.
+/// the page. VoiceOver finds the foil as a button and, once it's off, the item in one sentence.
 struct FavoritePage: View {
     /// Taps it takes to get the foil off.
     static let tapsToUnwrap = 5
@@ -41,8 +42,13 @@ struct FavoritePage: View {
                 ZStack(alignment: .top) {
                     hint
                         .opacity(isUnwrapped ? 0 : 1)
+                        // The foil tells VoiceOver itself how many taps are left.
+                        .accessibilityHidden(true)
                     details
                         .opacity(isUnwrapped ? 1 : 0)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(detailsDescription)
+                        .accessibilityHidden(!isUnwrapped)
                 }
                 Spacer(minLength: 0)
             }
@@ -119,11 +125,19 @@ struct FavoritePage: View {
         }
     }
 
+    /// What VoiceOver reads for the details.
+    private var detailsDescription: String {
+        let first = WrappedFormat.day(LocalDate(item.firstBought))
+        return "\(item.name). You got it \(WrappedFormat.count(item.count, "time")), \(item.total.usd()) in all. First one: \(first). Mostly from \(item.cafeName)."
+    }
+
     private func unwrap() {
         withAnimation(.easeOut(duration: 0.3)) {
             isUnwrapped = true
         }
         confetti += 1
+        // The foil's VoiceOver button goes with the foil, so say what was under it.
+        UIAccessibility.post(notification: .announcement, argument: "Your number 1: \(item.name)!")
     }
 }
 

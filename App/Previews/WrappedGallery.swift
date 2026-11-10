@@ -2,9 +2,10 @@ import SwiftUI
 import NoblesKit
 
 /// Every page of Cafe Wrapped in its finished state, phone-sized: the sample recap (the favorite
-/// covered, part-torn and unwrapped), a sparse recap, the tallest pages on a small iPhone
-/// ("-compact"), the empty state and the share poster. Rendered to `docs/widgets` by the
-/// `WidgetSnapshots` tests so layouts can be checked without a device.
+/// covered, part-torn and unwrapped), a sparse recap and a one-purchase one, the tallest pages on
+/// a small iPhone ("-compact"), the empty and stopped-early messages, and the share poster.
+/// Rendered to `docs/widgets` by the `WidgetSnapshots` tests so layouts can be checked without a
+/// device.
 @MainActor
 enum WrappedGallery {
     static var entries: [WidgetGallery.Entry] {
@@ -15,6 +16,11 @@ enum WrappedGallery {
         if let sparse = Self.sparse {
             entries += [WrappedPage.total, .cafes, .topItems, .records, .summary].map { page in
                 entry("wrapped-sparse-\(page.galleryName)", sparse, page)
+            }
+        }
+        if let single = Self.single {
+            entries += [WrappedPage.total, .records].map { page in
+                entry("wrapped-single-\(page.galleryName)", single, page)
             }
         }
         entries += [WrappedPage.total, .cafes, .topItems, .records].map { page in
@@ -29,6 +35,13 @@ enum WrappedGallery {
         ))
         entries.append(phone("wrapped-empty", .large) {
             WrappedMessageView(message: .noPurchases(in: sample.period.name), onSample: {}, onClose: {})
+        })
+        entries.append(phone("wrapped-stops-early", .large) {
+            WrappedMessageView(
+                message: .stopsEarly(at: LocalDate(year: 2026, month: 11, day: 10), isSignedOut: true),
+                onSample: {},
+                onClose: {}
+            )
         })
         entries.append(WidgetGallery.Entry(name: "wrapped-poster", view: AnyView(WrappedPoster(wrapped: sample, cornerRadius: 0))))
         return entries
@@ -47,38 +60,51 @@ enum WrappedGallery {
     /// A thin semester as of the gallery's day: one cafe, three items over three days in one
     /// month, no streak, and an athletic-store charge that doesn't count.
     private static var sparse: CafeWrapped? {
+        recap(of: [
+            charge(5, "Cafe at Gleason Hall", "Roasted Turkey & Cheddar Panini with Pesto", "7.25", day: 22, hour: 12, minute: 41),
+            charge(4, "Athletic Store", "Nobles Crew Sweatshirt", "56.00", day: 20, hour: 16, minute: 5),
+            charge(3, "Cafe at Gleason Hall", "Everything Bagel with Cream Cheese", "3.25", day: 14, hour: 10, minute: 32),
+            charge(2, "Cafe at Gleason Hall", "Iced Vanilla Latte", "4.75", day: 6, hour: 10, minute: 21),
+            charge(1, "Cafe at Gleason Hall", "Everything Bagel with Cream Cheese", "3.25", day: 6, hour: 10, minute: 20),
+        ])
+    }
+
+    /// A semester of one purchase, which is at once the first and the biggest.
+    private static var single: CafeWrapped? {
+        recap(of: [charge(1, "Cafe 2000", "Iced Vanilla Latte", "4.75", day: 6, hour: 19, minute: 42)])
+    }
+
+    /// The recap of `charges` as of the gallery's day.
+    private static func recap(of charges: [StoreCharge]) -> CafeWrapped? {
         let calendar = SchoolCalendar.nobles2026_27
         let today = LocalDate(WidgetGallery.now)
         guard let semester = CafeWrapped.semester(in: calendar, on: today) else { return nil }
-        func charge(_ id: Int, _ store: String, _ item: String, _ amount: String, _ day: Int, _ hour: Int, _ minute: Int) -> StoreCharge {
-            let date = LocalDate(year: 2026, month: 10, day: day)
-            return StoreCharge(
-                id: id,
-                storeName: store,
-                transactionType: "Chit",
-                detail: item,
-                amount: Decimal(string: amount) ?? 0,
-                madeAt: date.at(hour: hour, minute: minute),
-                postedOn: date
-            )
+        let totals = Dictionary(grouping: charges, by: \.storeName).map { store, charges in
+            StoreTotal(storeName: store, amount: charges.reduce(0) { $0 + $1.amount }, total: charges.reduce(0) { $0 + $1.total })
         }
-        let charges = [
-            charge(5, "Cafe at Gleason Hall", "Roasted Turkey & Cheddar Panini with Pesto", "7.25", 22, 12, 41),
-            charge(4, "Athletic Store", "Nobles Crew Sweatshirt", "56.00", 20, 16, 5),
-            charge(3, "Cafe at Gleason Hall", "Everything Bagel with Cream Cheese", "3.25", 14, 10, 32),
-            charge(2, "Cafe at Gleason Hall", "Iced Vanilla Latte", "4.75", 6, 10, 21),
-            charge(1, "Cafe at Gleason Hall", "Everything Bagel with Cream Cheese", "3.25", 6, 10, 20),
-        ]
         let statement = StoreStatement(
             charges: charges,
-            totalsByStore: [
-                StoreTotal(storeName: "Cafe at Gleason Hall", amount: 18.50, total: 18.50),
-                StoreTotal(storeName: "Athletic Store", amount: 56, total: 56),
-            ],
-            grandTotal: 74.50,
+            totalsByStore: totals,
+            grandTotal: totals.reduce(0) { $0 + $1.total },
             fetchedAt: WidgetGallery.now
         )
         return CafeWrapped(statement: statement, semester: semester, calendar: calendar, asOf: today)
+    }
+
+    /// A charge in October 2026.
+    private static func charge(
+        _ id: Int, _ store: String, _ item: String, _ amount: String, day: Int, hour: Int, minute: Int
+    ) -> StoreCharge {
+        let date = LocalDate(year: 2026, month: 10, day: day)
+        return StoreCharge(
+            id: id,
+            storeName: store,
+            transactionType: "Chit",
+            detail: item,
+            amount: Decimal(string: amount) ?? 0,
+            madeAt: date.at(hour: hour, minute: minute),
+            postedOn: date
+        )
     }
 
     // MARK: Drawing

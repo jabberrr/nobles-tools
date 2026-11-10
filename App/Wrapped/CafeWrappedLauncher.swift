@@ -3,6 +3,8 @@ import NoblesKit
 
 /// Opens Cafe Wrapped full screen: the sample at once, or the connected account's own semester once
 /// its purchases load, with a friendly message (and the sample on offer) when there's no recap.
+/// A saved copy of the purchases, all there is when the sign-in has expired or Nobles can't be
+/// reached, is recapped only through the day it was saved, and says so first.
 struct CafeWrappedLauncher: View {
     /// Whose purchases to recap.
     enum Source: String, Identifiable {
@@ -24,6 +26,8 @@ struct CafeWrappedLauncher: View {
     @State private var hasCheckedAccount = false
     /// Set by "See a Sample".
     @State private var showsSample = false
+    /// Set by "Show It Anyway", for a recap that stops before today.
+    @State private var showsPartialRecap = false
 
     private enum Phase {
         case recap(CafeWrapped)
@@ -40,7 +44,12 @@ struct CafeWrappedLauncher: View {
             case .loading:
                 WrappedLoadingView { dismiss() }
             case .message(let message):
-                WrappedMessageView(message: message, onSample: { showSample() }, onClose: { dismiss() })
+                WrappedMessageView(
+                    message: message,
+                    onSample: { crossFade { showsSample = true } },
+                    onShowAnyway: { crossFade { showsPartialRecap = true } },
+                    onClose: { dismiss() }
+                )
             }
         }
         .task { await loadAccount() }
@@ -60,7 +69,13 @@ struct CafeWrappedLauncher: View {
         guard let semester = CafeWrapped.semester(in: library.calendar, on: today) else {
             return .message(.noSemester)
         }
-        guard let wrapped = CafeWrapped(statement: statement, semester: semester, calendar: library.calendar, asOf: today) else {
+        // The statement knows nothing after the day it was fetched.
+        let through = min(today, LocalDate(statement.fetchedAt))
+        let status = previewData.spendingStatus
+        if !showsPartialRecap, status == .signedOut || status == .offline, through < min(today, semester.span.end) {
+            return .message(.stopsEarly(at: through, isSignedOut: status == .signedOut))
+        }
+        guard let wrapped = CafeWrapped(statement: statement, semester: semester, calendar: library.calendar, asOf: through) else {
             return .message(.noPurchases(in: CafeWrapped.periodName(for: semester.span)))
         }
         return .recap(wrapped)
@@ -76,9 +91,8 @@ struct CafeWrappedLauncher: View {
         await previewData.load(.spending(previewData.storeSession))
     }
 
-    private func showSample() {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            showsSample = true
-        }
+    /// Moves on from a message with a cross-fade.
+    private func crossFade(_ change: () -> Void) {
+        withAnimation(.easeInOut(duration: 0.3), change)
     }
 }

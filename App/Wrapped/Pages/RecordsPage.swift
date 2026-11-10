@@ -2,8 +2,8 @@ import SwiftUI
 import NoblesKit
 
 /// Personal bests: the longest streak, how many different things you tried, the priciest buy and
-/// the semester's first. Each card slides in after the one before; any with nothing to show is left
-/// out.
+/// the semester's first (unless that was the priciest). Each card slides in after the one before;
+/// any with nothing to show is left out.
 struct RecordsPage: View {
     let wrapped: CafeWrapped
     let isActive: Bool
@@ -47,7 +47,7 @@ struct RecordsPage: View {
         if let charge = wrapped.biggestPurchase {
             records.append(.biggest(charge))
         }
-        if let charge = wrapped.firstPurchase {
+        if let charge = wrapped.firstPurchase, charge.id != wrapped.biggestPurchase?.id {
             records.append(.first(charge))
         }
         return records
@@ -103,14 +103,22 @@ private struct StreakCard: View {
                 }
             }
             .accessibilityHidden(true)
-            // Only a missed school day ends a streak.
-            Text("\(WrappedFormat.shortDay(streak.start)) – \(WrappedFormat.shortDay(streak.end)) · Weekends off")
+            Text(dates)
                 .font(WrappedStyle.caption)
                 .foregroundStyle(WrappedStyle.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .wrappedCard()
         .wrappedReveal(isActive, delay: delay, style: .slide(.leading))
+    }
+
+    /// "Oct 5 – Oct 16", noting any days off the run skipped: only a missed school day ends it.
+    private var dates: String {
+        let span = "\(WrappedFormat.shortDay(streak.start)) – \(WrappedFormat.shortDay(streak.end))"
+        let days = streak.start.days(until: streak.end) + 1
+        guard days > streak.length else { return span }
+        let spansWeekend = (0..<days).contains { streak.start.adding(days: $0).isWeekend }
+        return "\(span) · \(spansWeekend ? "Weekends" : "Holidays") off"
     }
 }
 

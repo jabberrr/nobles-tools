@@ -31,9 +31,10 @@ struct SummaryPage: View {
     }
 
     private var buttons: some View {
-        let image = WrappedPosterImage(wrapped: wrapped)
+        // The share sheet's preview is a symbol, so the poster is drawn only once, for the share.
+        let preview = SharePreview("My \(wrapped.period.name) Cafe Wrapped", image: Image(systemName: "gift.fill"))
         return HStack(spacing: 12) {
-            ShareLink(item: image, preview: SharePreview("My \(wrapped.period.name) Cafe Wrapped", image: image)) {
+            ShareLink(item: WrappedPosterImage(wrapped: wrapped), preview: preview) {
                 Label("Share", systemImage: "square.and.arrow.up")
             }
             .buttonStyle(WrappedButtonStyle())

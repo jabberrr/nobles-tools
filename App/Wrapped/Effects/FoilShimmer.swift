@@ -36,7 +36,7 @@ private struct FoilShimmer: ViewModifier {
         content
             .overlay {
                 if isActive && !isStatic && !reduceMotion {
-                    TimelineView(.animation) { timeline in
+                    TimelineView(SweepSchedule()) { timeline in
                         Self.highlight(at: timeline.date.timeIntervalSinceReferenceDate)
                     }
                     .blendMode(.sourceAtop)
@@ -46,15 +46,10 @@ private struct FoilShimmer: ViewModifier {
             .compositingGroup()
     }
 
-    /// Seconds between the starts of two sweeps.
-    private static let period = 3.4
-    /// How long one sweep takes to cross.
-    private static let sweepDuration = 1.1
-
     /// A diagonal band of light crossing the view, or nothing between sweeps.
     private static func highlight(at time: TimeInterval) -> LinearGradient {
-        let phase = time.truncatingRemainder(dividingBy: period) / sweepDuration
-        let eased = phase < 1 ? phase * phase * (3 - 2 * phase) : 2
+        let progress = Sweep.elapsed(at: time) / Sweep.duration
+        let eased = progress < 1 ? progress * progress * (3 - 2 * progress) : 2
         let center = -0.6 + 2.2 * eased
         return LinearGradient(
             stops: [
@@ -65,6 +60,43 @@ private struct FoilShimmer: ViewModifier {
             startPoint: UnitPoint(x: center - 0.6, y: 0),
             endPoint: UnitPoint(x: center + 0.6, y: 1)
         )
+    }
+}
+
+/// The shimmer's rhythm: a sweep crossing in `duration` seconds, starting every `period` seconds.
+private enum Sweep {
+    static let period = 3.4
+    static let duration = 1.1
+    /// Between frames while a sweep crosses.
+    static let frameInterval = 1.0 / 30.0
+
+    /// Seconds since the latest sweep started.
+    static func elapsed(at time: TimeInterval) -> TimeInterval {
+        time.truncatingRemainder(dividingBy: period)
+    }
+
+    /// From a frame at `date` to the next: one frame mid-sweep (the first past the end draws the
+    /// band gone), else until the next sweep starts.
+    static func wait(after date: Date) -> TimeInterval {
+        let elapsed = Self.elapsed(at: date.timeIntervalSinceReferenceDate)
+        return elapsed < duration ? frameInterval : max(period - elapsed, frameInterval)
+    }
+}
+
+/// Redraws the shimmer 30 times a second while a sweep crosses, then not again until the next.
+private struct SweepSchedule: TimelineSchedule {
+    func entries(from startDate: Date, mode: TimelineScheduleMode) -> Entries {
+        Entries(upcoming: startDate)
+    }
+
+    struct Entries: Sequence, IteratorProtocol {
+        var upcoming: Date
+
+        mutating func next() -> Date? {
+            let date = upcoming
+            upcoming = date.addingTimeInterval(Sweep.wait(after: date))
+            return date
+        }
     }
 }
 

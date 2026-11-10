@@ -52,7 +52,7 @@ struct PersonaPage: View {
     /// the turn. Under Reduce Motion they cross-fade instead.
     private var card: some View {
         ZStack {
-            PersonaCardBack()
+            PersonaCardBack(isShimmering: isActive && !showsFront)
                 .opacity(showsFront ? 0 : 1)
                 .animation(faceSwap, value: showsFront)
                 .rotation3DEffect(.degrees(reduceMotion ? 0 : (showsFront ? 180 : 0)), axis: (x: 0, y: 1, z: 0), perspective: 0.5)
@@ -87,25 +87,17 @@ struct PersonaPage: View {
             let fraction = Double(favorite.count) / Double(wrapped.itemCount)
             return "\(favorite.name) was \(WrappedFormat.percent(fraction)) of everything you bought."
         case .nightOwl:
-            return "\(WrappedFormat.percent(share(ofHours: 17...23))) of your purchases came after 5 PM."
+            return "\(WrappedFormat.percent(wrapped.share(ofHours: 17...23))) of your purchases came after 5 PM."
         case .earlyBird:
-            return "\(WrappedFormat.percent(share(ofHours: 0...9))) of your purchases came before 10 AM."
+            return "\(WrappedFormat.percent(wrapped.share(ofHours: 0...9))) of your purchases came before 10 AM."
         case .regular:
-            return "You stopped by on \(WrappedFormat.count(wrapped.dayCount, "different day")) this semester."
+            let soFar = wrapped.period.isComplete ? "" : " so far"
+            return "\(WrappedFormat.count(wrapped.dayCount, "day")) at the cafe\(soFar): at least every other school day."
         case .explorer:
             return "You tried \(wrapped.distinctItemCount) different things."
         case .dropIn:
             return "\(WrappedFormat.count(wrapped.purchaseCount, "purchase")), no set routine. You keep it fresh."
         }
-    }
-
-    private func share(ofHours hours: ClosedRange<Int>) -> Double {
-        let total = wrapped.hourCounts.reduce(0, +)
-        guard total > 0 else { return 0 }
-        let count = hours.reduce(0) { sum, hour in
-            sum + (wrapped.hourCounts.indices.contains(hour) ? wrapped.hourCounts[hour] : 0)
-        }
-        return Double(count) / Double(total)
     }
 }
 
@@ -131,9 +123,10 @@ private struct PersonaCardFront: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Faint enough that the tagline keeps 4.5:1 at its brightest corner.
         .background(
             LinearGradient(
-                colors: [Color.white.opacity(0.24), Color.white.opacity(0.08)],
+                colors: [Color.white.opacity(0.12), Color.white.opacity(0.03)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
@@ -143,8 +136,10 @@ private struct PersonaCardFront: View {
     }
 }
 
-/// The side you see first: plain shimmering foil and a question mark.
+/// The side you see first: plain foil, shimmering until it turns, and a question mark.
 private struct PersonaCardBack: View {
+    let isShimmering: Bool
+
     var body: some View {
         VStack(spacing: 12) {
             Text("?")
@@ -156,7 +151,7 @@ private struct PersonaCardBack: View {
         .foregroundStyle(WrappedStyle.ink)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WrappedFX.foilGradient, in: RoundedRectangle(cornerRadius: 32, style: .continuous))
-        .foilShimmer()
+        .foilShimmer(isActive: isShimmering)
     }
 }
 

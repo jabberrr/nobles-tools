@@ -5,10 +5,11 @@ import SwiftUI
 ///
 /// Each tap crinkles and shakes the foil (with a haptic) and tears off a chunk near the finger,
 /// bigger each time, which tumbles away while the content shows through the hole. The last tap
-/// bursts off the rest, the content pops, and `onUnwrap` runs; from then on the foil takes no
-/// taps, so they reach whatever is behind it. `initialTaps` starts it part unwrapped, torn at
-/// fixed spots, for snapshots. In static mode it draws that state without moving; under Reduce
-/// Motion pieces fade instead of flying.
+/// bursts off the rest, the content pops, and `onUnwrap` runs. The foil keeps swallowing taps
+/// until the last pieces land, so a quick extra tap can't reach what's behind it mid-burst; after
+/// that, taps pass through. `initialTaps` starts it part unwrapped, torn at fixed spots, for
+/// snapshots. In static mode it draws that state without moving; under Reduce Motion pieces fade
+/// instead of flying.
 struct FoilWrap<Content: View>: View {
     private let tapsToUnwrap: Int
     private let onTap: (Int) -> Void
@@ -42,6 +43,7 @@ struct FoilWrap<Content: View>: View {
             .scaleEffect(isPopped || reduceMotion ? 1 : 0.92)
             .accessibilityHidden(!foil.isUnwrapped)
             .overlay {
+                // While it's here it takes every tap on it: until the last pieces have landed.
                 if !foil.isUnwrapped || !foil.pieces.isEmpty {
                     foilLayer
                         .padding(-FoilSheet.overhang)
@@ -76,7 +78,6 @@ struct FoilWrap<Content: View>: View {
             foilDrawing
                 .allowsHitTesting(false)
         }
-        .allowsHitTesting(!foil.isUnwrapped)
         .accessibilityElement()
         .accessibilityLabel("Wrapped in foil")
         .accessibilityValue(tapsLeftDescription)

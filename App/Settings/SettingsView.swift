@@ -38,7 +38,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Cafe Wrapped")
                 } footer: {
-                    Text("For testing: open your semester recap any time. It also appears on the home screen when each semester ends.")
+                    Text("For testing: open your semester recap any time. Connect your Nobles account above to see your own; at the end of each semester it also shows at the top of the app's design list.")
                 }
 
                 Section {

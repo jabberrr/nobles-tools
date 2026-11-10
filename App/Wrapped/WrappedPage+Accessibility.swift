@@ -9,7 +9,8 @@ extension WrappedPage {
         case .total: Self.totalSummary(wrapped)
         case .cafes: Self.cafesSummary(wrapped)
         case .topItems: Self.topItemsSummary(wrapped)
-        case .favorite: Self.favoriteSummary(wrapped)
+        // No spoilers: the page's own elements name the item once the foil is off.
+        case .favorite: "Your number 1."
         case .times: Self.timesSummary(wrapped)
         case .days: Self.daysSummary(wrapped)
         case .records: Self.recordsSummary(wrapped)
@@ -26,23 +27,19 @@ extension WrappedPage {
 
     private static func cafesSummary(_ wrapped: CafeWrapped) -> String {
         let lines: [String] = wrapped.cafes.map { cafe in
-            let goTo = cafe.topItem.map { " Your go-to: \($0.name)." } ?? ""
-            return "\(cafe.name): \(cafe.total.usd()), \(WrappedFormat.percent(cafe.share)) of your spending, \(WrappedFormat.count(cafe.purchaseCount, "purchase")).\(goTo)"
+            let items = cafe.topItems.map { "\($0.name), \(WrappedFormat.count($0.count, "time"))" }
+            let mostBought = items.isEmpty ? "" : " Most bought: \(items.joined(separator: "; "))."
+            return "\(cafe.name): \(cafe.total.usd()), \(WrappedFormat.percent(cafe.share)) of your spending, \(WrappedFormat.count(cafe.purchaseCount, "purchase")).\(mostBought)"
         }
         return (["Where you went."] + lines).joined(separator: " ")
     }
 
+    /// Keeps #1 under wraps, as the page does, for the favorite page to reveal.
     private static func topItemsSummary(_ wrapped: CafeWrapped) -> String {
-        let lines: [String] = wrapped.topItems.enumerated().map { rank, item in
+        let lines: [String] = wrapped.topItems.enumerated().dropFirst().map { rank, item in
             "Number \(rank + 1): \(item.name), \(WrappedFormat.count(item.count, "time"))."
         }
-        return (["Your top \(wrapped.topItems.count)."] + lines).joined(separator: " ")
-    }
-
-    private static func favoriteSummary(_ wrapped: CafeWrapped) -> String {
-        guard let item = wrapped.favorite else { return "" }
-        let first = WrappedFormat.day(LocalDate(item.firstBought))
-        return "Your number 1: \(item.name). You got it \(WrappedFormat.count(item.count, "time")), \(item.total.usd()) in all. First one: \(first)."
+        return (["Your top \(wrapped.topItems.count)."] + lines + ["Number 1 is still under wraps."]).joined(separator: " ")
     }
 
     private static func timesSummary(_ wrapped: CafeWrapped) -> String {
@@ -74,7 +71,7 @@ extension WrappedPage {
         if let charge = wrapped.biggestPurchase {
             parts.append("Biggest single buy: \(charge.total.usd()), \(charge.detail).")
         }
-        if let charge = wrapped.firstPurchase {
+        if let charge = wrapped.firstPurchase, charge.id != wrapped.biggestPurchase?.id {
             parts.append("First of the semester: \(charge.detail), \(WrappedFormat.moment(charge.madeAt)).")
         }
         return parts.joined(separator: " ")
