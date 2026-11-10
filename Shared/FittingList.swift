@@ -15,26 +15,39 @@ struct FittingPrefix<Item, Content: View>: View {
     var spacing: CGFloat = 4
     /// Color of the "+N more" line, or `nil` to leave it out.
     var overflowColor: Color? = nil
-    /// When nothing fits, show nothing at all rather than a lone "+N more" (for a list that sits
-    /// under its own header or beside a figure, where a bare overflow line would read as broken).
+    /// Never show a lone "+N more": when not even one item fits with it, show the first item
+    /// alone, and failing that nothing (for a list under a figure, where a bare count reads as
+    /// broken).
     var hidesOverflowWhenEmpty: Bool = false
     /// Lays out the items that are shown.
     @ViewBuilder let content: ([Item]) -> Content
 
     var body: some View {
-        let most = max(0, min(items.count, capacity))
-        FirstFitting(variants: Array((0...most).reversed()), axes: .vertical) { count in
-            layout(showing: count)
+        FirstFitting(variants: layouts, axes: .vertical) { layout in
+            self.layout(showing: layout.count, withOverflow: layout.showsOverflow)
         }
     }
 
-    /// The first `count` items, then the "+N more" line if any are left out.
-    private func layout(showing count: Int) -> some View {
+    /// The layouts to try, most generous first: each count down to none, with "+N more" for any
+    /// left out; or, when a bare count isn't wanted, ending with one item alone and then nothing.
+    private var layouts: [(count: Int, showsOverflow: Bool)] {
+        let most = max(0, min(items.count, capacity))
+        var layouts = stride(from: most, through: hidesOverflowWhenEmpty ? 1 : 0, by: -1)
+            .map { (count: $0, showsOverflow: overflowColor != nil && $0 < items.count) }
+        if hidesOverflowWhenEmpty {
+            if most > 0 { layouts.append((count: 1, showsOverflow: false)) }
+            layouts.append((count: 0, showsOverflow: false))
+        }
+        return layouts
+    }
+
+    /// The first `count` items, then the "+N more" line for the rest when `withOverflow`.
+    private func layout(showing count: Int, withOverflow: Bool) -> some View {
         VStack(alignment: .leading, spacing: spacing) {
             if count > 0 {
                 content(Array(items.prefix(count)))
             }
-            if let overflowColor, count < items.count, !(count == 0 && hidesOverflowWhenEmpty) {
+            if withOverflow, let overflowColor {
                 MoreLabel(count: items.count - count, color: overflowColor)
             }
         }

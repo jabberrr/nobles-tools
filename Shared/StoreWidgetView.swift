@@ -90,6 +90,24 @@ private struct StoreHomeScreenView: View {
         }
     }
 
+    /// The highlighted dollars with their label beside them on one line; the label shortens at
+    /// words, and the dollars shrink rather than ever being cut.
+    private func inlineFigure(_ spending: StoreContent.Spending, size: CGFloat) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(spending.figure.amount)
+                .font(.system(size: size, weight: .bold, design: fontDesign))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .layoutPriority(1)
+            let caption = spending.figure.caption
+            FirstFitting(variants: [caption] + caption.cutsAtWords(limit: 3), axes: .horizontal) { Text($0) }
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(colors.secondary)
+                .lineLimit(1)
+        }
+    }
+
     /// The bar against the limit and its caption ("$58 of $300", "$242 left of $300"), when the
     /// design sets a limit.
     @ViewBuilder private func limitBar(_ spending: StoreContent.Spending, height: CGFloat) -> some View {
@@ -140,9 +158,14 @@ private struct StoreHomeScreenView: View {
     // MARK: Medium
 
     /// The figure, then the recent charges across the full width so item names aren't cut; the
-    /// figure alone when the list is empty or turned off.
+    /// figure alone when the list is empty or turned off. With a list, the figure's label sits
+    /// beside it, leaving the list room for a row.
     @ViewBuilder private func medium(_ spending: StoreContent.Spending) -> some View {
-        figure(spending, size: spending.charges.isEmpty ? 46 : 38)
+        if spending.charges.isEmpty {
+            figure(spending, size: 46)
+        } else {
+            inlineFigure(spending, size: 34)
+        }
         limitBar(spending, height: 7)
         if !spending.charges.isEmpty {
             charges(spending, capacity: 4)
