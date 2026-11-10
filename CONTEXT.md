@@ -25,12 +25,15 @@ Widget kinds (`WidgetKind`):
 
 All kinds share a `Theme`: palette, font style and background style.
 
+The user files requests as cards on the Trello board **Nobles Tools** (https://trello.com/b/pxLsChDf/nobles-tools; the Trello MCP tools reach it). When asked to address new cards, comment on each one with what changed. Leave the **"Future (claude ignore this list)"** list alone.
+
 Visual language (Shared/):
 - A common header: an icon in an accent circle, the title, and a detail that shortens when space is tight.
 - Small uppercase section labels with icons.
 - Icons for stations (`Symbols.swift`, keyword-mapped), sports (`SportSymbol`) and terms (`Term.Kind.symbolName`).
 - Lists show fewer items in full plus "+N more" instead of truncating.
 - Where space is tiny, names step down through short forms before any cut: `MenuItem.shortName`, `Game.shortOpponent`/`opponentInitials` ("BB&N"), `Game.teamVariants` ("Girls Field Hockey · MS" → "Field Hockey · MS"). Only an inline Lock Screen dish too long even in short form is cut, and then at a word.
+  - The exception, at the user's request: the spending rectangular Lock Screen's latest item gets two lines of `caption2`, then one, cut at the end of the line. That shows more of the name than cutting at a word.
 - Icon chips and W/L badges cut their symbol out of the accent fill, so they survive iOS's tinted and clear Home Screen modes (which keep only alpha).
 - Circular Lock Screen widgets fill the widget before drawing the disc: `circularBackdrop(for:disc:)`, shared by `WidgetChrome` and the preview frame.
 - Palettes must pass `PaletteTests`: text at least 4.5:1 and accent at least 3:1 on both gradient ends.
@@ -102,6 +105,8 @@ Identifiers:
   - Scores: refreshes every 2 h, or every 60 min on game days. It also adds an entry at the next school midnight, so the "Today" labels and the results/upcoming split move to the new day.
 - **Offline:** `ResponseCache` keeps the last good raw response per URL in the app-group container. Services fall back to it on network errors. The scores feed also reports the cache time (`GameFeed.fetchedAt`), so the widget can show "Updated 4h ago" once data is older than its 2 h refresh.
 - **App previews:** `PreviewData` fetches each data source once and filters locally per design, so toggling settings never re-fetches. It falls back to sample data, labelled as such, when offline.
+  - Spending previews show the connected account's own statement, or its cached copy badged as the widget would show it. They use the sample only when no account is connected.
+  - The request carries the `StoreSession`, so connecting or reconnecting loads afresh.
 - **Dates:** use `LocalDate` and `Calendar.school` (America/New_York) for anything that is a school day or a meal time. Never use the device time zone for school logic.
 
 ## Data sources (verified facts)
@@ -145,7 +150,7 @@ Identifiers:
 ### School store spending (authenticated; verified 2026-11-09)
 - The store pages live under `https://nobilis.nobles.edu/SchoolStoreNew/` and are gated by **Veracross OAuth SSO**. A logged-out request to `parent_limits.php` 302-redirects to `accounts.veracross.com/nobles/oauth/authorize?client_id=…&scope=sso` then the Veracross login (which has a reCAPTCHA). The whole directory requires a logged-in `nobilis` PHP session (`PHPSESSID`).
 - **Sign-in is done in-app**, not scraped: `App/Store/StoreLoginView.swift` loads `parent_limits.php` in a `WKWebView`; the user signs in on the real Veracross page; on landing back on the `nobilis.nobles.edu` `SchoolStoreNew` page the app reads the person id/name from the live DOM (`a[href*="person_id="]`) and the `nobles.edu` cookies, and saves a `StoreSession` (cookie + personID + personName) via `StoreSessionStore`. **The password is never read or stored.** For a parent with several children it shows a picker.
-- **Data endpoint:** `GET …/SchoolStoreNew/get_charges.php?child_id=<personID>` with the session cookie returns JSON: `charges[]` (`charge_id`, `store_id`, `store_name`, `trans_type`, `description`, `quantity`, `total_cost` "4.00", `sales_tax`, `created` "yyyy-MM-dd HH:mm" school-local, `posted_on` "yyyy-MM-dd" or null = pending), `totals_by_store[]`, `grand_totals`. Money is strings → `Decimal`. A real sample is the fixture `Fixtures/real-store-charges.json`.
+- **Data endpoint:** `GET …/SchoolStoreNew/get_charges.php?child_id=<personID>` with the session cookie returns JSON: `charges[]` (`charge_id`, `store_id`, `store_name`, `trans_type`, `description`, `quantity`, `total_cost` "4.00", `sales_tax`, `created` "yyyy-MM-dd HH:mm" school-local, `posted_on` "yyyy-MM-dd" or null = pending), `totals_by_store[]`, `grand_totals`. Money is strings → `Decimal`. The fixture `Fixtures/synthetic-store-charges.json` has the real response's shape with made-up values. The user's own response was the fixture at first; at their request it was replaced with random numbers and generic items. Never commit real charge data: the repo is public.
 - Not-signed-in → the endpoint 401/403s or returns the Veracross login wall; `StoreService` classifies those as `.notAuthenticated` (vs `.unavailable` for network/parse) and **caches only a clean parse**, so a login wall is never cached. The widget then shows the last cached figures with "Sign in to refresh" and the app re-connects.
 - **Limits and gift-card balance are NOT fetched.** They only appear in `parent_limits.php`'s server HTML (the sample we have is a macOS "Copy", not the real DOM), so the spending limit is entered in the app (`StoreConfiguration.limit`) for the progress bar/ring. To auto-read them later, capture the real View-Source of `parent_limits.php` and parse the Limits table (groups: Athletics = Athletic Store; "Cafe2000 + Gleason Hall Snack Bar" = Cafe 2000 + Cafe at Gleason Hall).
 - These are undocumented internal endpoints keyed to the signed-in account; only the user's own data is ever read. No weekly smoke test (it needs a login).
