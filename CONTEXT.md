@@ -21,6 +21,7 @@ Widget kinds (`WidgetKind`):
 | `menu` | Flik dining menu for Lunch, Dinner or "Next Meal" (auto-advances as each meal ends). Filters (`MenuFilter`): everything, entrées only, no salads/soups, only chosen stations ("Just…"), everything except chosen stations. Toggle for station headers. A **featured dish** (`MenuConfiguration.featuredStation`: the first dish of a chosen station, or Automatic = first entrée) leads every size and is the only dish on Lock Screen sizes. A chosen station overrides the filter; Automatic follows it. "Just Entrées" shows nothing (with a message) when no entrée station exists. | all six: systemSmall/Medium/Large, accessoryCircular/Rectangular/Inline |
 | `countdown` | Days left in the current quarter, semester or school year (`Term.Kind`), counted as school days, weekdays or calendar days. Number, ring or bar style. | all six |
 | `scores` | Recent results and upcoming games for Nobles teams, filtered by sport, with a varsity-only option. | all six |
+| `spending` | The signed-in student's own school-store spending (cafe chits, athletic store) from the Nobles portal. Needs the account connected in **Settings → Nobles Account** (Veracross web sign-in; only the session cookie + person id are kept, never the password). Shows total spent / remaining against an in-app limit / latest charge (`StoreHighlight`), a recent-charges list, and per-store totals. Store filter; optional spending limit set in the app (the charges endpoint doesn't carry it). | all six |
 
 All kinds share a `Theme`: palette, font style and background style.
 
@@ -54,10 +55,15 @@ NoblesKit/                  Swift package, Foundation-only (no SwiftUI). Builds 
     Calendar/               SchoolCalendar/Term/Countdown models, NoblesCalendar (built-in 2026–27), countdown math
     Scores/                 Game/GameFeed/Scoreboard models, NoblesAthleticsProvider (AthleticsResults JSON +
                             AthleticsSchedule HTML + AthleticsParsing), ScoresService, preview data
+    Store/                  Spending: StoreModels (charge/total/statement/session/config + StoreSessionStore in
+                            the app group), StoreChargesResponse (get_charges.php JSON), StoreService (authed
+                            fetch + auth/offline classification + cache), Money (Decimal.usd), preview data
   Tests/NoblesKitTests/     swift-testing tests. Fixtures/real-* are REAL captured responses; synthetic-* are hand-written.
 Shared/                     SwiftUI widget views, theme mapping and formatting, compiled into BOTH app and widget
 App/                        App target: DesignLibrary (state), design list, editor with live previews,
-                            PreviewData (loads real data once for previews), Settings (calendar editor).
+                            PreviewData (loads real data once for previews), Settings (calendar editor,
+                            Nobles Account). Store/ holds the Veracross web sign-in (StoreLoginView),
+                            the StoreAccount connection manager and its Settings section.
                             Previews/DesignWidgetContent draws a design from given data (editor + gallery);
                             Previews/WidgetGallery is every widget × size from fixed sample data.
 Snapshots/                  WidgetSnapshots test target: renders WidgetGallery to PNGs (when SNAPSHOT_OUTPUT_DIR is set).
@@ -136,6 +142,14 @@ Identifiers:
 - High confidence: graduation is the Friday after Memorial Day, so **2027-06-04**.
 - Everything else is estimated: first day 2026-09-08, Q1 end 10-30, S1 end 12-18, Q3 2027-01-04…03-12, March break 03-13…03-28, plus the usual Monday holidays. Replace these with real dates if anyone obtains the calendar, or its iCal export from the logged-in Nobles portal.
 
+### School store spending (authenticated; verified 2026-11-09)
+- The store pages live under `https://nobilis.nobles.edu/SchoolStoreNew/` and are gated by **Veracross OAuth SSO**. A logged-out request to `parent_limits.php` 302-redirects to `accounts.veracross.com/nobles/oauth/authorize?client_id=…&scope=sso` then the Veracross login (which has a reCAPTCHA). The whole directory requires a logged-in `nobilis` PHP session (`PHPSESSID`).
+- **Sign-in is done in-app**, not scraped: `App/Store/StoreLoginView.swift` loads `parent_limits.php` in a `WKWebView`; the user signs in on the real Veracross page; on landing back on the `nobilis.nobles.edu` `SchoolStoreNew` page the app reads the person id/name from the live DOM (`a[href*="person_id="]`) and the `nobles.edu` cookies, and saves a `StoreSession` (cookie + personID + personName) via `StoreSessionStore`. **The password is never read or stored.** For a parent with several children it shows a picker.
+- **Data endpoint:** `GET …/SchoolStoreNew/get_charges.php?child_id=<personID>` with the session cookie returns JSON: `charges[]` (`charge_id`, `store_id`, `store_name`, `trans_type`, `description`, `quantity`, `total_cost` "4.00", `sales_tax`, `created` "yyyy-MM-dd HH:mm" school-local, `posted_on` "yyyy-MM-dd" or null = pending), `totals_by_store[]`, `grand_totals`. Money is strings → `Decimal`. A real sample is the fixture `Fixtures/real-store-charges.json`.
+- Not-signed-in → the endpoint 401/403s or returns the Veracross login wall; `StoreService` classifies those as `.notAuthenticated` (vs `.unavailable` for network/parse) and **caches only a clean parse**, so a login wall is never cached. The widget then shows the last cached figures with "Sign in to refresh" and the app re-connects.
+- **Limits and gift-card balance are NOT fetched.** They only appear in `parent_limits.php`'s server HTML (the sample we have is a macOS "Copy", not the real DOM), so the spending limit is entered in the app (`StoreConfiguration.limit`) for the progress bar/ring. To auto-read them later, capture the real View-Source of `parent_limits.php` and parse the Limits table (groups: Athletics = Athletic Store; "Cafe2000 + Gleason Hall Snack Bar" = Cafe 2000 + Cafe at Gleason Hall).
+- These are undocumented internal endpoints keyed to the signed-in account; only the user's own data is ever read. No weekly smoke test (it needs a login).
+
 ## Building and testing
 
 - macOS: pull, then `open NoblesTools.xcodeproj`. It's signed with the user's team, so it runs on a simulator or their iPhone with no setup. Another team can be set on one Mac via the gitignored `Config/Local.xcconfig`. After changing `project.yml` locally, regenerate with `xcodegen generate`, or push and let CI do it.
@@ -173,7 +187,7 @@ Identifiers:
 - **Widget layout gotchas** (learned from the renders):
   - Stacks can truncate wrapping text even when everything fits. Pin each wrapping `Text` with `.fixedSize(horizontal: false, vertical: true)`.
   - Don't nest `ViewThatFits`: an outer one measures only the inner one's first child. Use `FirstFitting` (`TextFitting.swift`), which takes one flat list of variants (a `ForEach` inside a single `ViewThatFits`).
-  - The system linear `Gauge` renders broken in ImageRenderer, so progress bars are drawn (`ProgressViews.swift`).
+  - The system `Gauge` renders out of proportion in ImageRenderer, so progress is drawn with `ProgressViews.swift`: `ProgressBar` (home + rectangular lock) and `ProgressRing` (spending's circular lock). A capacity `Gauge` showed the spending ring's fill wrong in the snapshot renders; the drawn ring matches the bar and the centered amount exactly.
   - The preview frame draws a stand-in for `AccessoryWidgetBackground` on circular Lock Screen previews.
 - Tests use swift-testing (`import Testing`, `@Test`, `#expect`). Never touch the network in tests: inject a fake `HTTPClient` (`Tests/NoblesKitTests/Support/FakeHTTPClient.swift`). Prefer the `real-*` fixtures.
 - Model enums expose `displayName` (and `symbolName` where useful) for UI. Keep UI strings in the models only when they are shared between app and widget.
@@ -213,4 +227,9 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
     - the featured dish (a station picked in the editor, or Automatic), which is the only dish on Lock Screen sizes.
   - A critic pass found a real-device bug the renders couldn't show (the circular disc sized to its content), a featured-dish fallback that ignored the filter, glyphs lost in tinted mode, Sunset contrast, and scores losing gender and level. All fixed and re-rendered.
   - NoblesKit has 118 tests. CI and the renders are green.
+- **2026-11-10: Spending widget (4th kind).**
+  - The user found the Nobles school-store pages and asked for a widget of their own cafe/store spending. Probed `SchoolStoreNew/` from a throwaway Actions workflow: it's Veracross OAuth; the user confirmed `get_charges.php` 401s for other accounts and supplied a real JSON sample.
+  - Built against a fixed contract (`scratchpad/store-contract.md`) with three parallel agents (CORE/NoblesKit, APP, WIDGETUI) + a critic: NoblesKit `Store/` (service, parser, session, preview data, +13 tests → 131), in-app Veracross `WKWebView` sign-in that keeps only the session cookie + person id, and the `spending` widget in all six sizes.
+  - CI compiled first try. The critic found no compile/logic/privacy defect; the render pass then caught two UI issues I fixed: medium truncated item names (now the figure sits above full-width charge rows) and the Lock Screen limit read ambiguously (the circular ring + centre and the rectangular figure now agree, via `ProgressRing`).
+  - Limits/gift-card balance aren't in the charges endpoint, so the limit is set in the app; auto-reading them needs the real View-Source of `parent_limits.php` (see Data sources). Nothing has been seen on a device; the live auth path can only be tested there.
 

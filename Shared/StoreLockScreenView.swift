@@ -42,16 +42,18 @@ struct StoreLockScreenView: View {
         switch content.state {
         case .spending(let spending):
             if let progress = spending.progress {
-                // The ring fills with what's been spent, so its centre shows the spent amount too
-                // (not the design's highlight) — otherwise ring and number would measure opposites.
-                Gauge(value: progress) {
-                    Text("Spending")
-                } currentValueLabel: {
+                // A drawn ring (not a Gauge, which renders out of proportion in ImageRenderer) that
+                // fills with what's been spent, so its centre shows the spent amount too — not the
+                // design's highlight — otherwise ring and number would measure opposites.
+                ZStack {
+                    ProgressRing(progress: progress, lineWidth: 7, colors: colors)
                     Text(spending.spentCompact)
+                        .font(.system(size: 17, weight: .bold, design: fontDesign))
                         .monospacedDigit()
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
+                        .widgetAccentable()
                 }
-                .gaugeStyle(.accessoryCircularCapacity)
-                .widgetAccentable()
             } else {
                 VStack(spacing: 0) {
                     Image(systemName: "creditcard")

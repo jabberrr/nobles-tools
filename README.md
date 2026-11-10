@@ -9,6 +9,7 @@ Every widget comes in all six sizes: Small, Medium and Large on the Home Screen,
 | **Dining Menu** | Lunch, dinner, or whichever meal is next, from the Flik dining menus. Styles: Everything, Just Entrées, No Salads or Soups, Just… (stations you pick), Everything Except…. A **featured dish** leads every size and is the one dish shown on the Lock Screen. You pick its station (Hot Entree, Vegan Entree, Soup…), or let it pick the first entrée. |
 | **Countdown** | Days left in the current quarter, semester or school year, counted as school days, weekdays or calendar days. Number, ring or bar style. |
 | **Scores** | Recent Nobles results and upcoming games, filtered by sport. |
+| **Spending** | Your own cafe and school-store spending (sign in with Veracross). Total spent, remaining against a limit you set, or your latest charge; a list of recent charges; per-store totals. |
 
 Every widget also has a theme (palette, font and background). Make as many designs as you like in the app, then add a Nobles Tools widget to your Home Screen, long-press it, choose **Edit Widget**, and pick a design.
 
@@ -29,9 +30,13 @@ These images are rendered by CI from the widgets' own views with sample data (`A
   <img src="docs/widgets/scores-crimson-small.png" width="202" alt="Scores in the Crimson theme">
 </p>
 <p>
+  <img src="docs/widgets/spending-medium.png" width="396" alt="Spending, medium">
+  <img src="docs/widgets/spending-limit-forest-small.png" width="202" alt="Spending against a limit">
+</p>
+<p>
   <img src="docs/widgets/menu-lunch-lock-rectangular.png" width="248" alt="Dining Menu, Lock Screen rectangular">
   <img src="docs/widgets/menu-lunch-lock-circular.png" width="152" alt="Dining Menu, Lock Screen circular">
-  <img src="docs/widgets/countdown-year-lock-circular.png" width="152" alt="Countdown, Lock Screen circular">
+  <img src="docs/widgets/spending-limit-forest-lock-circular.png" width="152" alt="Spending, Lock Screen circular">
   <img src="docs/widgets/scores-lock-inline.png" width="316" alt="Scores, Lock Screen inline">
 </p>
 
@@ -66,5 +71,6 @@ swift test --package-path NoblesKit
   Nobles publishes only lunch and dinner; there is no breakfast menu (`menu-type/breakfast` returns 404). Menu types are discovered from `/menu/api/schools/`, so a breakfast menu would appear automatically if Flik ever adds one.
 - **Scores:** Nobles Athletics (`https://nobilis.nobles.edu/Athletics/`). Results come from the JSON behind its Latest Results page, and upcoming games from its Upcoming Schedule. Both are undocumented and have **final scores only**. No official live, in-game score source exists for Nobles (see `CONTEXT.md`).
 - **School calendar:** Nobles' full calendar is only available after logging in, so the built-in 2026–27 quarter, semester and break dates are **estimates**. Graduation (June 4, 2027) is the only date with high confidence. You can correct the dates in the app under **Settings → School Calendar**.
+- **Spending:** your own school-store account on the Nobles portal (`nobilis.nobles.edu/SchoolStoreNew`). The Spending widget needs you to connect your account under **Settings → Nobles Account**: a sign-in sheet loads the real Veracross login, you sign in, and the app keeps only the resulting session so it can read `get_charges.php` (cafe chits and store purchases, per-store totals). **Your password is never seen or stored; only your own account is read, and the data stays on your device.** The session is short-lived — when it lapses the widget shows the last figures and asks you to reconnect in the app. Spending limits aren't in that endpoint, so you set an optional limit in the app for the progress bar.
 
 The **Live API smoke test** workflow checks the menu and athletics endpoints every week and can be run manually from the Actions tab.
