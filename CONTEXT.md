@@ -234,6 +234,10 @@ Identifiers:
 ## Conventions
 
 - Swift 6 language mode everywhere; iOS 17 deployment target. Don't use iOS 18+ APIs without an `if #available` guard.
+- **Never compare `Date`s with `<=` or `>=`, and never pass them to `max(_:_:)`, which uses `>=`.** Use `Date.isAtOrBefore(_:)` and `Date.later(_:)` (`NoblesKit/Core/DateOrdering.swift`), or `<`, `>` and `==`.
+  - Foundation marks `Date.<=`/`>=` `@backDeployed(before: FoundationPreview 6.4.2)`. iOS 27.2 beta claims that version but doesn't ship the symbols, so the call jumps to address 0.
+  - TestFlight build 4 crashed this way at launch, in `Game.hasStarted`. `min(_:_:)` uses `<` and is safe.
+  - `LocalDate` is our own `Comparable` type, so its `<=` is fine.
 - In AppIntents types, use computed static properties (`static var title: LocalizedStringResource { "…" }`). Stored `static var` is a Swift 6 concurrency error.
 - **New persisted fields must decode with a default** (`container.decode(.key, or: default)` from `LenientDecoding.swift`), so designs saved by older builds keep loading.
 - Inside `extension Binding`, a bare `max(...)` or `min(...)` resolves as a dynamic member lookup. Write `Swift.max`. CI caught this once.
@@ -367,3 +371,7 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
     - the line graph's end label could drift from the total on refund-only days. `CafeWrapped.days` now includes those days.
   - All fixed. NoblesKit has 177 tests.
 - **2026-11-10: build number bumped to 2** (`CURRENT_PROJECT_VERSION` in `project.yml`), at the user's request.
+- **2026-11-10: launch crash on iOS 27.2 beta (TestFlight build 4).**
+  - The crash log showed a jump to address 0 in `Date.<=`, called from `Game.hasStarted` while the first design thumbnails drew.
+  - swift-foundation's source shows `Date.<=`/`>=` are back-deployed, and the beta OS lacks the symbols.
+  - Replaced the four date `<=`/`>=`/`max` call sites with `Date.isAtOrBefore`/`later` (see Conventions). NoblesKit has 179 tests.
