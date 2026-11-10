@@ -12,63 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Download foil photos and product candidates
+      - name: Crop the foil photo at full size
         run: |
           pip install --quiet pillow
-          mkdir -p .github/probe-assets/foil2 .github/probe-assets/candidates
+          mkdir -p .github/probe-assets/foil3
           curl -sSL -A "NoblesToolsProbe/1.0" -o crumpled.jpg "https://upload.wikimedia.org/wikipedia/commons/4/43/Crumpled_Tin_Foil_%2855598736185%29.jpg"
-          curl -sSL -A "NoblesToolsProbe/1.0" -o cooking.jpg "https://upload.wikimedia.org/wikipedia/commons/c/cc/Aluminium_cooking_foil.jpg"
-          for id in Foil001 Foil003; do
-            curl -sSL -o "$id.zip" "https://ambientcg.com/get?file=${id}_1K-JPG.zip" && unzip -o -q "$id.zip" -d "$id"
-          done
+          curl -sS -A "NoblesToolsProbe/1.0" "https://commons.wikimedia.org/w/api.php?action=query&titles=File:Crumpled_Tin_Foil_(55598736185).jpg&prop=imageinfo&iiprop=extmetadata%7Csize%7Curl&format=json" -o .github/probe-assets/foil3/metadata.json
           python3 - <<'EOF'
-          import glob, json, os, time, urllib.parse, urllib.request
           from PIL import Image
-          out = ".github/probe-assets/foil2"
-          for name in ("crumpled", "cooking"):
-              try:
-                  image = Image.open(f"{name}.jpg").convert("RGB")
-                  print(name, image.size)
-                  image.thumbnail((1600, 1600)); image.save(f"{out}/{name}-full.jpg", quality=85)
-                  side = min(image.size); left = (image.width - side) // 2; top = (image.height - side) // 2
-                  image.crop((left, top, left + side, top + side)).resize((1024, 1024)).save(f"{out}/{name}-square.jpg", quality=85)
-              except Exception as error:
-                  print(name, "failed:", error)
-          for path in glob.glob("Foil00*/*_NormalGL.jpg") + glob.glob("Foil00*/*_Displacement.jpg"):
-              Image.open(path).convert("RGB").save(f"{out}/{os.path.basename(path)}", quality=90)
-
-          agent = {"User-Agent": "NoblesTools/1.0"}
-          fields = "code,product_name,brands,image_front_url,unique_scans_n,countries_tags"
-          queries = {
-              "bodyarmor": ["bodyarmor strawberry banana", "bodyarmor lyte"],
-              "cheetos-puffs": ["cheetos puffs cheese flavored snacks"],
-              "chobani-drink": ["chobani greek yogurt drink", "chobani drink strawberry banana"],
-              "oreo": ["oreo original chocolate sandwich cookies", "oreo cookies"],
-              "stacys": ["stacy's simply naked pita chips", "stacys pita chips"],
-          }
-          found = {}
-          for slug, terms in queries.items():
-              for term in terms:
-                  try:
-                      body = json.load(urllib.request.urlopen(urllib.request.Request(
-                          "https://search.openfoodfacts.org/search?" + urllib.parse.urlencode({"q": term, "page_size": 15, "fields": fields}),
-                          headers=agent), timeout=30))
-                  except Exception as error:
-                      print(slug, term, "failed:", error); continue
-                  hits = [h for h in body.get("hits", []) if h.get("image_front_url")]
-                  hits.sort(key=lambda h: ("en:united-states" in (h.get("countries_tags") or []), h.get("unique_scans_n") or 0), reverse=True)
-                  for hit in hits[:4]:
-                      key = f"{slug}-{hit['code']}"
-                      if key in found: continue
-                      try:
-                          data = urllib.request.urlopen(urllib.request.Request(hit["image_front_url"], headers=agent), timeout=30).read()
-                          open(f".github/probe-assets/candidates/{key}.jpg", "wb").write(data)
-                          found[key] = {k: hit.get(k) for k in ("code", "product_name", "brands", "image_front_url")}
-                          print(key, hit.get("product_name"), "|", hit.get("brands"))
-                      except Exception as error:
-                          print(key, "download failed:", error)
-                  time.sleep(2)
-          json.dump(found, open(".github/probe-assets/candidates/candidates.json", "w"), indent=1)
+          image = Image.open("crumpled.jpg").convert("RGB")
+          scale = image.width / 1600
+          box = tuple(round(v * scale) for v in (600, 460, 900, 760))
+          print(image.size, box)
+          image.crop(box).resize((1024, 1024), Image.LANCZOS).save(".github/probe-assets/foil3/foil-texture.jpg", quality=88)
           EOF
       - name: Commit the downloads
         run: |
