@@ -30,14 +30,18 @@ All kinds share a `Theme`: palette, font style and background style.
 2. Total, with a month chart.
 3. Each cafe, with its top 3 items.
 4. Top 5 items.
-5. The #1 item under **foil that tears away a bit per tap** (5 taps, `FoilWrap`).
+5. The #1 item wrapped in **foil shaped like it, which comes off in stages, one per tap** (5 taps, `FoilWrap`): it loosens, the top, left and right peel back, then it crumples away.
 6. Busiest hours.
 7. Days.
 8. Records: streak, items tried, biggest buy, first buy.
-9. A persona card that flips.
+9. A persona card the user taps to reveal (charge-up, flip, light burst).
 10. A shareable poster.
 
-Every stat reveals with an animation. Each item's "picture" is an emoji (`CafeItemArt`); there are no photos.
+Every stat reveals with an animation. The Total page has a cumulative spending line that draws in.
+- **Item pictures:** branded items show a product photo (`CafeItemArt.productImage(for:)` → asset `product-<slug>`); everything else shows an emoji (`CafeItemArt.emoji(for:)`).
+- **No spoilers:** nothing before the favorite page shows the #1 item. The top-items strip and the cafes page's row for it are foil "? ? ?" chips (`FoilSurface`), and the intro's floating emoji leave it out.
+- **Words:** plain, short sentences, at the user's request ("remove all typical claudisms"). No dashes or semicolons in sentences, no puns or cute sign-offs, no "Here's"/"That's…!". Keep to this in every new string.
+- **Type:** SF Pro only, never Rounded. SF Pro Expanded for headlines and big figures (the user liked the #1 item name's font), plain SF Pro elsewhere, and not too bold. Every font comes from a `WrappedStyle` token.
 - **Opening it:** Settings → Cafe Wrapped has the testing buttons the user asked for "for now" (own data, or sample data).
 - **Banner:** the design list shows one when `CafeWrapped.isReady`, from 6 days before a semester ends to 21 days after, and an account is connected.
 
@@ -95,6 +99,7 @@ App/                        App target: DesignLibrary (state), design list, edit
                             Previews/WidgetGallery is every widget × size from fixed sample data;
                             Previews/WrappedGallery is every Wrapped page in its finished state.
 Snapshots/                  WidgetSnapshots test target: renders WidgetGallery to PNGs (when SNAPSHOT_OUTPUT_DIR is set).
+App/Assets.xcassets/        FoilTexture (a real foil photo, see Data sources) and Products/product-<slug> photos.
 docs/widgets/               The rendered PNGs, committed by CI. Look at them to check layouts; the README shows them.
 Widgets/                    Widget extension: WidgetBundle, four AppIntentConfiguration widgets and their
                             timeline providers, Intents/ (configuration intents and design entities)
@@ -167,6 +172,12 @@ Identifiers:
 - Dead: the old XML web service `.../WebServices/gameschedule.php?eventtypes=ContestResults` returns HTTP 500. It was found in a 2022 student app.
 - These are undocumented internal endpoints and could change without notice. `api-smoke.yml` checks them weekly. If they break, re-run `capture-fixtures.yml` and adapt the parser.
 
+### Cafe Wrapped's images (licenses)
+- `FoilTexture`: cropped from "Crumpled Tin Foil" by Kevin M. Gill (Flickr, via Wikimedia Commons), **CC BY 4.0**. The light was evened out so it reads as flat silver.
+- `Products/product-<slug>`: front-of-pack photos from **Open Food Facts** (CC BY-SA 3.0). The brands' own "official" images are copyrighted and can't go in this public repo, so these stand in. Both are credited in Settings → Photo Credits.
+- Source barcodes, so a photo can be refreshed from `world.openfoodfacts.org/api/v2/product/<code>`: arnold-palmer 0613008730895, bodyarmor 0858176002584, boxed-water 0858276004068, cheetos-crunchy-hot 0028400589895, cheetos-puffs 0028400242929, cheez-it 0024100106851, chex-mix 0016000159907, chobani-yogurt 0818290011534, core-power 0811620021951, cup-noodles 0070662038031, doritos 0028400090896, fairlife 0856312002795, gatorade-bar 17058599, goldfish 0014100085478, haribo 0042238302815, izze 0836093010974, lays 0028400323826, miss-vickies 0028400168731, naked 0082592660152, nestle-cocoa 0050000140022, oh-snap 0074329123399, oreo 0044000032029, oreo-ice-cream-sandwich 0075856078701, polar 0071537020359, popcorners 0810607020703, powerade 0049000032789, quaker-oatmeal 0030000567296, rice-krispies-treat 0038000265013, rxbar 0193908001764, smartfood 0028400020008, stacys 0028400094405, sunchips 0028400147415, swoon 0858344005591.
+- Items with no good photo keep their emoji: the Chobani drink (an explicit no-photo entry, so it doesn't borrow the cup's), Pirate Booty, Chips Galore, King pretzels. A slug with no asset falls back to the emoji in the app too.
+
 ### School calendar (estimates)
 - Nobles' full calendar requires a family login, so the built-in `SchoolCalendar.nobles2026_27` is **estimated**. Users can edit it in Settings → School Calendar.
 - Structure: two semesters, each split into quarters. Grades go home in October, December, March and June.
@@ -176,11 +187,13 @@ Identifiers:
 ### School store spending (authenticated; verified 2026-11-09)
 - The store pages live under `https://nobilis.nobles.edu/SchoolStoreNew/` and are gated by **Veracross OAuth SSO**. A logged-out request to `parent_limits.php` 302-redirects to `accounts.veracross.com/nobles/oauth/authorize?client_id=…&scope=sso` then the Veracross login (which has a reCAPTCHA). The whole directory requires a logged-in `nobilis` PHP session (`PHPSESSID`).
 - **Sign-in is done in-app**, not scraped: `App/Store/StoreLoginView.swift` loads `parent_limits.php` in a `WKWebView`; the user signs in on the real Veracross page; on landing back on the `nobilis.nobles.edu` `SchoolStoreNew` page the app reads the person id/name from the live DOM (`a[href*="person_id="]`) and the `nobles.edu` cookies, and saves a `StoreSession` (cookie + personID + personName) via `StoreSessionStore`. **The password is never read or stored.** For a parent with several children it shows a picker.
-- **Data endpoint:** `GET …/SchoolStoreNew/get_charges.php?child_id=<personID>` with the session cookie returns JSON: `charges[]` (`charge_id`, `store_id`, `store_name`, `trans_type`, `description`, `quantity`, `total_cost` "4.00", `sales_tax`, `created` "yyyy-MM-dd HH:mm" school-local, `posted_on` "yyyy-MM-dd" or null = pending), `totals_by_store[]`, `grand_totals`. Money is strings → `Decimal`. The fixture `Fixtures/synthetic-store-charges.json` has the real response's shape with made-up values. The user's own response was the fixture at first; at their request it was replaced with random numbers and generic items. Never commit real charge data: the repo is public.
+- **Data endpoint:** `GET …/SchoolStoreNew/get_charges.php?child_id=<personID>` with the session cookie returns JSON: `charges[]` (`charge_id`, `store_id`, `store_name`, `trans_type`, `description`, `quantity`, `total_cost` "4.00", `sales_tax`, `created` "yyyy-MM-dd HH:mm" **in UTC**, `posted_on` "yyyy-MM-dd" or null = pending), `totals_by_store[]`, `grand_totals`. Money is strings → `Decimal`. The fixture `Fixtures/synthetic-store-charges.json` has the real response's shape with made-up values. The user's own response was the fixture at first; at their request it was replaced with random numbers and generic items. Never commit real charge data: the repo is public.
 - Not-signed-in → the endpoint 401/403s or returns the Veracross login wall; `StoreService` classifies those as `.notAuthenticated` (vs `.unavailable` for network/parse) and **caches only a clean parse**, so a login wall is never cached. The widget then shows the last cached figures with "Sign in to refresh" and the app re-connects.
 - **Limits and gift-card balance are NOT fetched.** They only appear in `parent_limits.php`'s server HTML (the sample we have is a macOS "Copy", not the real DOM), so the spending limit is entered in the app (`StoreConfiguration.limit`) for the progress bar/ring. To auto-read them later, capture the real View-Source of `parent_limits.php` and parse the Limits table (groups: Athletics = Athletic Store; "Cafe2000 + Gleason Hall Snack Bar" = Cafe 2000 + Cafe at Gleason Hall).
 - These are undocumented internal endpoints keyed to the signed-in account; only the user's own data is ever read. No weekly smoke test (it needs a login).
 - The sign-in web view uses the persistent `WKWebsiteDataStore.default()`, so a later Connect reconnects without typing anything. Disconnect, or a rejected sign-in, clears that store.
+- **`created` is UTC (verified 2026-11-10).** It was first read as school-local. The real purchases only fall inside the cafes' posted hours when read as UTC, and they move an hour with the November DST change. An athletic-store charge at "21:03" is 5:03 PM, not 9 PM.
+- **The cafe menus are public:** `https://nobilis.nobles.edu/SchoolStoreDev/menu_print.php?store_id=5&window_id=3` (Cafe at Gleason Hall, mornings: Mon–Fri 8:30–10:45 AM) and `?store_id=3&window_id=2` (Cafe 2000, afternoons: Mon/Tue/Thu/Fri 2:30–6 PM, Wed 1:30–6 PM). Charge `description`s are the menu item names as printed, without the flavor line. Both samples (`StoreStatement.sample(now:)`, `CafeWrapped.sample`) use only these items, prices and hours; `Tests/…/Support/CafeMenus.swift` holds them for tests.
 - **Unknown until tested on a device:** whether `get_charges.php` returns the whole school year or only recent charges. Cafe Wrapped assumes the whole semester; the fixture's shape spans Sep 10 – Nov 9.
 - **Unknown until tested on a device:** how long a `nobilis` PHPSESSID stays valid for the widget. PHP's default idle lifetime is 24 minutes; once the session lapses, the widget shows "Sign in to refresh".
 
@@ -210,6 +223,7 @@ Identifiers:
 
 - The sandbox's network policy blocks `*.flikisdining.com`, `nobles.edu` and most other sites. `WebFetch` fails DNS for nearly every host. `WebSearch`, PyPI, npm, Docker Hub and github.com (git) work.
 - **To see live API data, run it in GitHub Actions and read the logs** with `mcp__github__get_job_logs`. Artifact downloads (blob storage) are blocked.
+- **To bring outside files into the repo** (photos, menus), push a temporary workflow that downloads them and commits them to the branch, review them, then delete the workflow and the downloads. Open Food Facts' `cgi/search.pl` answers 503 under load; `search.openfoodfacts.org/search?q=…` and the product API by barcode work.
 - **To bring real responses into the repo,** dispatch `capture-fixtures.yml`: `mcp__github__actions_run_trigger` with method `run_workflow`, `workflow_id: capture-fixtures.yml` and the branch as `ref`. It commits the responses to that branch; then `git pull`. Re-capturing changes the content the `real-*` tests assert on, so update those tests in the same change.
 - If `git push` returns 403 "Claude doesn't have GitHub access", the Claude GitHub App needs to be installed on the repo. Ask the user.
 - **Pull before you push.** After a push that changes the project (new or removed files, `project.yml` edits), CI adds a "Regenerate Xcode project" commit to the branch. Run `git pull --rebase` before the next push.
