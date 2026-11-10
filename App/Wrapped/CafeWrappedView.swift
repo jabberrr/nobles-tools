@@ -46,9 +46,11 @@ struct CafeWrappedView: View {
             VStack(spacing: 0) {
                 header
                 ZStack {
+                    // `ImageRenderer` draws a view with a transition as it would be on its way in
+                    // (blank), so snapshots get none.
                     pageView(page)
                         .id(page)
-                        .transition(pageTransition)
+                        .transition(isStatic ? .identity : pageTransition)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }

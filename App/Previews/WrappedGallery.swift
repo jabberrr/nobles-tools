@@ -30,6 +30,12 @@ enum WrappedGallery {
         entries.append(phone("wrapped-empty", .large) {
             WrappedMessageView(message: .noPurchases(in: sample.period.name), onSample: {}, onClose: {})
         })
+        // TEMPORARY: a page outside the story container, to diagnose blank renders.
+        entries.append(phone("wrapped-debug-intro-direct", .large) {
+            IntroPage(wrapped: sample, isActive: true)
+                .foregroundStyle(.white)
+                .background(Color(hex: 0x2A0A5E))
+        })
         entries.append(WidgetGallery.Entry(name: "wrapped-poster", view: AnyView(WrappedPoster(wrapped: sample, cornerRadius: 0))))
         return entries
     }
