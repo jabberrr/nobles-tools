@@ -174,6 +174,7 @@ enum WidgetGallery {
             .spending(StoreConfiguration(showsRecentCharges: false)),
             theme: Theme(palette: .crimson, background: .solid)
         )
+        let capped = design(.spending(StoreConfiguration(limit: 300)), theme: Theme(palette: .paper))
         let sample = GallerySamples.storeStatement
         return [
             Variant(name: "spending", design: spending, families: WidgetKind.spending.widgetFamilies, statement: sample),
@@ -191,7 +192,25 @@ enum WidgetGallery {
                 families: homeScreen + [.accessoryCircular, .accessoryRectangular, .accessoryInline],
                 statement: sample
             ),
-            Variant(name: "spending-cafe-navy", design: cafe, families: [.systemSmall, .systemMedium], statement: sample),
+            Variant(
+                name: "spending-limit-forest-compact",
+                design: limited,
+                families: [.accessoryCircular, .accessoryRectangular],
+                screen: .compact,
+                statement: sample
+            ),
+            Variant(
+                name: "spending-cap-paper",
+                design: capped,
+                families: [.accessoryCircular, .accessoryRectangular, .accessoryInline],
+                statement: sample
+            ),
+            Variant(
+                name: "spending-cafe-navy",
+                design: cafe,
+                families: [.systemSmall, .systemMedium, .accessoryRectangular, .accessoryInline],
+                statement: sample
+            ),
             Variant(name: "spending-nolist-crimson", design: noList, families: [.systemSmall, .systemMedium], statement: sample),
             Variant(
                 name: "spending-offline-dark",

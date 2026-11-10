@@ -60,11 +60,15 @@ struct StoreContent {
         let progress: Double?
         /// "$82 of $300" for under a progress bar, or `nil` when no limit is set.
         let limitCaption: String?
-        /// The amount spent, without cents, for the Lock Screen gauge, which always reads
-        /// spent-against-limit so its ring and centre agree.
-        let spentCompact: String
-        /// The most recent charge's item, or `nil` when there are no charges.
-        let latestItem: String?
+        /// Words after the figure on the Lock Screen, saying what it is: "of $300", "left" or
+        /// "latest"; `nil` for a plain total, which the "Spending" title already explains.
+        let lockContext: String?
+        /// The Lock Screen meter, measuring the same thing as the figure: spent of the limit, or
+        /// left of it when the figure is the remainder. `nil` without a limit or for the latest charge.
+        let lockProgress: Double?
+        /// The rectangular Lock Screen's last line when there's no meter: the latest item ("Last: …"
+        /// unless the figure is that charge), in full and then cut at words, longest first.
+        let lockDetail: [String]
         /// The store filter in words: "All stores" or the chosen stores joined.
         let storeSummary: String
 
@@ -76,9 +80,26 @@ struct StoreContent {
             figure = Figure(highlight: configuration.highlight, spent: spent, limit: configuration.limit, latest: latest)
             charges = configuration.showsRecentCharges ? statement.charges(in: stores) : []
             totals = Self.totals(statement.totalsByStore, in: stores)
-            latestItem = latest?.detail
-            spentCompact = spent.usd(showsCents: false)
-            if let limit = configuration.limit, limit > 0 {
+            let limit = configuration.limit.flatMap { $0 > 0 ? $0 : nil }
+            let leadsWithLatest = configuration.highlight == .latestCharge && latest != nil
+            switch (configuration.highlight, limit) {
+            case (.totalSpent, let limit?):
+                lockContext = "of \(limit.usd(showsCents: false))"
+                lockProgress = Self.fraction(spent, of: limit)
+            case (.remaining, let limit?):
+                lockContext = "left"
+                lockProgress = Self.fraction(max(0, limit - spent), of: limit)
+            default:
+                lockContext = leadsWithLatest ? "latest" : nil
+                lockProgress = nil
+            }
+            if let item = latest?.detail {
+                let variants = [item] + item.cutsAtWords(limit: 4)
+                lockDetail = leadsWithLatest ? variants : variants.map { "Last: \($0)" }
+            } else {
+                lockDetail = []
+            }
+            if let limit {
                 progress = Self.fraction(spent, of: limit)
                 limitCaption = "\(spent.usd(showsCents: false)) of \(limit.usd(showsCents: false))"
             } else {

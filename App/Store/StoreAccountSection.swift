@@ -1,11 +1,15 @@
 import SwiftUI
 import NoblesKit
 
-/// The Settings section that connects, shows and disconnects the user's Nobles account, which the
+/// The Settings section that shows, connects and disconnects the user's Nobles account, which the
 /// spending widget uses. Signing in happens in a web view, so the password never reaches the app.
+///
+/// The sign-in sheet is presented by the screen that owns this section (`onConnect`), not from
+/// here: a sheet attached inside a `Form` row is dismissed as soon as the list refreshes that row.
 struct StoreAccountSection: View {
-    @State private var account = StoreAccount()
-    @State private var isSigningIn = false
+    let account: StoreAccount
+    /// Asks the owning screen to present the sign-in sheet.
+    let onConnect: () -> Void
 
     var body: some View {
         Section {
@@ -32,17 +36,10 @@ struct StoreAccountSection: View {
         } footer: {
             Text(footer)
         }
-        .sheet(isPresented: $isSigningIn) {
-            StoreLoginView { session in
-                Task { await account.connect(session) }
-            }
-        }
     }
 
     private func connectButton(_ title: String, systemImage: String) -> some View {
-        Button {
-            isSigningIn = true
-        } label: {
+        Button(action: onConnect) {
             Label(title, systemImage: systemImage)
         }
     }

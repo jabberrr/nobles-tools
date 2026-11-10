@@ -149,6 +149,7 @@ private struct StoreLoginWebView: UIViewRepresentable {
         configuration.websiteDataStore = .default()
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
         webView.load(URLRequest(url: Self.startURL))
         return webView
@@ -156,10 +157,10 @@ private struct StoreLoginWebView: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {}
 
-    /// The web view's navigation delegate. WebKit calls it on the main actor, so it's isolated
-    /// there, which lets it touch the web view and the SwiftUI callbacks directly.
+    /// The web view's navigation and UI delegate. WebKit calls it on the main actor, so it's
+    /// isolated there, which lets it touch the web view and the SwiftUI callbacks directly.
     @MainActor
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         private let onLoadingChange: (Bool) -> Void
         private let onCapture: (_ cookie: String, _ people: [StorePerson]) -> Void
         /// Set once the signed-in page has been captured, so a later `didFinish` doesn't re-capture.
@@ -190,6 +191,20 @@ private struct StoreLoginWebView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
             onLoadingChange(false)
+        }
+
+        /// Sign-in pages can open their identity provider in a new window; there's only one window
+        /// here, so load it in place instead of ignoring the tap.
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            if navigationAction.targetFrame == nil {
+                webView.load(navigationAction.request)
+            }
+            return nil
         }
 
         /// Whether `url` is a signed-in Nobles school-store page, not the Veracross login host.

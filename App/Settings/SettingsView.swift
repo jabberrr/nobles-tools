@@ -4,6 +4,8 @@ import NoblesKit
 struct SettingsView: View {
     @Environment(DesignLibrary.self) private var library
     @Environment(\.dismiss) private var dismiss
+    @State private var storeAccount = StoreAccount()
+    @State private var isConnectingStore = false
 
     var body: some View {
         NavigationStack {
@@ -18,7 +20,7 @@ struct SettingsView: View {
                     Text("Countdowns use these term dates and breaks.")
                 }
 
-                StoreAccountSection()
+                StoreAccountSection(account: storeAccount) { isConnectingStore = true }
 
                 Section {
                     ForEach(Array(Self.homeScreenSteps.enumerated()), id: \.offset) { index, step in
@@ -49,6 +51,12 @@ struct SettingsView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
+            }
+        }
+        // Presented from here rather than from the account's Form row, which would dismiss it.
+        .sheet(isPresented: $isConnectingStore) {
+            StoreLoginView { session in
+                Task { await storeAccount.connect(session) }
             }
         }
     }
