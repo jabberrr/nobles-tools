@@ -98,7 +98,7 @@ struct CafeWrappedTests {
         ])
         #expect(wrapped.topItems.map(\.count) == [3, 2, 2, 1, 1])
         #expect(wrapped.topItems.map(\.total) == ["12.00", "6.00", "4.50", "7.97", "1.50"].map(Self.money))
-        #expect(wrapped.topItems.map(\.emoji) == ["☕️", "🥯", "🍪", "🥪", "🍎"])
+        #expect(wrapped.topItems.map(\.emoji) == ["🧋", "🥯", "🍪", "🥪", "🍎"])
 
         // "Iced Latte" and "Iced  latte " are one item, named as last written.
         let favorite = try #require(wrapped.favorite)
@@ -123,14 +123,43 @@ struct CafeWrappedTests {
         #expect(abs(cafes[1].share - 6 / 25.5) < 1e-9)
         #expect(cafes.map(\.id) == cafes.map(\.name))
 
-        let gleasonTop = try #require(cafes[0].topItem)
-        #expect(gleasonTop.name == "Iced latte")
-        #expect(gleasonTop.count == 3)
+        // Up to three each: Gleason's Apple ties the panini on units but cost less.
+        #expect(cafes[0].topItems.map(\.name) == ["Iced latte", "Everything Bagel", "Turkey Panini"])
+        #expect(cafes[0].topItems.map(\.count) == [3, 2, 1])
+        #expect(cafes[1].topItems.map(\.name) == ["Chocolate Chip Cookie", "Banana"])
+        #expect(cafes.map { $0.topItem?.name } == ["Iced latte", "Chocolate Chip Cookie"])
         let cafe2000Top = try #require(cafes[1].topItem)
-        #expect(cafe2000Top.name == "Chocolate Chip Cookie")
         #expect(cafe2000Top.count == 2)
         #expect(cafe2000Top.total == Self.money("4.50"))
         #expect(cafe2000Top.cafeName == Self.cafe2000)
+    }
+
+    @Test func ranksEachCafesItemsByItsOwnPurchases() throws {
+        let day = LocalDate(2026, 9, 8)
+        let charges = [
+            Self.charge(1, Self.gleason, "Cookie", "2.00", on: day, at: 10),
+            Self.charge(2, Self.gleason, "Cookie", "2.00", on: day, at: 11),
+            Self.charge(3, Self.cafe2000, "Cookie", "2.00", on: day, at: 19),
+            Self.charge(4, Self.cafe2000, "Latte", "4.00", on: day, at: 19),
+            Self.charge(5, Self.cafe2000, "Latte", "4.00", on: day, at: 20),
+            Self.charge(6, Self.cafe2000, "Muffin", "3.00", on: day, at: 20),
+            Self.charge(7, Self.cafe2000, "Banana", "1.00", on: day, at: 21),
+        ]
+        let wrapped = try #require(CafeWrapped(statement: Self.statement(charges), semester: try fall(), calendar: calendar, asOf: day))
+        #expect(wrapped.favorite?.name == "Cookie")
+        #expect(wrapped.favorite?.count == 3)
+
+        let cafes = Dictionary(uniqueKeysWithValues: wrapped.cafes.map { ($0.name, $0) })
+        let cafe2000 = try #require(cafes[Self.cafe2000])
+        #expect(cafe2000.topItems.map(\.name) == ["Latte", "Muffin", "Cookie"]) // Banana is fourth
+        #expect(cafe2000.topItems.map(\.count) == [2, 1, 1])
+        #expect(cafe2000.topItems.map(\.total) == ["8.00", "3.00", "2.00"].map(Self.money))
+        #expect(cafe2000.topItems.allSatisfy { $0.cafeName == Self.cafe2000 })
+        #expect(cafe2000.topItem == cafe2000.topItems.first)
+
+        let gleason = try #require(cafes[Self.gleason])
+        #expect(gleason.topItems.map(\.name) == ["Cookie"])
+        #expect(gleason.topItems.map(\.count) == [2])
     }
 
     @Test func bucketsTimesInSchoolTime() throws {
@@ -147,6 +176,27 @@ struct CafeWrappedTests {
         #expect(wrapped.peakHour == 10)
         #expect(wrapped.favoriteWeekday == 3) // Tuesday
         #expect(wrapped.timeOfDay == .morning)
+
+        #expect(wrapped.share(ofHours: 17...23) == 2.0 / 9)
+        #expect(wrapped.share(ofHours: 0...9) == 1.0 / 9)
+        #expect(wrapped.share(ofHours: 10...10) == 4.0 / 9)
+        #expect(wrapped.share(ofHours: 0...23) == 1)
+        #expect(wrapped.share(ofHours: 21...30) == 0) // past midnight counts nothing
+    }
+
+    @Test func timeOfDayHoldsThePeakHour() throws {
+        let day = LocalDate(2026, 9, 8)
+        // More purchases in the morning overall, but the busiest hour is 12:00.
+        let lunch = try #require(try recap([("A", day, 7), ("B", day, 8), ("C", day, 9), ("D", day, 12), ("E", day, 12)]))
+        #expect(lunch.peakHour == 12)
+        #expect(lunch.timeOfDay == .midday)
+
+        var none = lunch
+        none.purchaseCount = 0
+        none.hourCounts = Array(repeating: 0, count: 24)
+        #expect(none.peakHour == nil)
+        #expect(none.timeOfDay == nil)
+        #expect(none.share(ofHours: 0...23) == 0)
     }
 
     @Test func groupsMonthsAndDays() throws {
@@ -202,7 +252,7 @@ struct CafeWrappedTests {
 
         #expect(wrapped.peakHour == 8)
         #expect(wrapped.favoriteWeekday == 2) // Monday before Sunday, both with one
-        #expect(wrapped.timeOfDay == .morning) // two each; morning comes first
+        #expect(wrapped.timeOfDay == .morning) // 8:00 and 14:00 tie; the peak is the earlier
         #expect(wrapped.biggestDay?.date == LocalDate(2026, 9, 13))
         #expect(wrapped.biggestPurchase?.detail == "Muffin")
         #expect(wrapped.longestStreak == Self.streak(LocalDate(2026, 9, 13), LocalDate(2026, 9, 14), 2)) // vs Sep 17–18
@@ -315,11 +365,43 @@ struct CafeWrappedTests {
 
         #expect(semester(LocalDate(2026, 8, 1)) == "Fall Semester") // before any: the first
         #expect(semester(LocalDate(2026, 10, 1)) == "Fall Semester")
+        #expect(semester(LocalDate(2026, 12, 14)) == "Fall Semester") // its last week
         #expect(semester(LocalDate(2026, 12, 25)) == "Fall Semester") // winter break: the one just ended
-        #expect(semester(LocalDate(2027, 1, 4)) == "Spring Semester")
-        #expect(semester(LocalDate(2027, 7, 1)) == "Spring Semester")
+        // Spring starts Jan 4, but Fall's recap stays ready through Jan 8.
+        #expect(semester(LocalDate(2027, 1, 4)) == "Fall Semester")
+        #expect(semester(LocalDate(2027, 1, 8)) == "Fall Semester")
+        #expect(semester(LocalDate(2027, 1, 9)) == "Spring Semester")
+        #expect(semester(LocalDate(2027, 6, 25)) == "Spring Semester")
+        #expect(semester(LocalDate(2027, 7, 1)) == "Spring Semester") // after the year: the last
         let empty = SchoolCalendar(name: "Empty", terms: [], breaks: [])
         #expect(CafeWrapped.semester(in: empty, on: LocalDate(2026, 10, 1)) == nil)
+    }
+
+    @Test func picksTheLatestReadySemester() throws {
+        func term(_ name: String, _ start: LocalDate, _ end: LocalDate) -> Term {
+            Term(kind: .semester, name: name, span: DateSpan(start: start, end: end))
+        }
+        // Back-to-back short semesters whose ready windows overlap.
+        let calendar = SchoolCalendar(name: "Short", terms: [
+            term("B", LocalDate(2026, 10, 1), LocalDate(2026, 10, 20)),
+            term("A", LocalDate(2026, 9, 8), LocalDate(2026, 9, 30)),
+        ], breaks: [])
+
+        #expect(CafeWrapped.semester(in: calendar, on: LocalDate(2026, 10, 10))?.name == "A") // only A is ready
+        #expect(CafeWrapped.semester(in: calendar, on: LocalDate(2026, 10, 18))?.name == "B") // both are
+    }
+
+    @Test func announcesFallFromDecember12ThroughJanuary8() {
+        let window = DateSpan(start: LocalDate(2026, 12, 12), end: LocalDate(2027, 1, 8))
+        var day = LocalDate(2026, 11, 30)
+        while day <= LocalDate(2027, 1, 31) {
+            let semester = CafeWrapped.semester(in: calendar, on: day)
+            #expect(semester.map { CafeWrapped.isReady($0, on: day) } == window.contains(day), "\(day)")
+            if window.contains(day) {
+                #expect(semester?.name == "Fall Semester", "\(day)")
+            }
+            day = day.adding(days: 1)
+        }
     }
 
     @Test func isReadyAroundTheSemesterEnd() throws {
@@ -344,11 +426,18 @@ struct CafeWrappedTests {
     }
 
     @Test func recognizesCafes() {
-        let cafes = ["Cafe 2000", "Cafe at Gleason Hall", "CAFÉ", "The Coffee Bar", "Snack Shack", "Grill", "Deli Counter", "Kitchen"]
+        let cafes = [
+            "Cafe 2000", "Cafe at Gleason Hall", "Cafe2000", "CAFÉ", "Gleason Hall Snack Bar", "Snacks", "Coffee Shop",
+            "The Coffee Bar", "Grill", "Bar & Grille", "Deli Counter", "Kitchen",
+        ]
         for store in cafes {
             #expect(CafeWrapped.isCafe(store), "\(store)")
         }
-        for store in ["Athletic Store", "Bookstore", "School Store", ""] {
+        let others = [
+            "Athletic Store", "Athletic Store Snack Bar", "Athletics Cafe", "Bookstore", "School Store", "Delivery",
+            "Kitchenware", "",
+        ]
+        for store in others {
             #expect(!CafeWrapped.isCafe(store), "\(store)")
         }
     }
@@ -374,7 +463,7 @@ struct CafeWrappedTests {
         #expect(wrapped.topItems.map(\.count) == [4, 3, 3, 3, 2])
         #expect(wrapped.months.map(\.total) == ["33.00", "54.00", "31.50"].map(Self.money))
         #expect(wrapped.peakHour == 15)
-        #expect(wrapped.timeOfDay == .afternoon) // tied with evening at 8; afternoon comes first
+        #expect(wrapped.timeOfDay == .afternoon)
         #expect(wrapped.weekdayCounts == [0, 6, 4, 5, 4, 7, 0])
         #expect(wrapped.favoriteWeekday == 6) // Friday
         #expect(wrapped.biggestDay == CafeWrapped.Day(date: LocalDate(2026, 11, 2), total: Self.money("15.00"), itemCount: 3))
@@ -444,13 +533,16 @@ struct CafeWrappedTests {
         #expect(wrapped.averagePerDay == Self.money("12.55"))
         #expect(wrapped.cafes.map(\.name) == [Self.gleason, Self.cafe2000])
         #expect(wrapped.cafes.map(\.total) == [Self.money("618.50"), Self.money("59.00")])
-        #expect(wrapped.cafes.map { $0.topItem?.name } == ["Iced Vanilla Latte", "Chocolate Chip Cookie"])
+        #expect(wrapped.cafes.map { $0.topItems.map(\.name) } == [
+            ["Iced Vanilla Latte", "Everything Bagel with Cream Cheese", "Turkey & Swiss Panini"],
+            ["Chocolate Chip Cookie", "Hot Chocolate", "Mozzarella Sticks"],
+        ])
         #expect(wrapped.topItems.map(\.name) == [
             "Iced Vanilla Latte", "Everything Bagel with Cream Cheese", "Chocolate Chip Cookie",
             "Turkey & Swiss Panini", "Matcha Latte",
         ])
         #expect(wrapped.topItems.map(\.count) == [29, 22, 16, 13, 11])
-        #expect(wrapped.topItems.map(\.emoji) == ["☕️", "🥯", "🍪", "🥪", "🍵"])
+        #expect(wrapped.topItems.map(\.emoji) == ["🧋", "🥯", "🍪", "🥪", "🍵"])
         #expect(wrapped.months.map(\.name) == ["Sep", "Oct", "Nov", "Dec"])
         #expect(wrapped.peakHour == 10)
         #expect(wrapped.favoriteWeekday == 3)

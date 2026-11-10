@@ -1,6 +1,7 @@
 import Foundation
 
-/// When most cafe purchases happen, in school time.
+/// A part of the day, in school time: the one holding someone's busiest hour headlines their
+/// recap (`CafeWrapped.timeOfDay`).
 public enum CafeTimeOfDay: String, CaseIterable, Sendable {
     /// Before 11:00.
     case morning
@@ -20,7 +21,7 @@ public enum CafeTimeOfDay: String, CaseIterable, Sendable {
         }
     }
 
-    /// A headline for someone who buys mostly at this time.
+    /// A headline for someone whose busiest hour falls in this part of the day.
     public var title: String {
         switch self {
         case .morning: "Morning Person"

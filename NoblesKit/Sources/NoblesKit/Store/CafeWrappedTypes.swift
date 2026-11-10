@@ -43,8 +43,12 @@ extension CafeWrapped {
         public var dayCount: Int
         /// `total` over the recap's overall total, 0...1 (0 when that's not positive).
         public var share: Double
-        /// The most units bought here, with its count and total counting this cafe only.
-        public var topItem: Item?
+        /// Up to 3 items bought here, ranked like the recap's `topItems`, with counts and totals
+        /// counting this cafe only.
+        public var topItems: [Item]
+
+        /// The item bought most here: `topItems.first`.
+        public var topItem: Item? { topItems.first }
 
         public var id: String { name }
     }
@@ -135,7 +139,7 @@ extension CafeWrapped.Cafe {
         dayCount = Set(purchases.map(\.day)).count
         let fraction = overallTotal > 0 ? NSDecimalNumber(decimal: total / overallTotal).doubleValue : 0
         share = min(max(fraction, 0), 1)
-        topItem = CafeWrapped.Item.ranked(purchases).first
+        topItems = Array(CafeWrapped.Item.ranked(purchases).prefix(3))
     }
 }
 

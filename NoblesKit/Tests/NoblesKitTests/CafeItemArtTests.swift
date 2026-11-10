@@ -8,15 +8,12 @@ struct CafeItemArtTests {
         ("Apple Cinnamon Oatmeal", "🥣"),
         ("Pumpkin Bread", "🍞"),
         ("Kettle Chips", "🥔"),
-        ("Blackberry Yogurt Bowl", "🥣"),
         ("Orange Juice", "🧃"),
-        ("Iced Vanilla Latte", "☕️"),
         // A phrase beats the word it ends with.
         ("Hot Chocolate", "☕️"),
         ("Ice Cream Sandwich", "🍦"),
         ("Coconut Water", "🥥"),
         ("Matcha Latte", "🍵"),
-        ("Iced Tea", "🥤"),
         ("Fruit Salad", "🍇"),
         // "with …" lists trimmings.
         ("Everything Bagel with Butter", "🥯"),
@@ -25,6 +22,61 @@ struct CafeItemArtTests {
         ("Plate with Chicken", "🍗"), // nothing before "with", so the whole name counts
     ])
     func picksTheMostSpecificKeyword(item: String, emoji: String) {
+        #expect(CafeItemArt.emoji(for: item) == emoji)
+    }
+
+    @Test(arguments: [
+        // Hot drinks…
+        ("Vanilla Latte", "☕️"),
+        ("Hot Chocolate", "☕️"),
+        ("Matcha Latte", "🍵"),
+        ("Chai Tea", "🍵"),
+        ("Green Tea", "🍵"),
+        // …are 🧋 iced, cold or frozen, as are frappés and boba.
+        ("Iced Vanilla Latte", "🧋"),
+        ("Cold Brew", "🧋"),
+        ("Iced Coffee", "🧋"),
+        ("Iced Mocha", "🧋"),
+        ("Iced Matcha Latte", "🧋"),
+        ("Iced Chai Tea", "🧋"),
+        ("Frozen Hot Chocolate", "🧋"),
+        ("Caramel Frappe", "🧋"),
+        ("Mocha Frappuccino", "🧋"),
+        ("Taro Bubble Tea", "🧋"),
+        // Other cold drinks.
+        ("Iced Tea", "🥤"),
+        ("Iced Green Tea", "🥤"),
+        ("Strawberry Banana Smoothie", "🥤"),
+        ("Lemonade", "🍋"),
+        ("Frozen Lemonade", "🍋"),
+        // A cold word among the trimmings, or on food, changes nothing.
+        ("Latte with Cold Foam", "☕️"),
+        ("Iced Lemon Pound Cake", "🍰"),
+    ])
+    func servesDrinksHotOrCold(item: String, emoji: String) {
+        #expect(CafeItemArt.emoji(for: item) == emoji)
+    }
+
+    @Test(arguments: [
+        // Breakfast bowls and cereal.
+        ("Blackberry Yogurt Bowl", "🥣"),
+        ("Açaí Bowl", "🥣"),
+        ("Smoothie Bowl", "🥣"),
+        ("Oatmeal Bowl", "🥣"),
+        ("Apple Cinnamon Oatmeal", "🥣"),
+        ("Honey Nut Cheerios", "🥣"),
+        ("Frosted Flakes", "🥣"),
+        ("Cinnamon Toast Crunch", "🥣"),
+        ("Bowl of Cereal", "🥣"),
+        // Every other bowl.
+        ("Salmon Poke Bowl", "🍣"),
+        ("Chicken Burrito Bowl", "🌯"),
+        ("Fruit Bowl", "🍇"),
+        ("Teriyaki Chicken Bowl", "🍚"),
+        ("Grain Bowl", "🍚"),
+        ("Rice Bowl", "🍚"),
+    ])
+    func tellsBowlsApart(item: String, emoji: String) {
         #expect(CafeItemArt.emoji(for: item) == emoji)
     }
 
@@ -72,7 +124,7 @@ struct CafeItemArtTests {
             "Pumpkin Bread": "🍞",
             "Ham & Cheddar Melt": "🥪",
             "Apple Cinnamon Oatmeal": "🥣",
-            "Cold Brew": "☕️",
+            "Cold Brew": "🧋",
             "Orange Juice": "🧃",
             "Vanilla Steamer": "☕️",
             "Blackberry Yogurt Bowl": "🥣",
@@ -82,7 +134,7 @@ struct CafeItemArtTests {
             "Grilled Chicken Caesar Wrap with Parmesan": "🌯",
             "Chai Latte": "🍵",
             "Bagel with Cream Cheese": "🥯",
-            "Iced Latte": "☕️",
+            "Iced Latte": "🧋",
             "Soft Pretzel": "🥨",
             "Iced Tea": "🥤",
             "Banana Bread Slice": "🍞",

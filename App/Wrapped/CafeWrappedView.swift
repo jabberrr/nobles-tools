@@ -46,11 +46,9 @@ struct CafeWrappedView: View {
             VStack(spacing: 0) {
                 header
                 ZStack {
-                    // `ImageRenderer` draws a view with a transition as it would be on its way in
-                    // (blank), so snapshots get none.
                     pageView(page)
                         .id(page)
-                        .transition(isStatic ? .identity : pageTransition)
+                        .transition(pageTransition)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -75,16 +73,23 @@ struct CafeWrappedView: View {
 
     // MARK: Pages
 
+    /// A page as VoiceOver reads it: one summary, except where it holds controls of its own (the
+    /// favorite's foil, the summary's buttons).
     @ViewBuilder
     private func pageView(_ page: WrappedPage) -> some View {
-        content(of: page, isActive: isStatic || revealedIndex == position)
-            .accessibilityElement(children: page == .summary ? .contain : .ignore)
+        let view = content(of: page, isActive: isStatic || revealedIndex == position)
+            .accessibilityElement(children: page == .favorite || page == .summary ? .contain : .ignore)
             .accessibilityLabel(page.accessibilitySummary(for: wrapped))
             .accessibilityValue("Page \(position + 1) of \(pages.count)")
             .accessibilityAction { go(by: 1) }
             .accessibilityAction(named: "Next") { go(by: 1) }
             .accessibilityAction(named: "Previous") { go(by: -1) }
-            .accessibilityFocused($isPageFocused)
+        if isStatic {
+            // `ImageRenderer` draws nothing at all for a view with `accessibilityFocused`.
+            view
+        } else {
+            view.accessibilityFocused($isPageFocused)
+        }
     }
 
     @ViewBuilder

@@ -100,12 +100,17 @@ public struct CafeWrapped: Hashable, Sendable {
         [2, 3, 4, 5, 6, 7, 1].filter { weekdayCounts[$0 - 1] > 0 }.firstMax { weekdayCounts[$0 - 1] }
     }
 
-    /// The part of the day with the most purchases, the earliest on ties; `nil` with none.
+    /// The part of the day holding `peakHour`, so a headline always agrees with the hourly chart;
+    /// `nil` with no purchases.
     public var timeOfDay: CafeTimeOfDay? {
-        func purchases(at time: CafeTimeOfDay) -> Int {
-            time.hours.reduce(0) { $0 + hourCounts[$1] }
-        }
-        return CafeTimeOfDay.allCases.filter { purchases(at: $0) > 0 }.firstMax { purchases(at: $0) }
+        peakHour.flatMap { hour in CafeTimeOfDay.allCases.first { $0.hours.contains(hour) } }
+    }
+
+    /// The fraction of purchases (0...1) made in `hours` of the day (school time); 0 with none.
+    public func share(ofHours hours: ClosedRange<Int>) -> Double {
+        guard purchaseCount > 0 else { return 0 }
+        let count = hourCounts.indices.filter(hours.contains).reduce(0) { $0 + hourCounts[$1] }
+        return Double(count) / Double(purchaseCount)
     }
 
     /// `total / dayCount`, rounded half-up to cents; 0 when `dayCount` is 0.
@@ -121,19 +126,26 @@ public struct CafeWrapped: Hashable, Sendable {
 // MARK: - Semesters and stores
 
 extension CafeWrapped {
-    /// Whether a store is a cafe: its name contains "cafe"/"café", "snack", "coffee", "grill",
-    /// "deli" or "kitchen" (accent/case-insensitive). "Athletic Store", "Bookstore" are not.
+    /// Whether a store is a cafe: its name has the word "cafe"/"café", "snack(s)", "coffee",
+    /// "grill(e)", "deli" or "kitchen" (accent/case-insensitive; digits split words, so "Cafe2000"
+    /// counts) and never mentions "athletic(s)". "Athletic Store", "Athletic Store Snack Bar",
+    /// "Bookstore" and "Delivery" are not.
     public static func isCafe(_ storeName: String) -> Bool {
-        storeName.containsAny(of: ["cafe", "snack", "coffee", "grill", "deli", "kitchen"])
+        let words = Set(storeName.matchKey.split { !$0.isLetter }.map(String.init))
+        return !words.isDisjoint(with: cafeWords) && words.isDisjoint(with: ["athletic", "athletics"])
     }
 
-    /// The semester to recap on `date`: the one containing it, else the latest that has ended,
-    /// else the first one; `nil` when the calendar has no semesters.
+    private static let cafeWords: Set = ["cafe", "snack", "snacks", "coffee", "grill", "grille", "deli", "kitchen"]
+
+    /// The semester to recap on `date`: the latest whose recap `isReady`, so a recap keeps its
+    /// moment into the first days of the next semester; else the one containing `date`, else the
+    /// latest that has ended, else the first one. `nil` when the calendar has no semesters.
     public static func semester(in calendar: SchoolCalendar, on date: LocalDate) -> Term? {
         let semesters = calendar.terms
             .filter { $0.kind == .semester }
             .sorted { $0.span.start < $1.span.start }
-        return semesters.first { $0.span.contains(date) }
+        return semesters.last { isReady($0, on: date) }
+            ?? semesters.first { $0.span.contains(date) }
             ?? semesters.last { $0.span.end < date }
             ?? semesters.first
     }

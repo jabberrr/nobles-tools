@@ -30,38 +30,6 @@ enum WrappedGallery {
         entries.append(phone("wrapped-empty", .large) {
             WrappedMessageView(message: .noPurchases(in: sample.period.name), onSample: {}, onClose: {})
         })
-        // TEMPORARY: a page outside the story container, to diagnose blank renders.
-        entries.append(phone("wrapped-debug-intro-direct", .large) {
-            IntroPage(wrapped: sample, isActive: true)
-                .foregroundStyle(.white)
-                .background(Color(hex: 0x2A0A5E))
-        })
-        entries.append(phone("wrapped-debug-a-id", .large) {
-            IntroPage(wrapped: sample, isActive: true).id(WrappedPage.intro)
-                .foregroundStyle(.white).background(Color(hex: 0x2A0A5E))
-        })
-        entries.append(phone("wrapped-debug-b-a11y", .large) {
-            IntroPage(wrapped: sample, isActive: true)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Intro")
-                .accessibilityValue("Page 1 of 10")
-                .accessibilityAction { }
-                .accessibilityAction(named: "Next") { }
-                .foregroundStyle(.white).background(Color(hex: 0x2A0A5E))
-        })
-        entries.append(phone("wrapped-debug-c-focus", .large) { DebugFocus(sample: sample) })
-        entries.append(phone("wrapped-debug-d-layout", .large) {
-            GeometryReader { _ in
-                VStack(spacing: 0) {
-                    Text("Header")
-                    ZStack { IntroPage(wrapped: sample, isActive: true) }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                .contentShape(Rectangle())
-                .onTapGesture { _ in }
-            }
-            .foregroundStyle(.white).background(Color(hex: 0x2A0A5E))
-        })
         entries.append(WidgetGallery.Entry(name: "wrapped-poster", view: AnyView(WrappedPoster(wrapped: sample, cornerRadius: 0))))
         return entries
     }
@@ -155,18 +123,6 @@ enum WrappedGallery {
             .frame(width: screen.size.width, height: screen.size.height)
             .environment(\.wrappedIsStatic, true)
         return WidgetGallery.Entry(name: name, view: AnyView(view))
-    }
-}
-
-// TEMPORARY: diagnosing blank page snapshots.
-private struct DebugFocus: View {
-    let sample: CafeWrapped
-    @AccessibilityFocusState private var isFocused: Bool
-
-    var body: some View {
-        IntroPage(wrapped: sample, isActive: true)
-            .accessibilityFocused($isFocused)
-            .foregroundStyle(.white).background(Color(hex: 0x2A0A5E))
     }
 }
 
