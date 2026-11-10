@@ -1,0 +1,260 @@
+{
+ "bodyarmor-0858176002836": {
+  "code": "0858176002836",
+  "product_name": "Pineapple coconut",
+  "brands": [
+   "Bodyarmor"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/085/817/600/2836/front_en.7.400.jpg"
+ },
+ "bodyarmor-0810113830247": {
+  "code": "0810113830247",
+  "product_name": "Cherry lime",
+  "brands": [
+   "BodyArmor"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/081/011/383/0247/front_en.3.400.jpg"
+ },
+ "bodyarmor-0071464017705": {
+  "code": "0071464017705",
+  "product_name": "100% fruit juice smoothie",
+  "brands": [
+   "Strawberry Banana"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/007/146/401/7705/front_en.17.400.jpg"
+ },
+ "bodyarmor-17843719": {
+  "code": "17843719",
+  "product_name": "BodyArmor",
+  "brands": null,
+  "image_front_url": "https://images.openfoodfacts.org/images/products/17843719/front_en.3.400.jpg"
+ },
+ "bodyarmor-0858176002584": {
+  "code": "0858176002584",
+  "product_name": "Bodyarmor Lyte Blueberry Pomegranate",
+  "brands": [
+   "BodyArmor"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/085/817/600/2584/front_en.26.400.jpg"
+ },
+ "bodyarmor-0810113830230": {
+  "code": "0810113830230",
+  "product_name": "BodyArmor Lyte",
+  "brands": null,
+  "image_front_url": "https://images.openfoodfacts.org/images/products/081/011/383/0230/front_en.3.400.jpg"
+ },
+ "bodyarmor-0850009942166": {
+  "code": "0850009942166",
+  "product_name": "Bodyarmor lyte",
+  "brands": null,
+  "image_front_url": "https://images.openfoodfacts.org/images/products/085/000/994/2166/front_en.3.400.jpg"
+ },
+ "cheetos-puffs-0028400071659": {
+  "code": "0028400071659",
+  "product_name": "simply cheetos puffs",
+  "brands": [
+   "cheetos puffs"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/002/840/007/1659/front_en.14.400.jpg"
+ },
+ "cheetos-puffs-0028400174459": {
+  "code": "0028400174459",
+  "product_name": "Cheetos Puffs",
+  "brands": [
+   "cheetos"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/002/840/017/4459/front_en.13.400.jpg"
+ },
+ "cheetos-puffs-0028400058179": {
+  "code": "0028400058179",
+  "product_name": "Cheetos puffs",
+  "brands": [
+   "Cheetos"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/002/840/005/8179/front_en.3.400.jpg"
+ },
+ "cheetos-puffs-0028400242929": {
+  "code": "0028400242929",
+  "product_name": "Cheese flavored puffs snacks",
+  "brands": [
+   "Cheetos"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/002/840/024/2929/front_en.3.400.jpg"
+ },
+ "chobani-drink-30347533": {
+  "code": "30347533",
+  "product_name": "Chobani Greek Yogurt",
+  "brands": [
+   "Chobani"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/30347533/front_en.3.400.jpg"
+ },
+ "chobani-drink-9310653103609": {
+  "code": "9310653103609",
+  "product_name": "Chobani Greek Yogurt",
+  "brands": [
+   "Chobani"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/931/065/310/3609/front_en.11.400.jpg"
+ },
+ "chobani-drink-9310653105696": {
+  "code": "9310653105696",
+  "product_name": "Chobani Greek yogurt vanilla",
+  "brands": [
+   "Chobani"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/931/065/310/5696/front_en.3.400.jpg"
+ },
+ "chobani-drink-9310653102596": {
+  "code": "9310653102596",
+  "product_name": "chobani mango greek yogurt",
+  "brands": [
+   "Chobani"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/931/065/310/2596/front.7.400.jpg"
+ },
+ "chobani-drink-0071464017705": {
+  "code": "0071464017705",
+  "product_name": "100% fruit juice smoothie",
+  "brands": [
+   "Strawberry Banana"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/007/146/401/7705/front_en.17.400.jpg"
+ },
+ "chobani-drink-0804217362131": {
+  "code": "0804217362131",
+  "product_name": "Strawberry Banana Drink",
+  "brands": null,
+  "image_front_url": "https://images.openfoodfacts.org/images/products/080/421/736/2131/front_en.3.400.jpg"
+ },
+ "chobani-drink-0847644008401": {
+  "code": "0847644008401",
+  "product_name": "Strawberry Banana sports drink",
+  "brands": null,
+  "image_front_url": "https://images.openfoodfacts.org/images/products/084/764/400/8401/front_en.3.400.jpg"
+ },
+ "chobani-drink-0818290011534": {
+  "code": "0818290011534",
+  "product_name": "Chobani Strawberry on the Bottom",
+  "brands": [
+   "Chobani"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/081/829/001/1534/front_en.3.400.jpg"
+ },
+ "oreo-0044000047009": {
+  "code": "0044000047009",
+  "product_name": "Oreo (Chocolate Sandwich Cookies)",
+  "brands": [
+   "Oreo",
+   " Nabisco"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/004/400/004/7009/front_en.20.400.jpg"
+ },
+ "oreo-7622210317667": {
+  "code": "7622210317667",
+  "product_name": "Oreo Original Sandwich Biscuits",
+  "brands": [
+   "Oreo"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/762/221/031/7667/front_en.16.400.jpg"
+ },
+ "oreo-0072554335358": {
+  "code": "0072554335358",
+  "product_name": "Oreo sandwich",
+  "brands": null,
+  "image_front_url": "https://images.openfoodfacts.org/images/products/007/255/433/5358/front_en.3.400.jpg"
+ },
+ "oreo-7622210826251": {
+  "code": "7622210826251",
+  "product_name": "Oreo Sandwich",
+  "brands": [
+   "Milka"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/762/221/082/6251/front_de.53.400.jpg"
+ },
+ "oreo-0044000032029": {
+  "code": "0044000032029",
+  "product_name": "oreo cookies shelf",
+  "brands": [
+   "Nabisco",
+   "Oreo"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/004/400/003/2029/front.7.400.jpg"
+ },
+ "oreo-0044000061142": {
+  "code": "0044000061142",
+  "product_name": "Oreo cookie",
+  "brands": [
+   "Oreo"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/004/400/006/1142/front_en.3.400.jpg"
+ },
+ "oreo-0044000070908": {
+  "code": "0044000070908",
+  "product_name": "Oreo Cookies",
+  "brands": [
+   "Oreo"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/004/400/007/0908/front_en.3.400.jpg"
+ },
+ "oreo-7622300688455": {
+  "code": "7622300688455",
+  "product_name": "Oreo cookies",
+  "brands": [
+   "Mondelez"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/762/230/068/8455/front_fr.3.400.jpg"
+ },
+ "stacys-0028400564632": {
+  "code": "0028400564632",
+  "product_name": "Pita Chips Simply Naked",
+  "brands": [
+   "Stacy's Pita Chip Company  Inc.",
+   " Stacy's"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/002/840/056/4632/front_en.7.400.jpg"
+ },
+ "stacys-0028400718356": {
+  "code": "0028400718356",
+  "product_name": "Pita Chips Simply Naked",
+  "brands": [
+   "Stacys",
+   " Stacy's"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/002/840/071/8356/front_en.10.400.jpg"
+ },
+ "stacys-0028400096324": {
+  "code": "0028400096324",
+  "product_name": "Pita Chips Simply Naked",
+  "brands": [
+   "Stacy's"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/002/840/009/6324/front_en.18.400.jpg"
+ },
+ "stacys-0028400094405": {
+  "code": "0028400094405",
+  "product_name": "Pita Chips Simply Naked",
+  "brands": [
+   "Stacy's"
+  ],
+  "image_front_url": "https://images.openfoodfacts.org/images/products/002/840/009/4405/front_en.7.400.jpg"
+ },
+ "stacys-92000284006113900319": {
+  "code": "92000284006113900319",
+  "product_name": "Stacy\u2019s Pita Chips",
+  "brands": null,
+  "image_front_url": "https://images.openfoodfacts.org/images/products/920/002/840/06113900319/front_en.3.400.jpg"
+ },
+ "stacys-0004455468983": {
+  "code": "0004455468983",
+  "product_name": "Stacys pita chips",
+  "brands": null,
+  "image_front_url": "https://images.openfoodfacts.org/images/products/000/445/546/8983/front_en.3.400.jpg"
+ },
+ "stacys-0028400321242": {
+  "code": "0028400321242",
+  "product_name": "Stacy\u2019s Pita Chips",
+  "brands": null,
+  "image_front_url": "https://images.openfoodfacts.org/images/products/002/840/032/1242/front_en.3.400.jpg"
+ }
+}
