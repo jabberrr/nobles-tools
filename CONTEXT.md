@@ -149,6 +149,8 @@ Identifiers:
 - Not-signed-in → the endpoint 401/403s or returns the Veracross login wall; `StoreService` classifies those as `.notAuthenticated` (vs `.unavailable` for network/parse) and **caches only a clean parse**, so a login wall is never cached. The widget then shows the last cached figures with "Sign in to refresh" and the app re-connects.
 - **Limits and gift-card balance are NOT fetched.** They only appear in `parent_limits.php`'s server HTML (the sample we have is a macOS "Copy", not the real DOM), so the spending limit is entered in the app (`StoreConfiguration.limit`) for the progress bar/ring. To auto-read them later, capture the real View-Source of `parent_limits.php` and parse the Limits table (groups: Athletics = Athletic Store; "Cafe2000 + Gleason Hall Snack Bar" = Cafe 2000 + Cafe at Gleason Hall).
 - These are undocumented internal endpoints keyed to the signed-in account; only the user's own data is ever read. No weekly smoke test (it needs a login).
+- The sign-in web view uses the persistent `WKWebsiteDataStore.default()`, so a later Connect reconnects without typing anything. Disconnect, or a rejected sign-in, clears that store.
+- **Unknown until tested on a device:** how long a `nobilis` PHPSESSID stays valid for the widget. PHP's default idle lifetime is 24 minutes; once the session lapses, the widget shows "Sign in to refresh".
 
 ## Building and testing
 
@@ -239,7 +241,12 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
   - The user reported two bugs.
     - "Connect Nobles Account" opened the sign-in sheet and closed it at once: the `.sheet` was on the account `Section` inside the Settings `Form`. It now lives on Settings' `NavigationStack` (see Conventions). The web view also gained a `WKUIDelegate`, so identity-provider pages that open a new window load in place.
     - The rectangular Lock Screen widget showed "a weird cut-off character": the latest item had priority beside the amount and squeezed it to "$". It's now three stacked lines (title, figure + "of $300"/"left"/"latest", then a bar or "Last: …").
-  - The Lock Screen meters now measure what the figure says: spent of the limit, or what's left of it.
-  - The gallery gained compact Lock Screen renders for the limit design, a spent-of-limit design and the latest-charge design.
+  - One `StoreContent.Meter` now drives every bar and ring. It measures what the figure says (spent of the limit, or what's left of it), with matching captions: "$163 left of $300" on the Home Screen, "of $300"/"left" on the Lock Screen.
+  - The rectangular Lock Screen shows "Sign in to refresh"/"Updated 4h ago" when its data is stale.
+  - A critic pass found that Disconnect left the sign-in web view's cookies, so the next Connect silently reused the old session: the sheet opened and closed again, and switching accounts was impossible. `StoreAccount` now clears `WKWebsiteDataStore.default()` on Disconnect and on a rejected sign-in. The sign-in sheet is the app's only web view.
+  - Also from that pass:
+    - Capture no longer latches onto an intermediate page with no account on it.
+    - The sheet can't be swiped away mid sign-in.
+  - The gallery gained compact Lock Screen renders for the limit design, a spent-of-limit design, the latest-charge design, four-digit amounts and a signed-out state.
   - Still unverified on a device: whether the Veracross sign-in completes. If Nobles' Veracross sends students to Google sign-in, Google may refuse embedded web views ("this browser may not be secure").
 
