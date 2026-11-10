@@ -64,7 +64,7 @@ struct MenuTimelineProvider: AppIntentTimelineProvider {
             let entry = MenuEntry(date: now, design: design, upcoming: nil)
             return Timeline(entries: [entry], policy: .after(now + Self.retryInterval))
         }
-        let refresh = min(max(current.validUntil, now + Self.minimumAge), now + Self.maximumAge)
+        let refresh = min(current.validUntil.later(now + Self.minimumAge), now + Self.maximumAge)
         return Timeline(entries: Self.entries(for: menus, design: design, now: now), policy: .after(refresh))
     }
 

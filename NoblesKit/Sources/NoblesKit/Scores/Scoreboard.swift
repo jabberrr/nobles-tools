@@ -50,7 +50,7 @@ extension Game {
     /// Whether the game should have begun: its start time has passed or, for a game with only a
     /// date, its day is over.
     func hasStarted(now: Date) -> Bool {
-        hasStartTime ? start <= now : LocalDate(start) < LocalDate(now)
+        hasStartTime ? start.isAtOrBefore(now) : LocalDate(start) < LocalDate(now)
     }
 
     fileprivate var isLive: Bool {

@@ -34,7 +34,7 @@ public struct NoblesAthleticsProvider: ScoresProvider {
         }
         let games = Self.merged(results: (try? results.get().value) ?? [], schedule: (try? schedule.get().value) ?? [])
         return GameFeed(
-            games: games.filter { start <= $0.start && $0.start <= end },
+            games: games.filter { start.isAtOrBefore($0.start) && $0.start.isAtOrBefore(end) },
             fetchedAt: loaded.compactMap(\.cachedAt).min() ?? now
         )
     }

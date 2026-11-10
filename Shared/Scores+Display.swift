@@ -72,7 +72,7 @@ extension Game {
         case .postponed: "Postponed"
         case .cancelled: "Cancelled"
         case .final: "Final"
-        case .scheduled: start <= now ? "Awaiting result" : whenText(today: LocalDate(now))
+        case .scheduled: start.isAtOrBefore(now) ? "Awaiting result" : whenText(today: LocalDate(now))
         }
     }
 
