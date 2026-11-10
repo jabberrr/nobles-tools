@@ -93,8 +93,9 @@ App/                        App target: DesignLibrary (state), design list, edit
                             the StoreAccount connection manager and its Settings section.
                             Wrapped/ is Cafe Wrapped: CafeWrappedView (story container), CafeWrappedLauncher
                             (loads the account's recap or the sample, with message screens), Pages/ (one per
-                            page), Effects/ (FoilWrap and its FoilSheet/FoilState/FoilFrame, reveals, counting
-                            text, confetti, backdrops, shimmer), WrappedStyle/WrappedPage (palettes, fonts).
+                            page), Effects/ (FoilWrap with FoilCover/FoilMasks/FoilFinish/FoilGeometry/FoilBall,
+                            FoilSurface, reveals, counting text, confetti, light burst, backdrops, shimmer, hint),
+                            WrappedStyle/WrappedPage/WrappedFormat (type, palettes, wording of figures).
                             Previews/DesignWidgetContent draws a design from given data (editor + gallery);
                             Previews/WidgetGallery is every widget × size from fixed sample data;
                             Previews/WrappedGallery is every Wrapped page in its finished state.
@@ -192,6 +193,7 @@ Identifiers:
 - **Limits and gift-card balance are NOT fetched.** They only appear in `parent_limits.php`'s server HTML (the sample we have is a macOS "Copy", not the real DOM), so the spending limit is entered in the app (`StoreConfiguration.limit`) for the progress bar/ring. To auto-read them later, capture the real View-Source of `parent_limits.php` and parse the Limits table (groups: Athletics = Athletic Store; "Cafe2000 + Gleason Hall Snack Bar" = Cafe 2000 + Cafe at Gleason Hall).
 - These are undocumented internal endpoints keyed to the signed-in account; only the user's own data is ever read. No weekly smoke test (it needs a login).
 - The sign-in web view uses the persistent `WKWebsiteDataStore.default()`, so a later Connect reconnects without typing anything. Disconnect, or a rejected sign-in, clears that store.
+- The sign-in sheet covers `SchoolStoreNew` pages with a "Connecting to Nobles…" panel, then shows "Connected" for a moment before closing. Before this, a Reconnect that needed no typing flashed the spending page and shut. Sign-in pages and any other portal page stay visible. A failed capture, or cancelling the account picker, ends the cover or the sheet.
 - **`created` is UTC (verified 2026-11-10).** It was first read as school-local. The real purchases only fall inside the cafes' posted hours when read as UTC, and they move an hour with the November DST change. An athletic-store charge at "21:03" is 5:03 PM, not 9 PM.
 - **The cafe menus are public:** `https://nobilis.nobles.edu/SchoolStoreDev/menu_print.php?store_id=5&window_id=3` (Cafe at Gleason Hall, mornings: Mon–Fri 8:30–10:45 AM) and `?store_id=3&window_id=2` (Cafe 2000, afternoons: Mon/Tue/Thu/Fri 2:30–6 PM, Wed 1:30–6 PM). Charge `description`s are the menu item names as printed, without the flavor line. Both samples (`StoreStatement.sample(now:)`, `CafeWrapped.sample`) use only these items, prices and hours; `Tests/…/Support/CafeMenus.swift` holds them for tests.
 - **Unknown until tested on a device:** whether `get_charges.php` returns the whole school year or only recent charges. Cafe Wrapped assumes the whole semester; the fixture's shape spans Sep 10 – Nov 9.
@@ -241,6 +243,7 @@ Identifiers:
   - The preview frame draws a stand-in for `AccessoryWidgetBackground` on circular Lock Screen previews.
   - Never give secondary text `layoutPriority` over a figure on the same line: the figure gets squeezed to a single glyph (the spending rectangular showed "$" this way). Stack lines instead, and let a figure shrink (`minimumScaleFactor`) rather than ever truncate.
   - **`accessibilityFocused` makes `ImageRenderer` draw nothing at all**, not even backgrounds. Every Wrapped page rendered blank until `CafeWrappedView` stopped applying it in static mode. A `.transition` or `.id` is fine.
+  - **Inside a `Canvas`, `ImageRenderer` skips `GraphicsContext` filters (`.alphaThreshold`, `.blur`) and some blend modes.** The first item-shaped foil used the "metaball" blur-and-threshold trick. It rendered as a square with the item's silhouette painted on top. It's now plain SwiftUI: the silhouette stamped in a ring inside `.mask {}`, with holes cut by `.blendMode(.destinationOut)` in a `.compositingGroup()`, which renders. It hasn't been seen on a device yet.
   - An `alignmentGuide` set inside a view that `wrappedReveal` (or another modifier) wraps didn't take effect: the bar charts' figures landed inside their bars. Stack a label above its view instead, in a fixed-height slot so it can overhang.
   - **Check every render of a widget you change**, including the default design at each Lock Screen size and the `-compact` ones. The rectangular bug above was visible in its render, but only the limit variant was looked at.
 - **Animation under Swift 6:** don't conform a `View`/`ViewModifier` to `Animatable`, because its nonisolated `animatableData` clashes with main-actor isolation. Drive motion with `@State` + `withAnimation`, `TimelineView` (paused or throttled when idle), `PhaseAnimator`/`KeyframeAnimator`, or `Shape`s. Wrapped's particle effects draw in one `Canvas` each, not one view per particle. Every Wrapped effect honors Reduce Motion.
@@ -346,3 +349,19 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
     - Shimmers pause between sweeps.
     - VoiceOver can tear the foil.
   - NoblesKit has 166 tests.
+- **2026-11-10: Trello cards, Cafe Wrapped (second board pass), and Reconnect.**
+  - Fetched the real cafe menus from a temporary Actions workflow; they're public (see Data sources). Their posted hours showed **`created` is UTC**, so it's now parsed that way, with tests across the DST change.
+  - Both samples use only real menu items, prices and hours. The Wrapped sample's #1 is the Jumbo Chocolate Chip Cookie.
+  - **Foil (#10, #11):** a real foil photo (CC BY 4.0) replaced the drawn shards. The foil is shaped like the item and comes off in five stages. Product photos for branded items (#18) come from Open Food Facts; the brands' official images are copyrighted. Both are credited in Settings.
+  - Hidden the #1 before its reveal (#9).
+  - **Pages:**
+    - Cumulative line graph on Total (#17).
+    - Month bars moved to Days, and the biggest day to Records (#13).
+    - Tap-to-reveal persona with a charge-up, flip and light burst (#15).
+  - **Look:** plain wording (#12); SF Pro only, Expanded for headlines and figures, less bold (#16, #19).
+  - **Reconnect (#7)** no longer flashes the spending page.
+  - Three parallel agents (core, foil/persona, pages), then a critic. The critic caught three things:
+    - the snapshot renderer drew the first item-shaped foil as a square (see Conventions);
+    - the sign-in cover could strand a parent who cancels the account picker;
+    - the line graph's end label could drift from the total on refund-only days. `CafeWrapped.days` now includes those days.
+  - All fixed. NoblesKit has 177 tests.
