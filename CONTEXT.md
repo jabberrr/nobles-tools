@@ -189,6 +189,9 @@ Identifiers:
   - Don't nest `ViewThatFits`: an outer one measures only the inner one's first child. Use `FirstFitting` (`TextFitting.swift`), which takes one flat list of variants (a `ForEach` inside a single `ViewThatFits`).
   - The system `Gauge` renders out of proportion in ImageRenderer, so progress is drawn with `ProgressViews.swift`: `ProgressBar` (home + rectangular lock) and `ProgressRing` (spending's circular lock). A capacity `Gauge` showed the spending ring's fill wrong in the snapshot renders; the drawn ring matches the bar and the centered amount exactly.
   - The preview frame draws a stand-in for `AccessoryWidgetBackground` on circular Lock Screen previews.
+  - Never give secondary text `layoutPriority` over a figure on the same line: the figure gets squeezed to a single glyph (the spending rectangular showed "$" this way). Stack lines instead, and let a figure shrink (`minimumScaleFactor`) rather than ever truncate.
+  - **Check every render of a widget you change**, including the default design at each Lock Screen size and the `-compact` ones. The rectangular bug above was visible in its render, but only the limit variant was looked at.
+- **Present sheets from a screen's `NavigationStack`, never from inside a `Form`/`List` row** (a `.sheet` on a `Section` lands on its rows). A row-attached sheet is dismissed as soon as the list refreshes that row: the spending sign-in sheet opened and closed at once this way. `SettingsView` owns `StoreAccount` and presents `StoreLoginView`; `StoreAccountSection` only asks to connect.
 - Tests use swift-testing (`import Testing`, `@Test`, `#expect`). Never touch the network in tests: inject a fake `HTTPClient` (`Tests/NoblesKitTests/Support/FakeHTTPClient.swift`). Prefer the `real-*` fixtures.
 - Model enums expose `displayName` (and `symbolName` where useful) for UI. Keep UI strings in the models only when they are shared between app and widget.
 - The committed `NoblesTools.xcodeproj` is generated output. Change `project.yml`, and let CI regenerate the project (or run `xcodegen generate` on a Mac) rather than editing it in Xcode.
@@ -232,4 +235,11 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
   - Built against a fixed contract (`scratchpad/store-contract.md`) with three parallel agents (CORE/NoblesKit, APP, WIDGETUI) + a critic: NoblesKit `Store/` (service, parser, session, preview data, +13 tests → 131), in-app Veracross `WKWebView` sign-in that keeps only the session cookie + person id, and the `spending` widget in all six sizes.
   - CI compiled first try. The critic found no compile/logic/privacy defect; the render pass then caught two UI issues I fixed: medium truncated item names (now the figure sits above full-width charge rows) and the Lock Screen limit read ambiguously (the circular ring + centre and the rectangular figure now agree, via `ProgressRing`).
   - Limits/gift-card balance aren't in the charges endpoint, so the limit is set in the app; auto-reading them needs the real View-Source of `parent_limits.php` (see Data sources). Nothing has been seen on a device; the live auth path can only be tested there.
+- **2026-11-10: first device test of Spending.**
+  - The user reported two bugs.
+    - "Connect Nobles Account" opened the sign-in sheet and closed it at once: the `.sheet` was on the account `Section` inside the Settings `Form`. It now lives on Settings' `NavigationStack` (see Conventions). The web view also gained a `WKUIDelegate`, so identity-provider pages that open a new window load in place.
+    - The rectangular Lock Screen widget showed "a weird cut-off character": the latest item had priority beside the amount and squeezed it to "$". It's now three stacked lines (title, figure + "of $300"/"left"/"latest", then a bar or "Last: …").
+  - The Lock Screen meters now measure what the figure says: spent of the limit, or what's left of it.
+  - The gallery gained compact Lock Screen renders for the limit design, a spent-of-limit design and the latest-charge design.
+  - Still unverified on a device: whether the Veracross sign-in completes. If Nobles' Veracross sends students to Google sign-in, Google may refuse embedded web views ("this browser may not be secure").
 
