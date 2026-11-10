@@ -12,102 +12,63 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Download menus and assets
+      - name: Download foil photos and product candidates
         run: |
           pip install --quiet pillow
-          mkdir -p .github/probe-assets/foil .github/probe-assets/brands
-          for store in 5 3; do for window in 1 2 3 4 5 6; do
-            curl -sS -L -o "menu-$store-$window.html" "https://nobilis.nobles.edu/SchoolStoreDev/menu_print.php?store_id=$store&window_id=$window" || true
-          done; done
-          for id in Foil001 Foil002 Foil003; do
-            curl -sSL -o "$id.zip" "https://ambientcg.com/get?file=${id}_1K-JPG.zip" && unzip -o -q "$id.zip" -d "$id" || echo "no $id"
+          mkdir -p .github/probe-assets/foil2 .github/probe-assets/candidates
+          curl -sSL -A "NoblesToolsProbe/1.0" -o crumpled.jpg "https://upload.wikimedia.org/wikipedia/commons/4/43/Crumpled_Tin_Foil_%2855598736185%29.jpg"
+          curl -sSL -A "NoblesToolsProbe/1.0" -o cooking.jpg "https://upload.wikimedia.org/wikipedia/commons/c/cc/Aluminium_cooking_foil.jpg"
+          for id in Foil001 Foil003; do
+            curl -sSL -o "$id.zip" "https://ambientcg.com/get?file=${id}_1K-JPG.zip" && unzip -o -q "$id.zip" -d "$id"
           done
           python3 - <<'EOF'
-          import glob, html, json, os, re, time, urllib.parse, urllib.request
+          import glob, json, os, time, urllib.parse, urllib.request
           from PIL import Image
-
-          with open(".github/probe-assets/menus.txt", "w") as out:
-              for path in sorted(glob.glob("menu-*.html")):
-                  t = open(path, encoding="utf-8", errors="replace").read()
-                  t = re.sub(r"(?is)<(script|style).*?</\1>", "", t)
-                  t = re.sub(r"(?i)<br\s*/?>|</(p|div|tr|li|h\d|table)>", "\n", t)
-                  t = html.unescape(re.sub(r"<[^>]+>", "", t))
-                  lines = [re.sub(r"\s+", " ", l).strip() for l in t.splitlines()]
-                  out.write(f"===== {path}\n" + "\n".join(l for l in lines if l) + "\n")
-
-          for path in glob.glob("Foil00*/*Color*.jpg"):
-              name = os.path.basename(path).split("_")[0]
-              Image.open(path).convert("RGB").save(f".github/probe-assets/foil/{name}.jpg", quality=85)
+          out = ".github/probe-assets/foil2"
+          for name in ("crumpled", "cooking"):
+              try:
+                  image = Image.open(f"{name}.jpg").convert("RGB")
+                  print(name, image.size)
+                  image.thumbnail((1600, 1600)); image.save(f"{out}/{name}-full.jpg", quality=85)
+                  side = min(image.size); left = (image.width - side) // 2; top = (image.height - side) // 2
+                  image.crop((left, top, left + side, top + side)).resize((1024, 1024)).save(f"{out}/{name}-square.jpg", quality=85)
+              except Exception as error:
+                  print(name, "failed:", error)
+          for path in glob.glob("Foil00*/*_NormalGL.jpg") + glob.glob("Foil00*/*_Displacement.jpg"):
+              Image.open(path).convert("RGB").save(f"{out}/{os.path.basename(path)}", quality=90)
 
           agent = {"User-Agent": "NoblesTools/1.0"}
-          def get_json(url):
-              return json.load(urllib.request.urlopen(urllib.request.Request(url, headers=agent), timeout=30))
-
-          # Found by an earlier search: read straight from the product API.
-          barcodes = {
-              "quaker-oatmeal": "0030000567296", "popcorners": "0810607020703",
-              "rice-krispies-treat": "0038000265013", "cheez-it": "0024100106851",
-              "miss-vickies": "0028400168731", "goldfish": "0014100085478", "haribo": "0042238302815",
-              "oreo": "0019320015403", "core-power": "0811620021951", "fairlife": "0856312002795",
-              "nestle-cocoa": "0050000140022",
-          }
+          fields = "code,product_name,brands,image_front_url,unique_scans_n,countries_tags"
           queries = {
-              "chobani-drink": "chobani yogurt drink", "chobani-yogurt": "chobani greek yogurt strawberry",
-              "gatorade-bar": "gatorade whey protein bar", "cheetos-puffs": "cheetos puffs",
-              "cheetos-crunchy-hot": "cheetos crunchy flamin hot", "lays": "lays classic potato chips",
-              "chex-mix": "chex mix traditional", "doritos": "doritos nacho cheese",
-              "smartfood": "smartfood white cheddar popcorn", "stacys": "stacys pita chips",
-              "sunchips": "sunchips original", "cup-noodles": "nissin cup noodles chicken",
-              "bodyarmor": "bodyarmor sports drink", "boxed-water": "boxed water",
-              "izze": "izze sparkling juice", "naked": "naked juice mighty mango",
-              "polar": "polar seltzer", "powerade": "powerade", "oh-snap": "oh snap pickle",
-              "pirates-booty": "pirates booty", "swoon": "swoon lemonade",
-              "arnold-palmer": "arizona arnold palmer", "rxbar": "rxbar",
-              "chips-galore": "chips galore", "oreo-ice-cream-sandwich": "oreo ice cream sandwich",
-              "kings-pretzel": "superpretzel soft pretzel",
+              "bodyarmor": ["bodyarmor strawberry banana", "bodyarmor lyte"],
+              "cheetos-puffs": ["cheetos puffs cheese flavored snacks"],
+              "chobani-drink": ["chobani greek yogurt drink", "chobani drink strawberry banana"],
+              "oreo": ["oreo original chocolate sandwich cookies", "oreo cookies"],
+              "stacys": ["stacy's simply naked pita chips", "stacys pita chips"],
           }
           found = {}
-          def save(slug, product):
-              data = urllib.request.urlopen(urllib.request.Request(product["image_front_url"], headers=agent), timeout=30).read()
-              open(f".github/probe-assets/brands/{slug}.jpg", "wb").write(data)
-              found[slug] = {k: product.get(k) for k in ("code", "product_name", "brands", "image_front_url")}
-              print(slug, product.get("code"), product.get("product_name"), "|", product.get("brands"))
-
-          for slug, code in barcodes.items():
-              try:
-                  product = get_json(f"https://world.openfoodfacts.org/api/v2/product/{code}?fields=code,product_name,brands,image_front_url")["product"]
-                  product["code"] = code
-                  save(slug, product)
-              except Exception as error:
-                  print(slug, "product failed:", error)
-              time.sleep(1)
-
-          fields = "code,product_name,brands,image_front_url,unique_scans_n,countries_tags"
-          for slug, query in queries.items():
-              hits = None
-              for url in (
-                  "https://search.openfoodfacts.org/search?" + urllib.parse.urlencode({"q": query, "page_size": 12, "fields": fields}),
-                  "https://world.openfoodfacts.org/cgi/search.pl?" + urllib.parse.urlencode({
-                      "search_terms": query, "search_simple": 1, "action": "process", "json": 1, "page_size": 12, "fields": fields}),
-              ):
+          for slug, terms in queries.items():
+              for term in terms:
                   try:
-                      body = get_json(url)
-                      hits = body.get("hits", body.get("products", []))
-                      break
+                      body = json.load(urllib.request.urlopen(urllib.request.Request(
+                          "https://search.openfoodfacts.org/search?" + urllib.parse.urlencode({"q": term, "page_size": 15, "fields": fields}),
+                          headers=agent), timeout=30))
                   except Exception as error:
-                      print(slug, "search failed:", url.split("?")[0], error)
-                      time.sleep(5)
-              hits = [h for h in (hits or []) if h.get("image_front_url")]
-              hits.sort(key=lambda h: ("en:united-states" in (h.get("countries_tags") or []), h.get("unique_scans_n") or 0), reverse=True)
-              if hits:
-                  try:
-                      save(slug, hits[0])
-                  except Exception as error:
-                      print(slug, "download failed:", error)
-              else:
-                  print(slug, "no hit")
-              time.sleep(3)
-          json.dump(found, open(".github/probe-assets/brands/brands.json", "w"), indent=1)
+                      print(slug, term, "failed:", error); continue
+                  hits = [h for h in body.get("hits", []) if h.get("image_front_url")]
+                  hits.sort(key=lambda h: ("en:united-states" in (h.get("countries_tags") or []), h.get("unique_scans_n") or 0), reverse=True)
+                  for hit in hits[:4]:
+                      key = f"{slug}-{hit['code']}"
+                      if key in found: continue
+                      try:
+                          data = urllib.request.urlopen(urllib.request.Request(hit["image_front_url"], headers=agent), timeout=30).read()
+                          open(f".github/probe-assets/candidates/{key}.jpg", "wb").write(data)
+                          found[key] = {k: hit.get(k) for k in ("code", "product_name", "brands", "image_front_url")}
+                          print(key, hit.get("product_name"), "|", hit.get("brands"))
+                      except Exception as error:
+                          print(key, "download failed:", error)
+                  time.sleep(2)
+          json.dump(found, open(".github/probe-assets/candidates/candidates.json", "w"), indent=1)
           EOF
       - name: Commit the downloads
         run: |
