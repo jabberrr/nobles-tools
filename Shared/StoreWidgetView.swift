@@ -84,8 +84,9 @@ private struct StoreHomeScreenView: View {
             Text(spending.figure.caption)
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(colors.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -114,7 +115,13 @@ private struct StoreHomeScreenView: View {
     }
 
     private func charges(_ spending: StoreContent.Spending, capacity: Int) -> some View {
-        FittingList(items: spending.charges, capacity: capacity, spacing: 7, overflowColor: colors.secondary) { charge in
+        FittingList(
+            items: spending.charges,
+            capacity: capacity,
+            spacing: 7,
+            overflowColor: colors.secondary,
+            hidesOverflowWhenEmpty: true
+        ) { charge in
             ChargeRow(charge: charge, today: content.today, colors: colors)
         }
     }

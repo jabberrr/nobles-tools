@@ -15,6 +15,9 @@ struct FittingPrefix<Item, Content: View>: View {
     var spacing: CGFloat = 4
     /// Color of the "+N more" line, or `nil` to leave it out.
     var overflowColor: Color? = nil
+    /// When nothing fits, show nothing at all rather than a lone "+N more" (for a list that sits
+    /// under its own header or beside a figure, where a bare overflow line would read as broken).
+    var hidesOverflowWhenEmpty: Bool = false
     /// Lays out the items that are shown.
     @ViewBuilder let content: ([Item]) -> Content
 
@@ -31,7 +34,7 @@ struct FittingPrefix<Item, Content: View>: View {
             if count > 0 {
                 content(Array(items.prefix(count)))
             }
-            if let overflowColor, count < items.count {
+            if let overflowColor, count < items.count, !(count == 0 && hidesOverflowWhenEmpty) {
                 MoreLabel(count: items.count - count, color: overflowColor)
             }
         }
@@ -57,10 +60,17 @@ struct FittingList<Item, Row: View>: View {
     let capacity: Int
     var spacing: CGFloat = 4
     var overflowColor: Color? = nil
+    var hidesOverflowWhenEmpty: Bool = false
     @ViewBuilder let row: (Item) -> Row
 
     var body: some View {
-        FittingPrefix(items: items, capacity: capacity, spacing: spacing, overflowColor: overflowColor) { shown in
+        FittingPrefix(
+            items: items,
+            capacity: capacity,
+            spacing: spacing,
+            overflowColor: overflowColor,
+            hidesOverflowWhenEmpty: hidesOverflowWhenEmpty
+        ) { shown in
             ForEach(Array(shown.enumerated()), id: \.offset) { _, item in
                 row(item)
             }
