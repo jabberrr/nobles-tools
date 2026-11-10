@@ -56,21 +56,23 @@ struct StoreContent {
         let charges: [StoreCharge]
         /// Each included store's running total, for the large size.
         let totals: [StoreTotal]
-        /// Spent against the limit, 0...1, or `nil` when no limit is set.
-        let progress: Double?
-        /// "$82 of $300" for under a progress bar, or `nil` when no limit is set.
-        let limitCaption: String?
-        /// Words after the figure on the Lock Screen, saying what it is: "of $300", "left" or
-        /// "latest"; `nil` for a plain total, which the "Spending" title already explains.
-        let lockContext: String?
-        /// The Lock Screen meter, measuring the same thing as the figure: spent of the limit, or
-        /// left of it when the figure is the remainder. `nil` without a limit or for the latest charge.
-        let lockProgress: Double?
+        /// A bar against the design's limit, or `nil` when no limit is set.
+        let meter: Meter?
+        /// Whether the figure is the latest charge rather than a total.
+        let leadsWithLatest: Bool
         /// The rectangular Lock Screen's last line when there's no meter: the latest item ("Last: …"
         /// unless the figure is that charge), in full and then cut at words, longest first.
         let lockDetail: [String]
         /// The store filter in words: "All stores" or the chosen stores joined.
         let storeSummary: String
+
+        /// The Lock Screen's meter: none when the figure is the latest charge, which a limit
+        /// doesn't measure. (The Home Screen captions its bar, so it shows one either way.)
+        var lockMeter: Meter? { leadsWithLatest ? nil : meter }
+
+        /// Words after the figure on the Lock Screen, saying what it is: "of $300", "left" or
+        /// "latest"; `nil` for a plain total, which the "Spending" title already explains.
+        var lockContext: String? { leadsWithLatest ? "latest" : meter?.context }
 
         init(statement: StoreStatement, configuration: StoreConfiguration, now: Date) {
             let stores = configuration.stores
@@ -80,31 +82,16 @@ struct StoreContent {
             figure = Figure(highlight: configuration.highlight, spent: spent, limit: configuration.limit, latest: latest)
             charges = configuration.showsRecentCharges ? statement.charges(in: stores) : []
             totals = Self.totals(statement.totalsByStore, in: stores)
-            let limit = configuration.limit.flatMap { $0 > 0 ? $0 : nil }
-            let leadsWithLatest = configuration.highlight == .latestCharge && latest != nil
-            switch (configuration.highlight, limit) {
-            case (.totalSpent, let limit?):
-                lockContext = "of \(limit.usd(showsCents: false))"
-                lockProgress = Self.fraction(spent, of: limit)
-            case (.remaining, let limit?):
-                lockContext = "left"
-                lockProgress = Self.fraction(max(0, limit - spent), of: limit)
-            default:
-                lockContext = leadsWithLatest ? "latest" : nil
-                lockProgress = nil
-            }
-            if let item = latest?.detail {
+            // With no charges, a latest-charge design shows the total spent instead (see `Figure`).
+            leadsWithLatest = configuration.highlight == .latestCharge && latest != nil
+            meter = configuration.limit
+                .flatMap { $0 > 0 ? $0 : nil }
+                .map { Meter(spent: spent, limit: $0, showsLeft: configuration.highlight == .remaining) }
+            if let item = latest?.detail, !item.isEmpty {
                 let variants = [item] + item.cutsAtWords(limit: 4)
                 lockDetail = leadsWithLatest ? variants : variants.map { "Last: \($0)" }
             } else {
                 lockDetail = []
-            }
-            if let limit {
-                progress = Self.fraction(spent, of: limit)
-                limitCaption = "\(spent.usd(showsCents: false)) of \(limit.usd(showsCents: false))"
-            } else {
-                progress = nil
-                limitCaption = nil
             }
             storeSummary = stores.isEmpty ? "All stores" : stores.joined(separator: ", ")
         }
@@ -119,6 +106,31 @@ struct StoreContent {
         private static func key(_ name: String) -> String {
             name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+
+    /// A bar against the design's limit and its labels. It measures what the figure says: what's
+    /// left when the figure is the remainder, otherwise what's been spent.
+    struct Meter {
+        /// How full the bar is, 0...1.
+        let progress: Double
+        /// Under a Home Screen bar: "$137 of $300" or "$163 left of $300".
+        let caption: String
+        /// Beside a Lock Screen figure: "of $300" or "left".
+        let context: String
+
+        init(spent: Decimal, limit: Decimal, showsLeft: Bool) {
+            let limitText = limit.usd(showsCents: false)
+            if showsLeft {
+                let left = max(0, limit - spent)
+                progress = Self.fraction(left, of: limit)
+                caption = "\(left.usd(showsCents: false)) left of \(limitText)"
+                context = "left"
+            } else {
+                progress = Self.fraction(spent, of: limit)
+                caption = "\(spent.usd(showsCents: false)) of \(limitText)"
+                context = "of \(limitText)"
+            }
         }
 
         /// `value / total`, clamped to 0...1.

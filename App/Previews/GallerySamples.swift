@@ -74,6 +74,19 @@ enum GallerySamples {
         return statement
     }
 
+    /// The sample statement plus a $1,000 bookstore total: four-digit figures, the widest the
+    /// Lock Screen has to hold.
+    static var bigStoreStatement: StoreStatement {
+        let statement = storeStatement
+        let bookstore = StoreTotal(storeName: "Bookstore", amount: 1000, total: 1000)
+        return StoreStatement(
+            charges: statement.charges,
+            totalsByStore: statement.totalsByStore + [bookstore],
+            grandTotal: statement.grandTotal + bookstore.total,
+            fetchedAt: statement.fetchedAt
+        )
+    }
+
     private static func upcoming(_ meal: Meal, on date: LocalDate, _ menu: DailyMenu) -> UpcomingMenu {
         UpcomingMenu(meal: meal, date: date, menu: menu, validUntil: meal.serviceEnd(on: date))
     }

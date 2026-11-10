@@ -206,6 +206,20 @@ enum WidgetGallery {
                 statement: sample
             ),
             Variant(
+                name: "spending-big-paper-compact",
+                design: design(.spending(StoreConfiguration(limit: 1500)), theme: Theme(palette: .paper)),
+                families: [.systemSmall, .accessoryCircular, .accessoryRectangular],
+                screen: .compact,
+                statement: GallerySamples.bigStoreStatement
+            ),
+            Variant(
+                name: "spending-signedout",
+                design: limited,
+                families: [.accessoryRectangular],
+                statement: GallerySamples.staleStoreStatement,
+                storeStatus: .signedOut
+            ),
+            Variant(
                 name: "spending-cafe-navy",
                 design: cafe,
                 families: [.systemSmall, .systemMedium, .accessoryRectangular, .accessoryInline],

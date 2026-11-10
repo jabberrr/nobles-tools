@@ -25,7 +25,9 @@ struct StoreAccountSection: View {
             case .connected(let name, let since):
                 LabeledContent("Connected", value: name ?? "Nobles Account")
                 LabeledContent("Since", value: since.formatted(date: .abbreviated, time: .omitted))
-                Button("Disconnect", role: .destructive) { account.disconnect() }
+                Button("Disconnect", role: .destructive) {
+                    Task { await account.disconnect() }
+                }
             case .error(let message):
                 Label(message, systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.secondary)

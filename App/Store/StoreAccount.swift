@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import WebKit
 import WidgetKit
 import NoblesKit
 
@@ -49,6 +50,8 @@ final class StoreAccount {
             markConnected(session)
         } catch StoreError.notAuthenticated {
             sessionStore.clear()
+            // Otherwise the next attempt would silently capture the same rejected sign-in.
+            await Self.forgetWebSignIn()
             status = .error("That sign-in couldn't be verified. Please connect again.")
         } catch {
             // A network hiccup right after signing in: keep the session (it's probably fine) and let
@@ -57,11 +60,23 @@ final class StoreAccount {
         }
     }
 
-    /// Forgets the saved sign-in and refreshes the widget so it prompts to reconnect.
-    func disconnect() {
+    /// Forgets the saved sign-in, here and in the sign-in web view, and refreshes the widget so it
+    /// prompts to reconnect.
+    func disconnect() async {
         sessionStore.clear()
+        await Self.forgetWebSignIn()
         status = .disconnected
         reloadWidgets()
+    }
+
+    /// Clears the sign-in web view's cookies and storage, so the next Connect shows the Veracross
+    /// login (and can sign in as someone else) instead of reusing the old session at once. The
+    /// sign-in sheet is the app's only web view, so its whole data store can go.
+    private static func forgetWebSignIn() async {
+        await WKWebsiteDataStore.default().removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),
+            modifiedSince: .distantPast
+        )
     }
 
     private func markConnected(_ session: StoreSession) {

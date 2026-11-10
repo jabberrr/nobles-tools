@@ -65,6 +65,8 @@ struct StoreLoginView: View {
                 Text(message)
             }
         }
+        // A downward drag on the web page shouldn't throw away a half-finished sign-in; Cancel does.
+        .interactiveDismissDisabled()
     }
 
     /// Decides what to do with a freshly captured cookie and the people found on the page.
@@ -201,9 +203,7 @@ private struct StoreLoginWebView: UIViewRepresentable {
             for navigationAction: WKNavigationAction,
             windowFeatures: WKWindowFeatures
         ) -> WKWebView? {
-            if navigationAction.targetFrame == nil {
-                webView.load(navigationAction.request)
-            }
+            webView.load(navigationAction.request)
             return nil
         }
 
@@ -215,15 +215,26 @@ private struct StoreLoginWebView: UIViewRepresentable {
 
         /// Reads the people and the session cookie from the signed-in page, then reports them.
         private func captureSession(from webView: WKWebView) async {
-            let people = StorePerson.list(from: try? await webView.evaluateJavaScript(Self.peopleScript))
+            var people = await Self.people(on: webView)
+            if people.isEmpty {
+                // The sign-in can return through a school-store page that forwards itself on; give
+                // it a moment and look again before deciding there's no account here.
+                try? await Task.sleep(for: .seconds(1.5))
+                people = await Self.people(on: webView)
+            }
             let cookies = await webView.configuration.websiteDataStore.httpCookieStore.allCookies()
             let cookie = cookies
                 .filter { $0.domain.contains("nobles.edu") }
                 .map { "\($0.name)=\($0.value)" }
                 .joined(separator: "; ")
-            // No cookie means the page wasn't really signed in; let a later navigation try again.
-            if cookie.isEmpty { hasCaptured = false }
+            // Nothing usable yet: let a later page try again rather than latching on this one.
+            if cookie.isEmpty || people.isEmpty { hasCaptured = false }
             onCapture(cookie, people)
+        }
+
+        /// The people the loaded page links to, or none if it can't be read.
+        private static func people(on webView: WKWebView) async -> [StorePerson] {
+            StorePerson.list(from: try? await webView.evaluateJavaScript(peopleScript))
         }
 
         /// Collects `[{id, name}]` for every person the page links to by `person_id`. Falls back to

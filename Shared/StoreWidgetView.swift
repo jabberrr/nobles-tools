@@ -90,17 +90,16 @@ private struct StoreHomeScreenView: View {
         }
     }
 
-    /// The spent-against-limit bar and its caption, when the design sets a limit.
+    /// The bar against the limit and its caption ("$137 of $300", "$163 left of $300"), when the
+    /// design sets a limit.
     @ViewBuilder private func limitBar(_ spending: StoreContent.Spending, height: CGFloat) -> some View {
-        if let progress = spending.progress {
-            ProgressBar(progress: progress, colors: colors)
+        if let meter = spending.meter {
+            ProgressBar(progress: meter.progress, colors: colors)
                 .frame(height: height)
-            if let caption = spending.limitCaption {
-                Text(caption)
-                    .font(.caption2)
-                    .foregroundStyle(colors.secondary)
-                    .lineLimit(1)
-            }
+            Text(meter.caption)
+                .font(.caption2)
+                .foregroundStyle(colors.secondary)
+                .lineLimit(1)
         }
     }
 

@@ -32,10 +32,13 @@ struct StoreLockScreenView: View {
         case .connect: ["Spending · Connect in app", "Connect in app", "Connect"]
         case .unavailable: ["Spending unavailable", "Unavailable"]
         case .spending(let spending):
-            if let context = spending.lockContext {
-                ["Spending · \(spending.figure.amount) \(context)", "Spending · \(spending.figure.amount)", spending.figure.amount]
+            let amount = spending.figure.amount
+            if spending.leadsWithLatest {
+                ["Latest charge · \(amount)", "Latest · \(amount)", amount]
+            } else if let context = spending.lockContext {
+                ["Spending · \(amount) \(context)", "Spending · \(amount)", amount]
             } else {
-                ["Spending · \(spending.figure.amount)", spending.figure.amount]
+                ["Spending · \(amount)", amount]
             }
         }
     }
@@ -47,10 +50,10 @@ struct StoreLockScreenView: View {
     @ViewBuilder private var circular: some View {
         switch content.state {
         case .spending(let spending):
-            if let progress = spending.lockProgress {
+            if let meter = spending.lockMeter {
                 // A drawn ring rather than a Gauge, which renders out of proportion in ImageRenderer.
                 ZStack {
-                    ProgressRing(progress: progress, lineWidth: 7, colors: colors)
+                    ProgressRing(progress: meter.progress, lineWidth: 7, colors: colors)
                     Text(spending.figure.compactAmount)
                         .font(.system(size: 17, weight: .bold, design: fontDesign))
                         .monospacedDigit()
@@ -86,15 +89,21 @@ struct StoreLockScreenView: View {
     // MARK: Rectangular
 
     /// Three short lines that fit the smallest Lock Screen: the title, the figure with what it is
-    /// ("$136.75 of $300", "$163.25 left"), then a bar measuring the same thing, or the latest item.
+    /// ("$136.75 of $300", "$163.25 left"), then — unless the figures are stale ("Sign in to
+    /// refresh", "Updated 4h ago") — a bar measuring the same thing, or the latest item.
     @ViewBuilder private var rectangular: some View {
         switch content.state {
         case .spending(let spending):
             VStack(alignment: .leading, spacing: 1) {
                 header
                 figureLine(spending)
-                if let progress = spending.lockProgress {
-                    ProgressBar(progress: progress, colors: colors)
+                if let note = content.note {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                } else if let meter = spending.lockMeter {
+                    ProgressBar(progress: meter.progress, colors: colors)
                         .frame(height: 5)
                         .padding(.top, 3)
                 } else if !spending.lockDetail.isEmpty {
@@ -112,17 +121,22 @@ struct StoreLockScreenView: View {
         }
     }
 
-    /// The figure with its context beside it when both fit, else the figure alone; the figure is
-    /// shrunk rather than ever cut.
+    /// The figure with its context beside it; without cents when that's what it takes to keep the
+    /// context; else the figure alone, shrunk rather than ever cut.
     private func figureLine(_ spending: StoreContent.Spending) -> some View {
-        let contexts: [String?] = if let context = spending.lockContext { [context, nil] } else { [nil] }
-        return FirstFitting(variants: contexts, axes: .horizontal) { context in
+        let figure = spending.figure
+        let variants: [(amount: String, context: String?)] = if let context = spending.lockContext {
+            [(figure.amount, context), (figure.compactAmount, context), (figure.amount, nil)]
+        } else {
+            [(figure.amount, nil)]
+        }
+        return FirstFitting(variants: variants, axes: .horizontal) { variant in
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(spending.figure.amount)
+                Text(variant.amount)
                     .font(.system(size: 22, weight: .bold, design: fontDesign))
                     .monospacedDigit()
-                    .minimumScaleFactor(context == nil ? 0.6 : 1)
-                if let context {
+                    .minimumScaleFactor(variant.context == nil ? 0.6 : 1)
+                if let context = variant.context {
                     Text(context)
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.secondary)
