@@ -135,6 +135,7 @@ extension CafeWrapped {
         return !words.isDisjoint(with: cafeWords) && words.isDisjoint(with: ["athletic", "athletics"])
     }
 
+    /// The words that make a store a cafe (`isCafe`).
     private static let cafeWords: Set = ["cafe", "snack", "snacks", "coffee", "grill", "grille", "deli", "kitchen"]
 
     /// The semester to recap on `date`: the latest whose recap `isReady`, so a recap keeps its

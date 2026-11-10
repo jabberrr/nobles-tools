@@ -181,7 +181,7 @@ struct CafeWrappedTests {
         #expect(wrapped.share(ofHours: 0...9) == 1.0 / 9)
         #expect(wrapped.share(ofHours: 10...10) == 4.0 / 9)
         #expect(wrapped.share(ofHours: 0...23) == 1)
-        #expect(wrapped.share(ofHours: 21...30) == 0) // past midnight counts nothing
+        #expect(wrapped.share(ofHours: 20...30) == 1.0 / 9) // hours past 23 count nothing
     }
 
     @Test func timeOfDayHoldsThePeakHour() throws {
