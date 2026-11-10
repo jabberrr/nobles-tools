@@ -30,40 +30,42 @@ struct WrappedBarChart: View {
                 column(bar, fraction: peak > 0 ? bar.value / peak : 0, delay: delay + stagger * Double(position))
             }
         }
-        // Room for the figure over the tallest bar.
-        .padding(.top, 24)
         .frame(maxWidth: .infinity)
         .accessibilityHidden(true)
     }
 
+    /// The figure (if any), the bar, then its label. Figures and labels sit in fixed-height
+    /// slots, so one wider than its bar overhangs it instead of widening the column.
     private func column(_ bar: Bar, fraction: Double, delay: Double) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
+            if let valueLabel = bar.valueLabel {
+                slot(height: 16) {
+                    Text(valueLabel)
+                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                        .foregroundStyle(bar.isHighlighted ? WrappedStyle.highlight : Color.white)
+                }
+                .wrappedReveal(isActive, delay: delay + 0.3, style: .fade)
+            }
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(barColor(for: bar))
                 .frame(height: bar.value > 0 ? max(8, height * CGFloat(fraction)) : 3)
                 .wrappedReveal(isActive, delay: delay, style: .growUp)
-                .overlay(alignment: .top) {
-                    if let valueLabel = bar.valueLabel {
-                        Text(valueLabel)
-                            .font(.system(size: 13, weight: .heavy, design: .rounded))
-                            .foregroundStyle(bar.isHighlighted ? WrappedStyle.highlight : Color.white)
-                            .fixedSize()
-                            .alignmentGuide(.top) { $0[.bottom] + 6 }
-                            .wrappedReveal(isActive, delay: delay + 0.3, style: .fade)
-                    }
-                }
-            // A fixed-height slot, so labels wider than their bar overhang it instead of
-            // widening the column.
-            Color.clear
-                .frame(height: 14)
-                .overlay {
-                    Text(bar.label ?? "")
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(bar.isHighlighted ? WrappedStyle.highlight : WrappedStyle.secondary)
-                        .fixedSize()
-                }
+            slot(height: 14) {
+                Text(bar.label ?? "")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(bar.isHighlighted ? WrappedStyle.highlight : WrappedStyle.secondary)
+            }
         }
         .frame(maxWidth: maxBarWidth)
+    }
+
+    private func slot<Label: View>(height: CGFloat, @ViewBuilder text: () -> Label) -> some View {
+        Color.clear
+            .frame(height: height)
+            .overlay {
+                text()
+                    .fixedSize()
+            }
     }
 
     private func barColor(for bar: Bar) -> Color {
