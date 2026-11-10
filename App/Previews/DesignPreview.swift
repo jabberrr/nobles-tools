@@ -4,9 +4,9 @@ import NoblesKit
 
 /// A live preview of a design at one size, drawn by the same views the widget uses.
 ///
-/// Menus and scores come from data `PreviewData` shares between designs, and each design's
-/// filters apply as it draws, so editing a setting redraws at once. Until the data first arrives
-/// the preview shows redacted sample content, like a widget placeholder.
+/// Menus, scores and spending come from data `PreviewData` shares between designs, and each
+/// design's filters apply as it draws, so editing a setting redraws at once. Until the data first
+/// arrives the preview shows redacted sample content, like a widget placeholder.
 struct DesignPreview: View {
     let design: WidgetDesign
     let family: WidgetFamily
@@ -24,8 +24,8 @@ struct DesignPreview: View {
                 colors: colors,
                 menu: isSpending ? nil : (menu.value ?? UpcomingMenu.placeholder(for: mealSelection, now: now)),
                 scoreboard: isSpending ? nil : scoreboard(now: now),
-                statement: isSpending ? StoreStatement.sample : nil,
-                storeStatus: isSpending ? StoreStatus.live : StoreStatus.disconnected,
+                statement: isSpending ? (data.spending.value ?? StoreStatement.sample) : nil,
+                storeStatus: isSpending ? data.spendingStatus : StoreStatus.disconnected,
                 calendar: library.calendar,
                 now: now
             )
@@ -45,7 +45,7 @@ struct DesignPreview: View {
         case .menu(let configuration): .menu(configuration.meal)
         case .scores: .scores
         case .countdown: nil
-        case .spending: nil
+        case .spending: .spending(StoreSessionStore().load())
         }
     }
 
@@ -59,7 +59,7 @@ struct DesignPreview: View {
         case .menu: menu.value == nil
         case .scores: data.feed.value == nil
         case .countdown: false
-        case .spending: false
+        case .spending: data.spending.value == nil
         }
     }
 

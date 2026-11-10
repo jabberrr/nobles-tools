@@ -90,7 +90,7 @@ private struct StoreHomeScreenView: View {
         }
     }
 
-    /// The bar against the limit and its caption ("$137 of $300", "$163 left of $300"), when the
+    /// The bar against the limit and its caption ("$58 of $300", "$242 left of $300"), when the
     /// design sets a limit.
     @ViewBuilder private func limitBar(_ spending: StoreContent.Spending, height: CGFloat) -> some View {
         if let meter = spending.meter {

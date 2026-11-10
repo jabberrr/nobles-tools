@@ -5,6 +5,9 @@ import NoblesKit
 struct StoreSettingsSections: View {
     @Binding var configuration: StoreConfiguration
 
+    @Environment(PreviewData.self) private var previewData
+    @FocusState private var isEditingLimit: Bool
+
     var body: some View {
         Section {
             CheckmarkRow(title: "All Stores", systemImage: "bag", isSelected: configuration.stores.isEmpty) {
@@ -32,14 +35,24 @@ struct StoreSettingsSections: View {
                     Text(highlight.displayName).tag(highlight)
                 }
             }
+            .onChange(of: configuration.highlight) { _, highlight in
+                // What's left needs a limit to count down from, so go straight to it.
+                if highlight == .remaining, configuration.limit == nil {
+                    isEditingLimit = true
+                }
+            }
         } header: {
             Text("Highlight")
         } footer: {
-            Text("The figure shown large on small and Lock Screen widgets.")
+            if configuration.highlight == .remaining, configuration.limit == nil {
+                Label("Remaining needs a spending limit. Set one below; until then, widgets show the total spent.", systemImage: "exclamationmark.circle")
+            } else {
+                Text("The figure shown large on small and Lock Screen widgets.")
+            }
         }
 
         Section {
-            LimitField(limit: $configuration.limit)
+            LimitField(limit: $configuration.limit, isFocused: $isEditingLimit)
         } header: {
             Text("Spending Limit")
         } footer: {
@@ -53,36 +66,42 @@ struct StoreSettingsSections: View {
         }
     }
 
-    /// The common store names as suggestions, then any chosen store that isn't among them.
+    /// The stores on the connected account (or the sample's, when none is connected) as
+    /// suggestions, then any chosen store that isn't among them.
     private var storeChoices: [String] {
-        StoreStatement.sample.stores.merged(with: configuration.stores)
+        (previewData.spending.value ?? .sample).stores.merged(with: configuration.stores)
     }
 }
 
-/// A currency field for the optional spending limit: clearing it sets no limit.
+/// A currency field for the optional spending limit: clearing it sets no limit. The "$" sits
+/// right against the amount (or "None"), and tapping anywhere on the row starts editing.
 private struct LimitField: View {
     @Binding var limit: Decimal?
+    var isFocused: FocusState<Bool>.Binding
     @State private var text: String
 
-    init(limit: Binding<Decimal?>) {
+    init(limit: Binding<Decimal?>, isFocused: FocusState<Bool>.Binding) {
         _limit = limit
+        self.isFocused = isFocused
         _text = State(initialValue: limit.wrappedValue.map(Self.format) ?? "")
     }
 
     var body: some View {
-        HStack {
-            Text("Limit")
-            Spacer()
-            Text("$")
-                .foregroundStyle(.secondary)
-            TextField("None", text: $text)
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .frame(width: 90)
-                .onChange(of: text) { _, newValue in
-                    limit = Self.parse(newValue)
-                }
+        LabeledContent("Limit") {
+            HStack(spacing: 2) {
+                Text("$")
+                    .foregroundStyle(.secondary)
+                TextField("None", text: $text)
+                    .keyboardType(.decimalPad)
+                    .focused(isFocused)
+                    .fixedSize()
+                    .onChange(of: text) { _, newValue in
+                        limit = Self.parse(newValue)
+                    }
+            }
         }
+        .contentShape(Rectangle())
+        .onTapGesture { isFocused.wrappedValue = true }
     }
 
     /// A positive amount from loosely typed input, or `nil` for empty or non-positive input.

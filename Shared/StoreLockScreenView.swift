@@ -4,7 +4,7 @@ import NoblesKit
 
 /// Spending on the Lock Screen: one figure, so it's never crowded. The figure is the design's
 /// highlight, and a meter, when there is one, measures the same thing: the circular size rings it,
-/// the rectangular size puts a bar under it, and the inline size reads "Spending · $136.75".
+/// the rectangular size puts a bar under it, and the inline size reads "Spending · $58.25".
 struct StoreLockScreenView: View {
     let content: StoreContent
     let family: WidgetFamily
@@ -22,7 +22,7 @@ struct StoreLockScreenView: View {
 
     // MARK: Inline
 
-    /// "Spending · $136.75 of $300", giving up words to fit; it never truncates.
+    /// "Spending · $58.25 of $300", giving up words to fit; it never truncates.
     private var inline: some View {
         FirstFitting(variants: inlineVariants) { Label($0, systemImage: "creditcard") }
     }
@@ -91,7 +91,7 @@ struct StoreLockScreenView: View {
     // MARK: Rectangular
 
     /// Three short lines that fit the smallest Lock Screen: the title, the figure with what it is
-    /// ("$136.75 of $300", "$163.25 left"), then — unless the figures are stale ("Sign in to
+    /// ("$58.25 of $300", "$241.75 left"), then — unless the figures are stale ("Sign in to
     /// refresh", "Updated 4h ago") — a bar measuring the same thing, or the latest item.
     @ViewBuilder private var rectangular: some View {
         switch content.state {
@@ -108,11 +108,16 @@ struct StoreLockScreenView: View {
                     ProgressBar(progress: meter.progress, colors: colors)
                         .frame(height: 5)
                         .padding(.top, 3)
-                } else if !spending.lockDetail.isEmpty {
-                    FirstFitting(variants: spending.lockDetail, axes: .horizontal) { Text($0) }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                } else if let detail = spending.lockDetail {
+                    // Two lines where the widget has room, so a long item name shows in full or
+                    // nearly; whatever still doesn't fit is cut at the end of the last line.
+                    FirstFitting(variants: [2, 1], axes: .vertical) { lines in
+                        Text(detail)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(lines)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
