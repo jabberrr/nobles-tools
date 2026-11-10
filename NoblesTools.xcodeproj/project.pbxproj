@@ -9,7 +9,9 @@
 /* Begin PBXBuildFile section */
 		0218A4DE19C1CD3D2D8723A2 /* TextFitting.swift in Sources */ = {isa = PBXBuildFile; fileRef = F904F4E9AEE2D7981FAE3171 /* TextFitting.swift */; };
 		023864092E9CCD9B04544DF6 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5830B591DC7CB8F48A685C /* PreviewData.swift */; };
+		0523AA2AD30AE073947BA109 /* StoreAccountSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212182F82C0FF4B4E7A5DE25 /* StoreAccountSection.swift */; };
 		078FE43DF2A5CE86243D3C8F /* CountdownWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC1CE01F355EA8F5D7212FE /* CountdownWidgetView.swift */; };
+		08EF561EADF473BEA9815EA3 /* StoreSettingsSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = F93B52E23BB48C94A7B56947 /* StoreSettingsSections.swift */; };
 		0CC789C1DFA39CD1DDBCE2BA /* NoblesWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55049156F16DE494AAB5AD62 /* NoblesWidgetsBundle.swift */; };
 		12CBA7884892282FF566F0DF /* DesignEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26B8293DA3FCB8311B616183 /* DesignEditorView.swift */; };
 		1418B0BC8414484518550711 /* MenuWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE28073558D23F28106F0F7 /* MenuWidgetView.swift */; };
@@ -24,10 +26,13 @@
 		3128D5A60D1C989538950776 /* ScoresContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DF6DD68F52C672F288A1523 /* ScoresContent.swift */; };
 		31A70288185A635CA434BA91 /* WidgetDesign+Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B1971106FACBCB9ED766A3 /* WidgetDesign+Content.swift */; };
 		3235170F03891F932344A0F6 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD002102B6E725A991D5A32 /* WidgetIntents.swift */; };
+		36996998E57CA07AA46772D0 /* StoreContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3A6F9A6BA6DDBFEB386819 /* StoreContent.swift */; };
 		3CBAD31E457D655B21AD7D03 /* MenuDishViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48599535F4DBEAE5559080A0 /* MenuDishViews.swift */; };
 		3CCD5E925536B3DCBB909266 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 08FF515C84F8ABB200F048C6 /* Assets.xcassets */; };
+		3D5089416FCAD91B97876F0A /* StoreLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F7D82FA2EF39140D0DCDC2B /* StoreLoginView.swift */; };
 		463757C6AD745EBED0B2268E /* ScoreRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 537F5DEE602E6324FE68C5CF /* ScoreRows.swift */; };
 		4F9F0C36AA87BED175EBD740 /* WidgetSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC00D703EFCA97DB75DFFA1B /* WidgetSnapshotTests.swift */; };
+		556A1DF95BAC4FB83945A407 /* StoreRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DD6C815414A071E7CFCFC21 /* StoreRows.swift */; };
 		58E0E2BE7BCE7E2C6C293334 /* MenuDishViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48599535F4DBEAE5559080A0 /* MenuDishViews.swift */; };
 		59029B519EF816DD0D052778 /* CalendarEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32C57B685E3B3A6FFF4A8A0 /* CalendarEditorView.swift */; };
 		5AE8D4891E68A993D8F35FB2 /* NoblesWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B8DD80AF53AF834A03B17A84 /* NoblesWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -35,7 +40,9 @@
 		5ED86908A765EA146953D593 /* MenuLockScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7934BFE0B581E7BEDFBF34F0 /* MenuLockScreenView.swift */; };
 		5F56EAC6E8B92BA88D22991B /* CountdownSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B32FCF2FF8005DE646C0AC35 /* CountdownSettingsSection.swift */; };
 		5F9E0A013E7752731D02C5D8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4566EE27C2C7546346FFEDF6 /* SettingsView.swift */; };
+		65E05C560B18F83EFE9DE918 /* StoreLockScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EDFD1B4246CBF910DF9A067 /* StoreLockScreenView.swift */; };
 		6A68547D66919D8B13ED9D4A /* CountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94EE756DB4323BA39A148536 /* CountdownWidget.swift */; };
+		6B8D95342A8840532D733C4E /* StoreContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3A6F9A6BA6DDBFEB386819 /* StoreContent.swift */; };
 		6CDF5F56ACAD928B3CC41B3C /* Scores+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8CF228B8104E15A221284 /* Scores+Display.swift */; };
 		6DB3C961B58E03BE7980E6F2 /* CountdownSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADCCEEEC683C3B0793403BF5 /* CountdownSnapshot.swift */; };
 		6DD6E36544E2AA6C4D2A70B8 /* FittingList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A25C54FDA34BC529501DE3 /* FittingList.swift */; };
@@ -48,16 +55,19 @@
 		8CA8EC28221863E1E496B397 /* NoblesKit in Frameworks */ = {isa = PBXBuildFile; productRef = D4B88FF741D38EA037429B1C /* NoblesKit */; };
 		8E9C5EAFFBE2D98305155EB5 /* GallerySamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194AA47BE27AF4030B7BD1E0 /* GallerySamples.swift */; };
 		9361153D5F1FA275940167F0 /* ScoreRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 537F5DEE602E6324FE68C5CF /* ScoreRows.swift */; };
+		94C5036CEB96018CD87F2282 /* StoreWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C2A3844B8EA979927C8EB3 /* StoreWidgetView.swift */; };
 		97E072E8A7DD7F537721AF24 /* Theme+SwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */; };
 		982D5A9A95465277B4564730 /* WidgetBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D3D9BC3080A7906BE9F2E2 /* WidgetBackground.swift */; };
 		983132C5183FEB3D6ECC0B74 /* WidgetGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1241AB0E547E54EBDAC8C5A2 /* WidgetGallery.swift */; };
 		9AA43E3C5434E5F62F190311 /* WidgetComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1317E033DD7378C1E9855A17 /* WidgetComponents.swift */; };
+		9DD9BB89326938A7A9D59243 /* StoreLockScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EDFD1B4246CBF910DF9A067 /* StoreLockScreenView.swift */; };
 		A20959F5B3C803C33C0A9A6B /* Symbols.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9ADF38CC1E71025D0537B7B /* Symbols.swift */; };
 		A277DC9405C569A70CEC3800 /* Scores+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF8CF228B8104E15A221284 /* Scores+Display.swift */; };
 		ADC1CFC7F579438384BC0A4D /* DesignListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BA211C76F9856DAE483410 /* DesignListView.swift */; };
 		B3529FB5B0BC705638AA7505 /* ProgressViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8782FC26962D92CF29ABFCE /* ProgressViews.swift */; };
 		B3C6E44108448E9ACF4B3EF5 /* NoblesKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1E106189296587F9719029D0 /* NoblesKit */; };
 		BDF54BF1228CC1442F52C62F /* EditorComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52BAEB9FA88CDCAA187E5245 /* EditorComponents.swift */; };
+		C09D025017745AD532C1A050 /* StoreRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DD6C815414A071E7CFCFC21 /* StoreRows.swift */; };
 		C1593C70619363FBAD84D834 /* FittingList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A25C54FDA34BC529501DE3 /* FittingList.swift */; };
 		C16DBB719BF417B820C8123B /* ScoresWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */; };
 		C5032F688B0BA361C0158B2E /* WidgetDesign+Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B1971106FACBCB9ED766A3 /* WidgetDesign+Content.swift */; };
@@ -69,6 +79,7 @@
 		D4C2606B59603AF8AF580F2B /* SchoolFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D0D676A69D4CB987E2DB75E /* SchoolFormat.swift */; };
 		D6C610BA08051DFD3AA46EB5 /* CountdownLockScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB55D905AB4F64BF55E3A19 /* CountdownLockScreenView.swift */; };
 		D81C55535E22209CAA7E0DA6 /* Theme+SwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */; };
+		D95E92B8FE7A8F94666DD9DE /* StoreWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD4D7B7437E474DBA7EC595 /* StoreWidget.swift */; };
 		DD9345C60C9A1E6B961F6330 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ABEF95F8453392472EB3B8DB /* SwiftUI.framework */; };
 		E172017960956EF03E7E37A0 /* ScoresContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DF6DD68F52C672F288A1523 /* ScoresContent.swift */; };
 		E47D3265226CC85C4AF16171 /* WidgetPreviewFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1011F678E961CB529F8E79 /* WidgetPreviewFrame.swift */; };
@@ -83,7 +94,9 @@
 		F73AA7E74FC242A2D9D1294E /* MenuSettingsSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DACBA333C3E49C9E3EBFF3 /* MenuSettingsSections.swift */; };
 		F858820D636E6AE2CE0CF436 /* MenuContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81BEB4D832AFC2D15D81EB0 /* MenuContent.swift */; };
 		F96F9C2FA9B9741BCF11369B /* WidgetComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1317E033DD7378C1E9855A17 /* WidgetComponents.swift */; };
+		FA8B9CE1618174A17DF9DDFE /* StoreWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C2A3844B8EA979927C8EB3 /* StoreWidgetView.swift */; };
 		FDAC5C2C31A4CF99C1CEADBB /* CountdownLockScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB55D905AB4F64BF55E3A19 /* CountdownLockScreenView.swift */; };
+		FF1BFCB3CDA3ACADE81A66D0 /* StoreAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042C67572553D3911790F92B /* StoreAccount.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -118,17 +131,22 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		042C67572553D3911790F92B /* StoreAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreAccount.swift; sourceTree = "<group>"; };
 		08FF515C84F8ABB200F048C6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0BC1CE01F355EA8F5D7212FE /* CountdownWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownWidgetView.swift; sourceTree = "<group>"; };
+		0F7D82FA2EF39140D0DCDC2B /* StoreLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreLoginView.swift; sourceTree = "<group>"; };
 		1241AB0E547E54EBDAC8C5A2 /* WidgetGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGallery.swift; sourceTree = "<group>"; };
 		1317E033DD7378C1E9855A17 /* WidgetComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetComponents.swift; sourceTree = "<group>"; };
+		17C2A3844B8EA979927C8EB3 /* StoreWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreWidgetView.swift; sourceTree = "<group>"; };
 		194AA47BE27AF4030B7BD1E0 /* GallerySamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GallerySamples.swift; sourceTree = "<group>"; };
 		1DC9684E2CB7ED5FC08ADBC5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1DF6DD68F52C672F288A1523 /* ScoresContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoresContent.swift; sourceTree = "<group>"; };
+		212182F82C0FF4B4E7A5DE25 /* StoreAccountSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreAccountSection.swift; sourceTree = "<group>"; };
 		26B8293DA3FCB8311B616183 /* DesignEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignEditorView.swift; sourceTree = "<group>"; };
 		2C4D089E1E8D3DAF884D4294 /* DesignWidgetContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignWidgetContent.swift; sourceTree = "<group>"; };
 		2C6B744B4477004C10C5BB50 /* NoblesToolsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoblesToolsApp.swift; sourceTree = "<group>"; };
 		2EB55D905AB4F64BF55E3A19 /* CountdownLockScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownLockScreenView.swift; sourceTree = "<group>"; };
+		2EDFD1B4246CBF910DF9A067 /* StoreLockScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreLockScreenView.swift; sourceTree = "<group>"; };
 		2F1011F678E961CB529F8E79 /* WidgetPreviewFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPreviewFrame.swift; sourceTree = "<group>"; };
 		3D0D676A69D4CB987E2DB75E /* SchoolFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolFormat.swift; sourceTree = "<group>"; };
 		4566EE27C2C7546346FFEDF6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -138,6 +156,7 @@
 		537F5DEE602E6324FE68C5CF /* ScoreRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreRows.swift; sourceTree = "<group>"; };
 		55049156F16DE494AAB5AD62 /* NoblesWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoblesWidgetsBundle.swift; sourceTree = "<group>"; };
 		59DACBA333C3E49C9E3EBFF3 /* MenuSettingsSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuSettingsSections.swift; sourceTree = "<group>"; };
+		5FD4D7B7437E474DBA7EC595 /* StoreWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreWidget.swift; sourceTree = "<group>"; };
 		630CB637D5FAC5B8762E2AD4 /* NoblesKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NoblesKit; path = NoblesKit; sourceTree = SOURCE_ROOT; };
 		6349A17AAE94CBB3144D2E4F /* EditorBindings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorBindings.swift; sourceTree = "<group>"; };
 		66AA418C91E9CA3ADD3D637A /* DesignEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignEntities.swift; sourceTree = "<group>"; };
@@ -147,6 +166,7 @@
 		7934BFE0B581E7BEDFBF34F0 /* MenuLockScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuLockScreenView.swift; sourceTree = "<group>"; };
 		7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoresWidgetView.swift; sourceTree = "<group>"; };
 		7AED143B9D1F8EF61F4B1134 /* WidgetSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSupport.swift; sourceTree = "<group>"; };
+		7DD6C815414A071E7CFCFC21 /* StoreRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreRows.swift; sourceTree = "<group>"; };
 		7DE28073558D23F28106F0F7 /* MenuWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuWidgetView.swift; sourceTree = "<group>"; };
 		86D3D9BC3080A7906BE9F2E2 /* WidgetBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetBackground.swift; sourceTree = "<group>"; };
 		9019A1B0F6375080CF3A702E /* MenuWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuWidget.swift; sourceTree = "<group>"; };
@@ -156,6 +176,7 @@
 		95BA211C76F9856DAE483410 /* DesignListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignListView.swift; sourceTree = "<group>"; };
 		9DD002102B6E725A991D5A32 /* WidgetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetIntents.swift; sourceTree = "<group>"; };
 		9FF8CF228B8104E15A221284 /* Scores+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scores+Display.swift"; sourceTree = "<group>"; };
+		AB3A6F9A6BA6DDBFEB386819 /* StoreContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreContent.swift; sourceTree = "<group>"; };
 		ABEF95F8453392472EB3B8DB /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		AC00D703EFCA97DB75DFFA1B /* WidgetSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotTests.swift; sourceTree = "<group>"; };
 		ADCCEEEC683C3B0793403BF5 /* CountdownSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownSnapshot.swift; sourceTree = "<group>"; };
@@ -177,6 +198,7 @@
 		F3E05BDCD0B0151D8E0AAC28 /* NoblesTools.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoblesTools.entitlements; sourceTree = "<group>"; };
 		F814F319454D3F1AE89EB51B /* ScoresLockScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoresLockScreenView.swift; sourceTree = "<group>"; };
 		F904F4E9AEE2D7981FAE3171 /* TextFitting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFitting.swift; sourceTree = "<group>"; };
+		F93B52E23BB48C94A7B56947 /* StoreSettingsSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreSettingsSections.swift; sourceTree = "<group>"; };
 		FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Theme+SwiftUI.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -236,6 +258,7 @@
 				EC6694052E428DAF5D47EC90 /* Editor */,
 				012673B7CD4D03111B481449 /* Previews */,
 				B5EA5C67EFE619C532E285C1 /* Settings */,
+				9F7621301BB652CF8A368132 /* Store */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -267,6 +290,10 @@
 				1DF6DD68F52C672F288A1523 /* ScoresContent.swift */,
 				F814F319454D3F1AE89EB51B /* ScoresLockScreenView.swift */,
 				7A72B36C60FEFA43DE59FDF4 /* ScoresWidgetView.swift */,
+				AB3A6F9A6BA6DDBFEB386819 /* StoreContent.swift */,
+				2EDFD1B4246CBF910DF9A067 /* StoreLockScreenView.swift */,
+				7DD6C815414A071E7CFCFC21 /* StoreRows.swift */,
+				17C2A3844B8EA979927C8EB3 /* StoreWidgetView.swift */,
 				E9ADF38CC1E71025D0537B7B /* Symbols.swift */,
 				F904F4E9AEE2D7981FAE3171 /* TextFitting.swift */,
 				FA71BAE55B9C4EBBD6F2639C /* Theme+SwiftUI.swift */,
@@ -298,6 +325,16 @@
 				9DD002102B6E725A991D5A32 /* WidgetIntents.swift */,
 			);
 			path = Intents;
+			sourceTree = "<group>";
+		};
+		9F7621301BB652CF8A368132 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				042C67572553D3911790F92B /* StoreAccount.swift */,
+				212182F82C0FF4B4E7A5DE25 /* StoreAccountSection.swift */,
+				0F7D82FA2EF39140D0DCDC2B /* StoreLoginView.swift */,
+			);
+			path = Store;
 			sourceTree = "<group>";
 		};
 		9F9FBE83E2F34D3D13AB732F /* Frameworks */ = {
@@ -353,6 +390,7 @@
 				C4EE6229B19F8453AC09FAF7 /* NoblesWidgets.entitlements */,
 				55049156F16DE494AAB5AD62 /* NoblesWidgetsBundle.swift */,
 				CA9CC3030C6DD97F2E962CBA /* ScoresWidget.swift */,
+				5FD4D7B7437E474DBA7EC595 /* StoreWidget.swift */,
 				7AED143B9D1F8EF61F4B1134 /* WidgetSupport.swift */,
 				9C3E27BFA82A0F9CBEB97242 /* Intents */,
 			);
@@ -369,6 +407,7 @@
 				52BAEB9FA88CDCAA187E5245 /* EditorComponents.swift */,
 				59DACBA333C3E49C9E3EBFF3 /* MenuSettingsSections.swift */,
 				ED23AA17C6B61D6C485DCABF /* ScoresSettingsSections.swift */,
+				F93B52E23BB48C94A7B56947 /* StoreSettingsSections.swift */,
 			);
 			path = Editor;
 			sourceTree = "<group>";
@@ -519,6 +558,11 @@
 				840B3C0B4EBFB52E5EB63B70 /* ScoresLockScreenView.swift in Sources */,
 				1CC41ABAE161E83A06A7B3DB /* ScoresWidget.swift in Sources */,
 				73C66311926BDCB34A7F6184 /* ScoresWidgetView.swift in Sources */,
+				36996998E57CA07AA46772D0 /* StoreContent.swift in Sources */,
+				9DD9BB89326938A7A9D59243 /* StoreLockScreenView.swift in Sources */,
+				C09D025017745AD532C1A050 /* StoreRows.swift in Sources */,
+				D95E92B8FE7A8F94666DD9DE /* StoreWidget.swift in Sources */,
+				FA8B9CE1618174A17DF9DDFE /* StoreWidgetView.swift in Sources */,
 				F43B1A74FE03A1A57364BD70 /* Symbols.swift in Sources */,
 				7E5D26B310B6D86835FBA0A2 /* TextFitting.swift in Sources */,
 				D81C55535E22209CAA7E0DA6 /* Theme+SwiftUI.swift in Sources */,
@@ -574,6 +618,14 @@
 				E7020F842409BA85F94B50BD /* ScoresSettingsSections.swift in Sources */,
 				C16DBB719BF417B820C8123B /* ScoresWidgetView.swift in Sources */,
 				5F9E0A013E7752731D02C5D8 /* SettingsView.swift in Sources */,
+				FF1BFCB3CDA3ACADE81A66D0 /* StoreAccount.swift in Sources */,
+				0523AA2AD30AE073947BA109 /* StoreAccountSection.swift in Sources */,
+				6B8D95342A8840532D733C4E /* StoreContent.swift in Sources */,
+				65E05C560B18F83EFE9DE918 /* StoreLockScreenView.swift in Sources */,
+				3D5089416FCAD91B97876F0A /* StoreLoginView.swift in Sources */,
+				556A1DF95BAC4FB83945A407 /* StoreRows.swift in Sources */,
+				08EF561EADF473BEA9815EA3 /* StoreSettingsSections.swift in Sources */,
+				94C5036CEB96018CD87F2282 /* StoreWidgetView.swift in Sources */,
 				A20959F5B3C803C33C0A9A6B /* Symbols.swift in Sources */,
 				0218A4DE19C1CD3D2D8723A2 /* TextFitting.swift in Sources */,
 				97E072E8A7DD7F537721AF24 /* Theme+SwiftUI.swift in Sources */,
