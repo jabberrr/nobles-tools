@@ -29,6 +29,19 @@ struct StoreServiceTests {
         #expect(abs(cached.fetchedAt.timeIntervalSinceNow) < 60)
     }
 
+    @Test func forgettingTheCacheRemovesTheStatement() async throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let cache = ResponseCache(directory: directory)
+        let http = FakeHTTPClient([chargesURL: .data(try Fixture.data("synthetic-store-charges.json"))])
+        let service = StoreService(http: http, cache: cache)
+
+        _ = try await service.statement(for: session, now: now)
+        #expect(await service.cachedStatement() != nil)
+        await service.forgetCachedStatement()
+        #expect(await service.cachedStatement() == nil)
+    }
+
     // MARK: Classification
 
     @Test func rejectedSessionIsNotAuthenticated() async {

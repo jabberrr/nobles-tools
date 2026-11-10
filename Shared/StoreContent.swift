@@ -52,7 +52,8 @@ struct StoreContent {
         let stores: [String]
         /// The prominent figure (small and Lock Screen sizes lead with it).
         let figure: Figure
-        /// Recent charges, newest first; empty when the design hides the list.
+        /// Recent charges, newest first, leaving out the latest when it's the figure; empty when
+        /// the design hides the list.
         let charges: [StoreCharge]
         /// Each included store's running total, for the large size.
         let totals: [StoreTotal]
@@ -66,9 +67,10 @@ struct StoreContent {
         /// The store filter in words: "All stores" or the chosen stores joined.
         let storeSummary: String
 
-        /// The Lock Screen's meter: none when the figure is the latest charge, which a limit
-        /// doesn't measure. (The Home Screen captions its bar, so it shows one either way.)
-        var lockMeter: Meter? { leadsWithLatest ? nil : meter }
+        /// The meter measuring the figure itself, which a figure beside or above it can share a
+        /// label with: none when the figure is the latest charge, which a limit doesn't measure.
+        /// (Sizes that caption their bar show `meter` either way.)
+        var figureMeter: Meter? { leadsWithLatest ? nil : meter }
 
         /// Words after the figure on the Lock Screen, saying what it is: "of $300", "left" or
         /// "latest"; `nil` for a plain total, which the "Spending" title already explains.
@@ -80,10 +82,12 @@ struct StoreContent {
             let spent = statement.total(in: stores)
             let latest = statement.latestCharge(in: stores)
             figure = Figure(highlight: configuration.highlight, spent: spent, limit: configuration.limit, latest: latest)
-            charges = configuration.showsRecentCharges ? statement.charges(in: stores) : []
-            totals = Self.totals(statement.totalsByStore, in: stores)
             // With no charges, a latest-charge design shows the total spent instead (see `Figure`).
             leadsWithLatest = configuration.highlight == .latestCharge && latest != nil
+            charges = configuration.showsRecentCharges
+                ? Array(statement.charges(in: stores).dropFirst(leadsWithLatest ? 1 : 0))
+                : []
+            totals = Self.totals(statement.totalsByStore, in: stores)
             meter = configuration.limit
                 .flatMap { $0 > 0 ? $0 : nil }
                 .map { Meter(spent: spent, limit: $0, showsLeft: configuration.highlight == .remaining) }
@@ -117,6 +121,8 @@ struct StoreContent {
         let caption: String
         /// Beside a Lock Screen figure: "of $300" or "left".
         let context: String
+        /// Beside a figure with room for more: "of $300" or "left of $300".
+        let phrase: String
 
         init(spent: Decimal, limit: Decimal, showsLeft: Bool) {
             let limitText = limit.usd(showsCents: false)
@@ -125,10 +131,12 @@ struct StoreContent {
                 progress = Self.fraction(left, of: limit)
                 caption = "\(left.usd(showsCents: false)) left of \(limitText)"
                 context = "left"
+                phrase = "left of \(limitText)"
             } else {
                 progress = Self.fraction(spent, of: limit)
                 caption = "\(spent.usd(showsCents: false)) of \(limitText)"
                 context = "of \(limitText)"
+                phrase = "of \(limitText)"
             }
         }
 

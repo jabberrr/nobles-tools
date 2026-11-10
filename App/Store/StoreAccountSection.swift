@@ -25,6 +25,9 @@ struct StoreAccountSection: View {
             case .connected(let name, let since):
                 LabeledContent("Connected", value: name ?? "Nobles Account")
                 LabeledContent("Since", value: since.formatted(date: .abbreviated, time: .omitted))
+                // Renews an expired session. The sign-in page keeps its Veracross login (Disconnect
+                // clears it), so while that's still valid no typing is needed.
+                connectButton("Reconnect", systemImage: "arrow.clockwise")
                 Button("Disconnect", role: .destructive) {
                     Task { await account.disconnect() }
                 }
@@ -48,7 +51,7 @@ struct StoreAccountSection: View {
 
     private var footer: String {
         if account.isConnected {
-            return "Your cafe and store spending stays on your device. Disconnecting removes the saved sign-in."
+            return "If the widget asks you to sign in, tap Reconnect. Your spending stays on your device; disconnecting removes the saved sign-in and spending."
         }
         return "Sign in with Veracross to show your own cafe and store spending. Your login and data stay on your device."
     }

@@ -44,7 +44,7 @@ private struct DesignEditorForm: View {
                     Label("Preview shows sample spending. Connect your Nobles account in Settings to use your own.", systemImage: "creditcard")
                         .frame(maxWidth: .infinity)
                 } else if design.kind == .spending, previewData.spendingStatus == .signedOut {
-                    Label("Your Nobles sign-in has expired. Reconnect in Settings to refresh.", systemImage: "person.badge.key")
+                    Label("Your Nobles sign-in has expired. Tap Reconnect in Settings to refresh.", systemImage: "person.badge.key")
                         .frame(maxWidth: .infinity)
                 } else if previewData.isShowingSample(for: design) {
                     Label("Showing sample data: \(sourceName) couldn't be reached.", systemImage: "wifi.slash")
@@ -78,6 +78,8 @@ private struct DesignEditorForm: View {
                 }
             }
         }
+        // The limit field's decimal pad has no return key; dragging the form puts it away.
+        .scrollDismissesKeyboard(.interactively)
         .navigationTitle(design.name.isEmpty ? design.kind.displayName : design.name)
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog("Delete this design?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {

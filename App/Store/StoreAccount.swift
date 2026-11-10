@@ -50,6 +50,7 @@ final class StoreAccount {
             markConnected(session)
         } catch StoreError.notAuthenticated {
             sessionStore.clear()
+            await service.forgetCachedStatement()
             // Otherwise the next attempt would silently capture the same rejected sign-in.
             await Self.forgetWebSignIn()
             status = .error("That sign-in couldn't be verified. Please connect again.")
@@ -60,10 +61,11 @@ final class StoreAccount {
         }
     }
 
-    /// Forgets the saved sign-in, here and in the sign-in web view, and refreshes the widget so it
-    /// prompts to reconnect.
+    /// Forgets the saved sign-in, here and in the sign-in web view, and the account's cached
+    /// purchases, then refreshes the widget so it prompts to connect.
     func disconnect() async {
         sessionStore.clear()
+        await service.forgetCachedStatement()
         await Self.forgetWebSignIn()
         status = .disconnected
         reloadWidgets()

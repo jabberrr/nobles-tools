@@ -53,6 +53,12 @@ public struct StoreService: Sendable {
         return try? Self.parse(cached.data, fetchedAt: cached.savedAt)
     }
 
+    /// Deletes the cached statement. Call it when an account is disconnected or rejected, so its
+    /// purchases neither linger on the device nor show under the next account connected.
+    public func forgetCachedStatement() async {
+        await cache?.remove(for: Self.cacheKey)
+    }
+
     /// Parses a `get_charges.php` body, stamping it `fetchedAt`. Throws `.notAuthenticated` for a
     /// sign-in wall (a not-`ok` or charge-less JSON body, or a Veracross login page) and
     /// `.unavailable` for an otherwise unreadable body.

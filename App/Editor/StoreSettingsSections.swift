@@ -36,9 +36,10 @@ struct StoreSettingsSections: View {
                 }
             }
             .onChange(of: configuration.highlight) { _, highlight in
-                // What's left needs a limit to count down from, so go straight to it.
+                // What's left needs a limit to count down from, so go straight to it. Deferred a
+                // turn: focus set while the picker's menu is still closing can be dropped.
                 if highlight == .remaining, configuration.limit == nil {
-                    isEditingLimit = true
+                    Task { @MainActor in isEditingLimit = true }
                 }
             }
         } header: {

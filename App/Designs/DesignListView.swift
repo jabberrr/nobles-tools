@@ -7,6 +7,7 @@ struct DesignListView: View {
     @Binding var path: [UUID]
 
     @Environment(DesignLibrary.self) private var library
+    @Environment(PreviewData.self) private var previewData
     @State private var isShowingSettings = false
 
     var body: some View {
@@ -61,7 +62,9 @@ struct DesignListView: View {
                     }
                 }
             }
-            .sheet(isPresented: $isShowingSettings) {
+            // Settings may have connected or disconnected the Nobles account that spending
+            // previews show.
+            .sheet(isPresented: $isShowingSettings, onDismiss: { previewData.refreshStoreSession() }) {
                 SettingsView()
                     .environment(library)
             }

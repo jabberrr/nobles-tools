@@ -29,6 +29,11 @@ public actor ResponseCache {
         store(data, for: key, savedAt: .now)
     }
 
+    /// Deletes the response stored for `key`, if there is one.
+    public func remove(for key: String) {
+        try? FileManager.default.removeItem(at: fileURL(for: key))
+    }
+
     /// `store(_:for:)` with an explicit save time, so tests can age entries.
     func store(_ data: Data, for key: String, savedAt: Date) {
         let file = fileURL(for: key)

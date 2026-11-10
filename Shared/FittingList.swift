@@ -35,7 +35,9 @@ struct FittingPrefix<Item, Content: View>: View {
         var layouts = stride(from: most, through: hidesOverflowWhenEmpty ? 1 : 0, by: -1)
             .map { (count: $0, showsOverflow: overflowColor != nil && $0 < items.count) }
         if hidesOverflowWhenEmpty {
-            if most > 0 { layouts.append((count: 1, showsOverflow: false)) }
+            if layouts.last?.showsOverflow == true {
+                layouts.append((count: 1, showsOverflow: false))
+            }
             layouts.append((count: 0, showsOverflow: false))
         }
         return layouts

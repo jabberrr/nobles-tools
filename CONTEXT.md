@@ -32,6 +32,7 @@ Visual language (Shared/):
 - Small uppercase section labels with icons.
 - Icons for stations (`Symbols.swift`, keyword-mapped), sports (`SportSymbol`) and terms (`Term.Kind.symbolName`).
 - Lists show fewer items in full plus "+N more" instead of truncating.
+  - The exception is a list that opts into `FittingList(hidesOverflowWhenEmpty:)`, such as the spending charges. It never shows a bare "+N more": when even one row plus the count won't fit, it shows one row without it, then nothing.
 - Where space is tiny, names step down through short forms before any cut: `MenuItem.shortName`, `Game.shortOpponent`/`opponentInitials` ("BB&N"), `Game.teamVariants` ("Girls Field Hockey · MS" → "Field Hockey · MS"). Only an inline Lock Screen dish too long even in short form is cut, and then at a word.
   - The exception, at the user's request: the spending rectangular Lock Screen's latest item gets two lines of `caption2`, then one, cut at the end of the line. That shows more of the name than cutting at a word.
 - Icon chips and W/L badges cut their symbol out of the accent fill, so they survive iOS's tinted and clear Home Screen modes (which keep only alpha).
@@ -106,7 +107,7 @@ Identifiers:
 - **Offline:** `ResponseCache` keeps the last good raw response per URL in the app-group container. Services fall back to it on network errors. The scores feed also reports the cache time (`GameFeed.fetchedAt`), so the widget can show "Updated 4h ago" once data is older than its 2 h refresh.
 - **App previews:** `PreviewData` fetches each data source once and filters locally per design, so toggling settings never re-fetches. It falls back to sample data, labelled as such, when offline.
   - Spending previews show the connected account's own statement, or its cached copy badged as the widget would show it. They use the sample only when no account is connected.
-  - The request carries the `StoreSession`, so connecting or reconnecting loads afresh.
+  - `PreviewData.storeSession` is the account they show. Settings changes the account through its own `StoreAccount`, so `DesignListView` calls `refreshStoreSession()` when the Settings sheet closes. That drops the old account's spending and its load times, then every spending preview loads the new account (the request key carries the session). Anything else that ever connects or disconnects must call it too.
 - **Dates:** use `LocalDate` and `Calendar.school` (America/New_York) for anything that is a school day or a meal time. Never use the device time zone for school logic.
 
 ## Data sources (verified facts)
@@ -174,6 +175,7 @@ Identifiers:
   - Renders are @2x, on an opaque backdrop, and quantized with pngquant to keep the repo small. The sample data and the moment are fixed (Tue 2026-10-27 11:30), so a render only changes when the views do.
   - The gallery covers every widget × size, themes in light and dark, compact iPhone sizes (`-compact`), a tinted-mode simulation (`-tinted`, approximate) and stress cases. About 64 images.
   - Add a variant for any new layout or stress case.
+  - To review many renders at once, tile them into labelled contact sheets with Pillow (installed in the sandbox), about 12 per image, and read those. Review every render of a widget you changed, not a sample.
 - **Watching CI from the sandbox:** the repo is public, so `curl https://api.github.com/repos/jabberrr/nobles-tools/actions/runs/<id>` works. Poll it in a background `until` loop rather than sleeping. Read failure logs with `mcp__github__get_job_logs`.
 - **Intermediate commits:** add `[skip ci]` to the commit message when pushing work-in-progress that isn't meant to build yet. It skips every push-triggered workflow.
 
@@ -254,4 +256,23 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
     - The sheet can't be swiped away mid sign-in.
   - The gallery gained compact Lock Screen renders for the limit design, a spent-of-limit design, the latest-charge design, four-digit amounts and a signed-out state.
   - Still unverified on a device: whether the Veracross sign-in completes. If Nobles' Veracross sends students to Google sign-in, Google may refuse embedded web views ("this browser may not be secure").
+- **2026-11-10: Trello cards, Spending (first board pass).**
+  - Limit field: the "$" sits against the amount or "None", and tapping the row edits it.
+  - "Remaining" with no limit now says so in the editor and jumps to the limit field. Widgets still fall back to the total spent until a limit is set.
+  - Editor previews and list thumbnails show the connected account's own spending (see Architecture). The "sample spending" note appears only when no account is connected, and an expired sign-in says so.
+  - The rectangular Lock Screen's latest item gets two lines (see Visual language).
+  - The user's real charges are gone from the tree: a seeded-random synthetic fixture and a new `StoreStatement.sample`, with 132 tests. They are still in git history; rewriting that needs a force-push and the user's go-ahead.
+  - `Decimal.usd` rounds half-up as documented. `NumberFormatter`'s default half-even showed $222.50 as "$222".
+  - The new sample's long newest item exposed a medium-size regression: no charges at all. A row plus "+N more" no longer fit under the figure, and the list hid a bare count.
+    - Medium now puts the figure's label beside it.
+    - `FittingList(hidesOverflowWhenEmpty:)` falls back to one row without the count, then nothing.
+  - All 38 Spending renders were reviewed via a contact sheet (PIL tiling in the scratchpad), which is quicker than opening each PNG.
+  - A critic pass found that previews could keep showing a disconnected account's spending, and that list thumbnails never noticed a connect. `PreviewData` now holds an observable `storeSession`, refreshed when Settings closes, and drops stale loads.
+  - Follow-ups:
+    - Disconnect, and a rejected sign-in, also delete the cached charges (`StoreService.forgetCachedStatement()`). Before, they lingered on the device and could show under the next account.
+    - Settings has **Reconnect**, which keeps the web view's Veracross login, so an expired session can be renewed without Disconnect wiping everything. Veracross's own cookie lasted 30 minutes in the probe, so expect to type the password again after that.
+    - The editor form dismisses the keyboard on drag. Choosing "Remaining" focuses the limit field a turn later.
+    - Medium with a limit labels its figure "left of $300" and drops the bar's caption, so a charge row fits.
+    - A latest-charge design leaves that charge out of its list.
+    - A rejected session isn't re-sent on every preview.
 

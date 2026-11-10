@@ -52,7 +52,7 @@ struct StoreLockScreenView: View {
     @ViewBuilder private var circular: some View {
         switch content.state {
         case .spending(let spending):
-            if let meter = spending.lockMeter {
+            if let meter = spending.figureMeter {
                 // A drawn ring rather than a Gauge, which renders out of proportion in ImageRenderer.
                 ZStack {
                     ProgressRing(progress: meter.progress, lineWidth: 7, colors: colors)
@@ -90,9 +90,10 @@ struct StoreLockScreenView: View {
 
     // MARK: Rectangular
 
-    /// Three short lines that fit the smallest Lock Screen: the title, the figure with what it is
+    /// Short lines that fit the smallest Lock Screen: the title, the figure with what it is
     /// ("$58.25 of $300", "$241.75 left"), then — unless the figures are stale ("Sign in to
-    /// refresh", "Updated 4h ago") — a bar measuring the same thing, or the latest item.
+    /// refresh", "Updated 4h ago") — a bar measuring the same thing, or the latest item on up to
+    /// two lines.
     @ViewBuilder private var rectangular: some View {
         switch content.state {
         case .spending(let spending):
@@ -104,7 +105,7 @@ struct StoreLockScreenView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
-                } else if let meter = spending.lockMeter {
+                } else if let meter = spending.figureMeter {
                     ProgressBar(progress: meter.progress, colors: colors)
                         .frame(height: 5)
                         .padding(.top, 3)

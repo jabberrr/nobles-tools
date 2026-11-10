@@ -45,7 +45,7 @@ struct DesignPreview: View {
         case .menu(let configuration): .menu(configuration.meal)
         case .scores: .scores
         case .countdown: nil
-        case .spending: .spending(StoreSessionStore().load())
+        case .spending: .spending(data.storeSession)
         }
     }
 

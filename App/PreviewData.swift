@@ -55,8 +55,12 @@ final class PreviewData {
     /// How current `spending` is, so previews badge it as the widget would. The sample shown with
     /// no account connected draws as live: it's there to design with.
     private(set) var spendingStatus: StoreStatus = .live
+    /// The connected Nobles account, whose spending previews show. Settings connects and
+    /// disconnects it, so the app calls `refreshStoreSession()` when Settings closes.
+    private(set) var storeSession = StoreSessionStore().load()
+
     /// Whether a Nobles account is connected, so the editor can say when it shows the sample.
-    private(set) var isStoreConnected = StoreSessionStore().load() != nil
+    var isStoreConnected: Bool { storeSession != nil }
 
     /// When each request last started; a request is repeated once its data is this old.
     @ObservationIgnored private var started: [Request: Date] = [:]
@@ -121,27 +125,50 @@ final class PreviewData {
         }
     }
 
+    /// Picks up an account connected, reconnected or disconnected in Settings. The old account's
+    /// spending is dropped at once, so it never shows as the new one's, and every spending preview
+    /// loads afresh (even for an account seen minutes ago).
+    func refreshStoreSession() {
+        let session = StoreSessionStore().load()
+        guard session != storeSession else { return }
+        storeSession = session
+        spending = .loading
+        spendingStatus = .live
+        started = started.filter { request, _ in
+            if case .spending = request { return false }
+            return true
+        }
+    }
+
     /// The account's own spending, falling back to its cached copy (badged as the widget would
     /// show it) and, failing that, to the sample. With no account, the sample.
     private func loadSpending(for session: StoreSession?) async {
-        isStoreConnected = session != nil
         guard let session else {
             spending = .sample(StoreStatement.sample)
             spendingStatus = .live
             return
         }
         do {
-            spending = .fetched(try await storeService.statement(for: session))
+            let statement = try await storeService.statement(for: session)
+            // Settings may have changed the account meanwhile; then that account's load decides.
+            guard session == storeSession else { return }
+            spending = .fetched(statement)
             spendingStatus = .live
         } catch {
-            started[.spending(session)] = nil
             let status: StoreStatus = (error as? StoreError) == .notAuthenticated ? .signedOut : .offline
-            if let cached = await storeService.cachedStatement() {
+            let cached = await storeService.cachedStatement()
+            guard session == storeSession else { return }
+            // Retry a network failure next time a preview asks. A rejected session won't come
+            // good; Reconnect makes a new one, which is a new request.
+            if status == .offline {
+                started[.spending(session)] = nil
+            }
+            if let cached {
                 spending = .fetched(cached)
                 spendingStatus = status
             } else if !spending.isFetched {
                 spending = .sample(StoreStatement.sample)
-                spendingStatus = .live
+                spendingStatus = status == .signedOut ? .signedOut : .live
             }
         }
     }

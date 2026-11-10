@@ -90,9 +90,9 @@ private struct StoreHomeScreenView: View {
         }
     }
 
-    /// The highlighted dollars with their label beside them on one line; the label shortens at
-    /// words, and the dollars shrink rather than ever being cut.
-    private func inlineFigure(_ spending: StoreContent.Spending, size: CGFloat) -> some View {
+    /// The highlighted dollars with `label` beside them on one line; the label shortens at words,
+    /// and the dollars shrink rather than ever being cut.
+    private func inlineFigure(_ spending: StoreContent.Spending, label: String, size: CGFloat) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(spending.figure.amount)
                 .font(.system(size: size, weight: .bold, design: fontDesign))
@@ -100,8 +100,7 @@ private struct StoreHomeScreenView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 .layoutPriority(1)
-            let caption = spending.figure.caption
-            FirstFitting(variants: [caption] + caption.cutsAtWords(limit: 3), axes: .horizontal) { Text($0) }
+            FirstFitting(variants: [label] + label.cutsAtWords(limit: 3), axes: .horizontal) { Text($0) }
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(colors.secondary)
                 .lineLimit(1)
@@ -163,11 +162,17 @@ private struct StoreHomeScreenView: View {
     @ViewBuilder private func medium(_ spending: StoreContent.Spending) -> some View {
         if spending.charges.isEmpty {
             figure(spending, size: 46)
+            limitBar(spending, height: 7)
+        } else if let meter = spending.figureMeter {
+            // The label says what the bar measures ("left of $300"), so the bar needs no caption.
+            inlineFigure(spending, label: meter.phrase, size: 34)
+            ProgressBar(progress: meter.progress, colors: colors)
+                .frame(height: 6)
+            charges(spending, capacity: 4)
+                .layoutPriority(1)
         } else {
-            inlineFigure(spending, size: 34)
-        }
-        limitBar(spending, height: 7)
-        if !spending.charges.isEmpty {
+            inlineFigure(spending, label: spending.figure.caption, size: 34)
+            limitBar(spending, height: 7)
             charges(spending, capacity: 4)
                 .layoutPriority(1)
         }
