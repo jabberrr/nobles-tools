@@ -103,13 +103,14 @@ extension CafeWrapped.Item {
     private init?(purchases: [CafeWrapped.DatedCharge]) {
         guard let first = purchases.min(), let latest = purchases.max() else { return nil }
         // Units per cafe, with each cafe's latest purchase to break ties by recency.
-        let cafes = Dictionary(grouping: purchases, by: \.charge.storeName)
-            .compactMap { name, charges in charges.max().map { (name: name, units: charges.units, latest: $0) } }
+        let cafes = Dictionary(grouping: purchases) { $0.charge.storeName.matchKey }
+            .compactMap { _, charges in charges.max().map { (units: charges.units, latest: $0) } }
+        let topCafe = cafes.max { ($0.units, $0.latest) < ($1.units, $1.latest) }?.latest ?? latest
         name = latest.charge.detail.collapsingWhitespace
         count = purchases.units
         total = purchases.spent
         emoji = CafeItemArt.emoji(for: name)
-        cafeName = cafes.max { ($0.units, $0.latest) < ($1.units, $1.latest) }?.name ?? latest.charge.storeName
+        cafeName = topCafe.charge.storeName
         firstBought = first.charge.madeAt
         lastBought = latest.charge.madeAt
     }
