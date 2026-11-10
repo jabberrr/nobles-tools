@@ -1,0 +1,430 @@
+===== menu-3-1.html
+Cafe 2000 — Menu
+Cafe 2000
+Monday–Sunday · 12 AM–11:59 PM
+===== menu-3-2.html
+Cafe 2000 — Menu
+Cafe 2000
+PM
+Monday, Tuesday, Thursday, Friday · 2:30 PM–6 PM
+Wednesday · 1:30 PM–6 PM
+Whole Fruit
+Whole Fruit
+Banana, Gala Apple, Orange
+$1.25
+Yogurt/Fruit
+Chobani Yogurt
+Strawberry, Vanilla
+$2.50
+Cup of Grapes
+$2.00
+Cup of Pineapple
+$2.50
+Fruit Cup
+$2.50
+Nobles Yogurt Cup
+$3.00
+Pastries
+Apple Caramel Bar Allergens: Contains: Egg, Wheat, Milk, Soy, Almonds may contain Peanuts
+$3.00
+Chocolate Croissant Allergens: Milk, Soy, Wheat, Gluten
+$3.00
+Chocolate Cup Cake Allergens: Egg, Milk, Soy, Wheat, Gluten may contain- Peanuts or Treenuts
+$2.50
+Cinnamon Sugar Donut Allergens: Egg, Milk, Soy, Wheat, Gluten
+$2.50
+Fudge Brownie Allergens: Egg, Milk, Soy, Wheat, Gluten
+$2.00
+Gluten Free Chocolate Torte Allergens: Egg, Milk, Soy
+$3.00
+Jumbo Chocolate Chip Cookie Allergens: Egg, Milk, Soy, Wheat, Gluten
+$2.50
+Large Croissant Allergens: Egg, Milk, Wheat, Gluten may contain- Soy, Tree Nuts, Mustard
+$3.00
+Lemon Square Allergens: Egg, Milk, Soy, Wheat, Gluten *may contain-Peanut or Treenuts
+$3.00
+Molten Chocolate Cake Allergens: Egg, Milk, Soy, Wheat, Gluten
+$3.00
+Red Velvet Cup Cake Allergens: Egg, Milk, Soy, Wheat, Gluten may contain- Peanuts or Treenuts
+$2.25
+Tira Misu Cake Allergens: Egg, Milk, Wheat, Gluten
+$3.00
+Snacks
+Candy Bar
+Kit Kat, M&M's, Reese's Peanut Butter Cup, Snickers, Sour Patch, Twix
+$2.00
+Cheese Puffs
+$3.00
+Cheetos Crunchy Hot
+$3.00
+Cheezit
+$2.00
+Chex mix
+$2.00
+Doritos
+Cool Ranch, Golden Sriracha, Regular Red, Sweet Thai Chili
+$2.00
+Dried Mango
+$2.00
+Goldfish
+$2.00
+Gummy Bears
+$2.50
+Jumbo Cheese Puffs
+$2.00
+King Soft Baked Pretzel Allergens: Wheat
+$3.00
+Lays Chips
+$2.50
+Ms. Vicki Chips
+Salt & Vinegar, Sea Salt
+$2.50
+Oh Snap Pickle
+Dill, Sassy
+$2.00
+Oreo Cookies
+$2.00
+Pirate Booty
+$2.00
+Popcorners
+$3.00
+Smartfood Popcorn
+$2.25
+Stacey's Pita Chips
+Cinnamon Sugar, Original Plain
+$2.00
+Sunchips- Original & Garden Salsa
+Original- Blue, Salsa-Red
+$2.00
+Beverages
+Apple Cider
+$2.50
+Arnold Palmer 1/2&1/2
+$2.50
+Body Armor
+Blueberry-Pomegranate Lyte, Dragonfruit, Orange Mango, Strawberry-Banana
+$3.00
+Boxed Water
+$2.25
+Core Power
+Chocolate, Vanilla
+$5.00
+Fairlife Milk
+Chocolate, Strawberry
+$2.50
+IZZE Drink
+Apple, Blackberry, Clementine
+$3.00
+Naked Juice
+Mighty Mango, Strawberry-Banana
+$3.75
+Nestle Hot Chocolate
+$2.50
+Polar Seltzer
+Cran-Line, Lemon, Lime, Plain
+$2.00
+Power Water-Kiwi Strawberry
+$3.00
+Powerade
+Blue, Yellow
+$2.50
+Swoon Beverage
+$2.50
+Big Dawg Bites
+Bacon Mac n Cheese Allergens: Milk, Wheat, Egg,
+$5.00
+Chicken Parmesan Sandwich Allergens: Milk, Wheat, Gluten, Egg, Soy
+$6.00
+Chicken Tenders Allergens: Wheat
+$6.00
+Cup of Noodles Allergens: Please read ingredients label
+$3.00
+Grilled Cheese Sandwich Allergens: Milk, Soy, Wheat, Gluten
+$6.00
+Sunbutter & Jelly Allergens: Soy, Wheat, Gluten
+$3.00
+Bars
+Gatorade Recovery Protein Bar
+Chocolate Caramel, Chocolate Chip, Oreo
+$4.00
+Frozen Treats
+Brownie Ice Cream Sundae Cup
+$2.50
+Chips Galore Ice Cream Sandwich
+$2.50
+Oreo Ice Cream Sandwich
+$2.50
+Strawberry Shortcake Ice Cream Sundae
+$2.50
+Pizza
+Cheese Pizza
+$6.00
+Pepperoni Pizza
+$6.00
+===== menu-3-3.html
+Cafe 2000 — Menu
+Cafe 2000
+Monday–Friday · 8:30 AM–10:45 AM
+===== menu-3-4.html
+Cafe 2000 — Menu
+Cafe 2000
+Monday–Friday · 1:30 PM–4:30 PM
+===== menu-3-5.html
+Cafe 2000 — Menu
+Cafe 2000
+===== menu-3-6.html
+Cafe 2000 — Menu
+Cafe 2000
+===== menu-5-1.html
+Cafe at Gleason Hall — Menu
+Cafe at Gleason Hall
+Monday–Sunday · 12 AM–11:59 PM
+===== menu-5-2.html
+Cafe at Gleason Hall — Menu
+Cafe at Gleason Hall
+Monday, Tuesday, Thursday, Friday · 2:30 PM–6 PM
+Wednesday · 1:30 PM–6 PM
+===== menu-5-3.html
+Cafe at Gleason Hall — Menu
+Cafe at Gleason Hall
+AM
+Monday–Friday · 8:30 AM–10:45 AM
+Morning Favorites
+Blueberry Crumb Muffin Allergens: Egg, Milk, Wheat, Gluten
+$3.00
+Quaker Oatmeal Bowl
+Apple Cinnamon, Maple Brown Sugar
+$2.50
+Chocolate Croissant Allergens: Milk, Soy, Wheat, Gluten
+$3.00
+Cinnamon Sugar Donut Allergens: Egg, Milk, Soy, Wheat, Gluten
+$3.00
+Yogurt/Fruit
+Chobani Yogurt Drink
+Mixed Berry (Blue), Strawberry-Banana (Red)
+$3.00
+Cup of Grapes
+$2.50
+Cup of Pineapple
+$3.00
+Cup of Strawberries
+$3.00
+Chobani Yogurt-5.3 Oz.
+Strawberry, Vanilla
+$2.50
+Bars
+Gatorade Whey Protein Bar
+Chocolate Caramel Caramel, Chocolate Chip, Oreo Cookies & Cream
+$4.50
+Snacks
+Cheeto Puffs
+$3.00
+Cheetos Crunchy Hot
+$3.00
+Dried Mango
+$2.00
+Lays Chips
+$2.50
+Popcorners
+$3.00
+Rice Krispie Treat
+$2.00
+Candy
+Hershey Chocolate Bar, Kit Kat, M&M's, Reese's Peanut Butter Cup, Snickers, Sour Patch, Twix
+$2.00
+Cheezit
+$2.00
+Chex mix
+$2.00
+Ms. Vicki Chips
+Dill Pickle, Salt & Vinegar, Sea Salt
+$3.00
+Doritos
+Cool Ranch, Golden Sriracha, Regular, Sweet Thai Chili
+$3.00
+Goldfish
+$2.00
+Haribo Gummy Bears
+$2.50
+Oreo Cookies
+$2.00
+Smartfood Popcorn
+$3.00
+Stacey's Pita Chips
+Cinnamon Sugar, Original
+$2.00
+Sunchips
+Garden Salsa, Original
+$2.00
+Big Dawg Bites
+Chicken Cup of Noodles Allergens: Please see ingredient label
+$3.00
+Beverages
+Body Armor
+Blueberry Pomegranate Lyte, Dragonfruit, Orange Mango, Strawberry-Banana
+$3.00
+Boxed Water
+$2.25
+Core Power
+Chocolate, Vanilla
+$5.00
+Fairlife Milk
+Chocolate, Strawberry
+$2.50
+IZZE Drink
+Apple, Blackberry, Clementine
+$3.00
+Naked Juice
+Mighty Mango, Strawberry Banana
+$3.75
+Polar Seltzer
+Cran-Lime, Lemon, Lime, Plain
+$2.00
+Powerade
+Blue, Purple, Yellow
+$2.50
+Special of the Day
+Nestle Hot Cocoa
+$2.50
+Strawberry-Banana Smoothie Allergens: Milk
+$3.00
+Pastries
+Jumbo Chocolate Chip Cookie Allergens: Egg, Milk, Soy, Wheat, Gluten
+$2.00
+Fudge Brownie Allergens: Egg, Milk, Soy, Wheat, Gluten
+$2.00
+===== menu-5-4.html
+Cafe at Gleason Hall — Menu
+Cafe at Gleason Hall
+PM
+Monday–Friday · 1:30 PM–4:30 PM
+Morning Favorites
+Blueberry Crumb Muffin Allergens: Egg, Milk, Wheat, Gluten
+$3.00
+Quaker Oatmeal Bowl
+Apple Cinnamon, Maple Brown Sugar
+$2.50
+Chocolate Croissant Allergens: Milk, Soy, Wheat, Gluten
+$3.00
+Cinnamon Sugar Donut Allergens: Egg, Milk, Soy, Wheat, Gluten
+$3.00
+Yogurt/Fruit
+Chobani Yogurt Drink
+Mixed Berry (Blue), Strawberry-Banana (Red)
+$3.00
+Cup of Grapes
+$2.50
+Cup of Pineapple
+$3.00
+Cup of Strawberries
+$3.00
+Chobani Yogurt-5.3 Oz.
+Strawberry, Vanilla
+$2.50
+Bars
+Gatorade Whey Protein Bar
+Chocolate Caramel Caramel, Chocolate Chip, Oreo Cookies & Cream
+$4.50
+Snacks
+Cheeto Puffs
+$3.00
+Cheetos Crunchy Hot
+$3.00
+Dried Mango
+$2.00
+Lays Chips
+$2.50
+Popcorners
+$3.00
+Rice Krispie Treat
+$2.00
+Candy
+Hershey Chocolate Bar, Kit Kat, M&M's, Reese's Peanut Butter Cup, Snickers, Sour Patch, Twix
+$2.00
+Cheezit
+$2.00
+Chex mix
+$2.00
+Ms. Vicki Chips
+Dill Pickle, Salt & Vinegar, Sea Salt
+$3.00
+Doritos
+Cool Ranch, Golden Sriracha, Regular, Sweet Thai Chili
+$3.00
+Goldfish
+$2.00
+Haribo Gummy Bears
+$2.50
+Oh Snap Pickle Bites
+Dill, Sassy
+$2.00
+Oreo Cookies
+$2.00
+Smartfood Popcorn
+$3.00
+Stacey's Pita Chips
+Cinnamon Sugar, Original
+$2.00
+Sunchips
+Garden Salsa, Original
+$2.00
+Beverages
+Body Armor
+Blueberry Pomegranate Lyte, Dragonfruit, Orange Mango, Strawberry-Banana
+$3.00
+Boxed Water
+$2.25
+Core Power
+Chocolate, Vanilla
+$5.00
+Fairlife Milk
+Chocolate, Strawberry
+$2.50
+IZZE Drink
+Apple, Blackberry, Clementine
+$3.00
+Naked Juice
+Mighty Mango, Strawberry Banana
+$3.75
+Polar Seltzer
+Cran-Lime, Lemon, Lime, Plain
+$2.00
+Powerade
+Blue, Purple, Yellow
+$2.50
+Pastries
+Apple Caramel Bar Allergens: Milk, Wheat, Gluten, Almonds, Egg, Soy may contain- Peanuts
+$3.00
+Chocolate Cup Cake Allergens: Egg, Milk, Soy, Wheat, Gluten may contain- Peanuts or Treenuts
+$2.25
+Gluten Free Chocolate Torte Allergens: Egg, Milk, Soy
+$3.00
+Lemon Square Allergens: Egg, Milk, Soy, Wheat, Gluten may contain- Peanuts or Treenuts
+$3.00
+Tira Misu Cake Allergens: Egg, Milk, Wheat, Gluten
+$3.00
+Jumbo Chocolate Chip Cookie Allergens: Egg, Milk, Soy, Wheat, Gluten
+$2.00
+Fudge Brownie Allergens: Egg, Milk, Soy, Wheat, Gluten
+$2.00
+Red Velvet Cup Cake Allergens: Egg, Milk, Soy, Wheat, Gluten may contain- Peanut, Treenut
+$2.25
+Molten Chocolate Cake Allergens: Egg, Milk, Soy, Wheat, Gluten
+$3.00
+Frozen Treats
+Strawberry Shortcake Ice Cream Sundae
+$2.50
+Big Dawg Bites
+Chicken Cup of Noodles Allergens: Please see ingredient label
+$3.00
+Special of the Day
+Nestle Hot Cocoa
+$2.50
+Strawberry-Banana Smoothie Allergens: Milk
+$3.00
+===== menu-5-5.html
+Cafe at Gleason Hall — Menu
+Cafe at Gleason Hall
+===== menu-5-6.html
+Cafe at Gleason Hall — Menu
+Cafe at Gleason Hall
