@@ -202,6 +202,7 @@ Identifiers:
 ## Building and testing
 
 - macOS: pull, then `open NoblesTools.xcodeproj`. It's signed with the user's team, so it runs on a simulator or their iPhone with no setup. Another team can be set on one Mac via the gitignored `Config/Local.xcconfig`. After changing `project.yml` locally, regenerate with `xcodegen generate`, or push and let CI do it.
+- **Versions** live in `project.yml`: `MARKETING_VERSION` (1.0) and `CURRENT_PROJECT_VERSION`, the build number (2). Bump them there, never in Xcode, and let CI regenerate the project.
 - Package tests: `swift test --package-path NoblesKit`.
 - **Linux or cloud sandbox (no Xcode):** NoblesKit can still be built and tested with Docker:
   ```sh
@@ -365,3 +366,4 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
     - the sign-in cover could strand a parent who cancels the account picker;
     - the line graph's end label could drift from the total on refund-only days. `CafeWrapped.days` now includes those days.
   - All fixed. NoblesKit has 177 tests.
+- **2026-11-10: build number bumped to 2** (`CURRENT_PROJECT_VERSION` in `project.yml`), at the user's request.
