@@ -162,14 +162,38 @@ private struct StoreHomeScreenView: View {
                 }
             }
             if !spending.charges.isEmpty {
-                Eyebrow(symbol: "clock", text: "Recent", colors: colors)
-                charges(spending, capacity: 5)
-                    .layoutPriority(1)
+                recentSection(spending)
             }
             Spacer(minLength: 0)
             note
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    /// The recent charges under a "Recent" header, which disappears whole when no row fits — so the
+    /// header never sits alone over a bare "+N more" when the card and per-store totals fill the
+    /// large size.
+    private func recentSection(_ spending: StoreContent.Spending) -> some View {
+        let most = min(spending.charges.count, 5)
+        return FirstFitting(variants: Array((0...most).reversed()), axes: .vertical) { count in
+            recent(spending, showing: count)
+        }
+    }
+
+    @ViewBuilder private func recent(_ spending: StoreContent.Spending, showing count: Int) -> some View {
+        if count > 0 {
+            VStack(alignment: .leading, spacing: 8) {
+                Eyebrow(symbol: "clock", text: "Recent", colors: colors)
+                VStack(spacing: 7) {
+                    ForEach(spending.charges.prefix(count)) { charge in
+                        ChargeRow(charge: charge, today: content.today, colors: colors)
+                    }
+                }
+                if count < spending.charges.count {
+                    MoreLabel(count: spending.charges.count - count, color: colors.secondary)
+                }
+            }
+        }
     }
 
     private func figureCard(_ spending: StoreContent.Spending) -> some View {
