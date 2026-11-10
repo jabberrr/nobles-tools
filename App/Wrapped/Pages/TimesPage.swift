@@ -54,8 +54,8 @@ struct TimesPage: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// The parts of the day with a purchase, in order. A part with none is left out (the cafes
-    /// aren't open at lunch), and the rest share the row.
+    /// The parts of the day with a purchase, in order. A part with none (usually lunch, when the
+    /// cafes are mostly closed) is left out, and the rest share the row.
     private var usedBuckets: [CafeTimeOfDay] {
         CafeTimeOfDay.allCases.filter { wrapped.share(ofHours: $0.hours) > 0 }
     }
