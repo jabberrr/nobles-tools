@@ -20,8 +20,7 @@ struct StoreLoginView: View {
     @State private var problem: String?
 
     /// A captured cookie plus the people the signed-in page linked to.
-    private struct Capture: Identifiable {
-        let id = UUID()
+    private struct Capture {
         let cookie: String
         let people: [StorePerson]
     }
@@ -157,8 +156,9 @@ private struct StoreLoginWebView: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {}
 
-    /// The web view's navigation delegate. Lives on the main actor in practice (WebKit calls its
-    /// delegate there), so each callback hops onto it explicitly before touching the web view.
+    /// The web view's navigation delegate. WebKit calls it on the main actor, so it's isolated
+    /// there, which lets it touch the web view and the SwiftUI callbacks directly.
+    @MainActor
     final class Coordinator: NSObject, WKNavigationDelegate {
         private let onLoadingChange: (Bool) -> Void
         private let onCapture: (_ cookie: String, _ people: [StorePerson]) -> Void
@@ -174,24 +174,22 @@ private struct StoreLoginWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-            MainActor.assumeIsolated { onLoadingChange(true) }
+            onLoadingChange(true)
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            MainActor.assumeIsolated {
-                onLoadingChange(false)
-                guard !hasCaptured, Self.isSignedInStorePage(webView.url) else { return }
-                hasCaptured = true
-                Task { @MainActor in await captureSession(from: webView) }
-            }
+            onLoadingChange(false)
+            guard !hasCaptured, Self.isSignedInStorePage(webView.url) else { return }
+            hasCaptured = true
+            Task { await captureSession(from: webView) }
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            MainActor.assumeIsolated { onLoadingChange(false) }
+            onLoadingChange(false)
         }
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            MainActor.assumeIsolated { onLoadingChange(false) }
+            onLoadingChange(false)
         }
 
         /// Whether `url` is a signed-in Nobles school-store page, not the Veracross login host.
@@ -201,7 +199,6 @@ private struct StoreLoginWebView: UIViewRepresentable {
         }
 
         /// Reads the people and the session cookie from the signed-in page, then reports them.
-        @MainActor
         private func captureSession(from webView: WKWebView) async {
             let people = StorePerson.list(from: try? await webView.evaluateJavaScript(Self.peopleScript))
             let cookies = await webView.configuration.websiteDataStore.httpCookieStore.allCookies()

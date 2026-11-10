@@ -24,8 +24,8 @@ struct DesignPreview: View {
                 colors: colors,
                 menu: isSpending ? nil : (menu.value ?? UpcomingMenu.placeholder(for: mealSelection, now: now)),
                 scoreboard: isSpending ? nil : scoreboard(now: now),
-                statement: isSpending ? .sample : nil,
-                storeStatus: isSpending ? .live : .disconnected,
+                statement: isSpending ? StoreStatement.sample : nil,
+                storeStatus: isSpending ? StoreStatus.live : StoreStatus.disconnected,
                 calendar: library.calendar,
                 now: now
             )
