@@ -9,15 +9,32 @@ import NoblesKit
 /// Veracross page loaded in `WKWebView`. Once that page lands back on a signed-in
 /// `nobilis.nobles.edu/SchoolStoreNew/…` page, the view reads only the session cookie and the people
 /// linked on it. Nothing else is captured or kept.
+///
+/// Only the sign-in pages are shown. The school-store pages are covered by a "Connecting" panel, so
+/// a reconnect that needs no typing goes straight to "Connected" instead of flashing the spending
+/// page on its way to closing.
 struct StoreLoginView: View {
     /// Called with the captured session once sign-in completes. The caller saves and verifies it.
     let onCapture: (StoreSession) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var stage = Stage.connecting
+    /// Set once a capture has failed: from then on every page shows, so the user can find their way.
+    @State private var showsEveryPage = false
     @State private var isLoading = true
     /// A capture awaiting a choice of person, when the account can see more than one.
     @State private var pendingCapture: Capture?
     @State private var problem: String?
+
+    /// What the sheet shows the user.
+    fileprivate enum Stage: Equatable {
+        /// Working with the school store: the page underneath isn't for the user.
+        case connecting
+        /// A sign-in page, which the user fills in.
+        case signingIn
+        /// Connected as the named person; the sheet closes in a moment.
+        case connected(String?)
+    }
 
     /// A captured cookie plus the people the signed-in page linked to.
     private struct Capture {
@@ -30,15 +47,20 @@ struct StoreLoginView: View {
             ZStack {
                 StoreLoginWebView(
                     onLoadingChange: { isLoading = $0 },
+                    onNeedsUser: showPage,
                     onCapture: handleCapture
                 )
                 .ignoresSafeArea(.container, edges: .bottom)
 
-                if isLoading {
+                if stage != .signingIn {
+                    StoreLoginStatus(stage: stage)
+                        .transition(.opacity)
+                } else if isLoading {
                     ProgressView()
                         .controlSize(.large)
                 }
             }
+            .animation(.easeInOut(duration: 0.2), value: stage)
             .navigationTitle("Connect Account")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -69,15 +91,29 @@ struct StoreLoginView: View {
         .interactiveDismissDisabled()
     }
 
+    /// Shows the web page when it's one the user acts on (a sign-in page), and covers it while the
+    /// school store works. Once connected, the cover stays.
+    private func showPage(_ needsUser: Bool) {
+        if case .connected = stage { return }
+        stage = needsUser || showsEveryPage ? .signingIn : .connecting
+    }
+
+    /// Shows the page with `message`, after a capture that didn't work out.
+    private func fail(_ message: String) {
+        showsEveryPage = true
+        stage = .signingIn
+        problem = message
+    }
+
     /// Decides what to do with a freshly captured cookie and the people found on the page.
     private func handleCapture(cookie: String, people: [StorePerson]) {
         guard !cookie.isEmpty else {
-            problem = "Signed in, but no session could be read. Please try again."
+            fail("You signed in, but the app couldn't read the session. Try again.")
             return
         }
         switch people.count {
         case 0:
-            problem = "Signed in, but no account was found on the page. Open your spending page, then try again."
+            fail("You signed in, but no account was on the page. Open your spending page, then try again.")
         case 1:
             finish(cookie: cookie, person: people[0])
         default:
@@ -85,10 +121,15 @@ struct StoreLoginView: View {
         }
     }
 
-    /// Builds the session for `person` and hands it back, then closes the sheet.
+    /// Builds the session for `person` and hands it back, shows "Connected" for a moment, then
+    /// closes the sheet.
     private func finish(cookie: String, person: StorePerson) {
         onCapture(StoreSession(cookie: cookie, personID: person.id, personName: person.name))
-        dismiss()
+        stage = .connected(person.name)
+        Task {
+            try? await Task.sleep(for: .seconds(0.9))
+            dismiss()
+        }
     }
 
     private var pickerIsPresented: Binding<Bool> {
@@ -97,6 +138,36 @@ struct StoreLoginView: View {
 
     private var problemIsPresented: Binding<Bool> {
         Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })
+    }
+}
+
+/// The panel over the web view while the school store works, then the "Connected" check.
+private struct StoreLoginStatus: View {
+    let stage: StoreLoginView.Stage
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if case .connected(let name) = stage {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 52))
+                    .foregroundStyle(.green)
+                    .symbolEffect(.bounce, value: stage)
+                Text("Connected")
+                    .font(.title3.weight(.semibold))
+                if let name {
+                    Text(name)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                ProgressView()
+                    .controlSize(.large)
+                Text("Connecting to Nobles…")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(uiColor: .systemBackground))
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -135,6 +206,8 @@ struct StorePerson: Identifiable, Hashable {
 private struct StoreLoginWebView: UIViewRepresentable {
     /// Reports page-load progress, to drive a spinner.
     let onLoadingChange: (Bool) -> Void
+    /// Reports whether the page is one for the user (a sign-in page) rather than the school store's.
+    let onNeedsUser: (Bool) -> Void
     /// Reports the captured cookie header and the people on the page, once sign-in completes.
     let onCapture: (_ cookie: String, _ people: [StorePerson]) -> Void
 
@@ -142,7 +215,7 @@ private struct StoreLoginWebView: UIViewRepresentable {
     private static let startURL = URL(string: "https://nobilis.nobles.edu/SchoolStoreNew/parent_limits.php")!
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onLoadingChange: onLoadingChange, onCapture: onCapture)
+        Coordinator(onLoadingChange: onLoadingChange, onNeedsUser: onNeedsUser, onCapture: onCapture)
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -164,24 +237,46 @@ private struct StoreLoginWebView: UIViewRepresentable {
     @MainActor
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         private let onLoadingChange: (Bool) -> Void
+        private let onNeedsUser: (Bool) -> Void
         private let onCapture: (_ cookie: String, _ people: [StorePerson]) -> Void
         /// Set once the signed-in page has been captured, so a later `didFinish` doesn't re-capture.
         private var hasCaptured = false
 
         init(
             onLoadingChange: @escaping (Bool) -> Void,
+            onNeedsUser: @escaping (Bool) -> Void,
             onCapture: @escaping (_ cookie: String, _ people: [StorePerson]) -> Void
         ) {
             self.onLoadingChange = onLoadingChange
+            self.onNeedsUser = onNeedsUser
             self.onCapture = onCapture
+        }
+
+        /// Covers the page before a school-store page starts to draw.
+        func webView(
+            _ webView: WKWebView,
+            decidePolicyFor navigationAction: WKNavigationAction
+        ) async -> WKNavigationActionPolicy {
+            if navigationAction.targetFrame?.isMainFrame == true, Self.isSchoolStore(navigationAction.request.url) {
+                onNeedsUser(false)
+            }
+            return .allow
         }
 
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
             onLoadingChange(true)
         }
 
+        /// Covers a school-store page reached by a server redirect, which asks no navigation policy.
+        func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+            if Self.isSchoolStore(webView.url) {
+                onNeedsUser(false)
+            }
+        }
+
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             onLoadingChange(false)
+            onNeedsUser(!Self.isSchoolStore(webView.url))
             guard !hasCaptured, Self.isSignedInStorePage(webView.url) else { return }
             hasCaptured = true
             Task { await captureSession(from: webView) }
@@ -207,10 +302,15 @@ private struct StoreLoginWebView: UIViewRepresentable {
             return nil
         }
 
+        /// Whether `url` is on the Nobles portal (`nobilis`), rather than a sign-in host.
+        private static func isSchoolStore(_ url: URL?) -> Bool {
+            url?.host == "nobilis.nobles.edu"
+        }
+
         /// Whether `url` is a signed-in Nobles school-store page, not the Veracross login host.
         private static func isSignedInStorePage(_ url: URL?) -> Bool {
-            guard let url, let host = url.host else { return false }
-            return host == "nobilis.nobles.edu" && url.path.contains("SchoolStoreNew")
+            guard let url, isSchoolStore(url) else { return false }
+            return url.path.contains("SchoolStoreNew")
         }
 
         /// Reads the people and the session cookie from the signed-in page, then reports them.
