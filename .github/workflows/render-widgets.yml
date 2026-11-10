@@ -1,8 +1,9 @@
 name: Render widget previews
 
 # Renders every widget at every size from fixed sample data (App/Previews/WidgetGallery.swift)
-# and commits the PNGs to docs/widgets. They make layouts checkable by eye, including from a
-# Claude Code session, which can't run Xcode, and illustrate the README.
+# and every Cafe Wrapped page (App/Previews/WrappedGallery.swift), and commits the PNGs to
+# docs/widgets. They make layouts checkable by eye, including from a Claude Code session, which
+# can't run Xcode, and illustrate the README.
 on:
   workflow_dispatch:
   push:
@@ -10,6 +11,7 @@ on:
     paths:
       - "Shared/**"
       - "App/Previews/**"
+      - "App/Wrapped/**"
       - "Snapshots/**"
       - "NoblesKit/Sources/**"
       - "project.yml"

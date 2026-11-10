@@ -9,10 +9,21 @@ struct DesignListView: View {
     @Environment(DesignLibrary.self) private var library
     @Environment(PreviewData.self) private var previewData
     @State private var isShowingSettings = false
+    @State private var wrappedSource: CafeWrappedLauncher.Source?
 
     var body: some View {
         NavigationStack(path: $path) {
             List {
+                if let periodName = readyWrappedPeriod {
+                    Section {
+                        Button {
+                            wrappedSource = .account
+                        } label: {
+                            WrappedBanner(periodName: periodName)
+                        }
+                        .listRowBackground(WrappedBanner.background)
+                    }
+                }
                 ForEach(WidgetKind.allCases) { kind in
                     let designs = library.designs(of: kind)
                     if !designs.isEmpty {
@@ -67,12 +78,30 @@ struct DesignListView: View {
             .sheet(isPresented: $isShowingSettings, onDismiss: { previewData.refreshStoreSession() }) {
                 SettingsView()
                     .environment(library)
+                    .environment(previewData)
+            }
+            .fullScreenCover(item: $wrappedSource) { source in
+                CafeWrappedLauncher(source: source)
+                    .environment(library)
+                    .environment(previewData)
             }
             .onChange(of: path) {
-                // A widget tap opened a design; don't leave Settings covering it.
+                // A widget tap opened a design; don't leave Settings or Cafe Wrapped covering it.
                 isShowingSettings = false
+                wrappedSource = nil
             }
         }
+    }
+
+    /// The semester whose Cafe Wrapped is ready to open today, e.g. "Fall 2026"; `nil` when none is,
+    /// or when no account is connected to recap.
+    private var readyWrappedPeriod: String? {
+        guard previewData.isStoreConnected else { return nil }
+        let today = LocalDate.today()
+        guard let semester = CafeWrapped.semester(in: library.calendar, on: today),
+              CafeWrapped.isReady(semester, on: today)
+        else { return nil }
+        return CafeWrapped.periodName(for: semester.span)
     }
 
     private var emptyState: some View {

@@ -1,0 +1,113 @@
+import SwiftUI
+import NoblesKit
+
+/// The countdown: the top items revealed from the bottom up, with #1 kept under foil for the
+/// next page.
+struct TopItemsPage: View {
+    let wrapped: CafeWrapped
+    let isActive: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            WrappedEyebrow("Your top \(wrapped.topItems.count)", symbol: "list.number")
+                .wrappedReveal(isActive, delay: 0.1, style: .fade)
+            Text("Most ordered")
+                .font(WrappedStyle.title(34))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .wrappedReveal(isActive, delay: 0.25)
+                .padding(.bottom, 4)
+            NumberOneTeaser(isActive: isActive)
+                .wrappedReveal(isActive, delay: delay(forRank: 1), style: .pop)
+            ForEach(Array(wrapped.topItems.enumerated().dropFirst()), id: \.element.id) { offset, item in
+                TopItemRow(rank: offset + 1, item: item)
+                    .wrappedReveal(isActive, delay: delay(forRank: offset + 1), style: .slide(.leading))
+            }
+            Spacer(minLength: 8)
+            Text("Who's #1? Tap on…")
+                .font(WrappedStyle.lead)
+                .foregroundStyle(WrappedStyle.secondary)
+                .wrappedReveal(isActive, delay: delay(forRank: 1) + 0.5)
+        }
+        .padding(.horizontal, WrappedStyle.margin)
+        .padding(.top, 20)
+        .padding(.bottom, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    /// The lowest rank shows first and #1's teaser last, a beat after #2.
+    private func delay(forRank rank: Int) -> Double {
+        let steps = wrapped.topItems.count - rank
+        return 0.6 + 0.4 * Double(steps) + (rank == 1 ? 0.3 : 0)
+    }
+}
+
+/// A ranked item: its picture, name, what it cost in all and how many you got.
+private struct TopItemRow: View {
+    let rank: Int
+    let item: CafeWrapped.Item
+
+    var body: some View {
+        HStack(spacing: 12) {
+            RankNumber(rank: rank)
+            WrappedItemPicture(emoji: item.emoji, size: 46)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.name)
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("\(item.total.usd()) in all")
+                    .font(WrappedStyle.caption)
+                    .foregroundStyle(WrappedStyle.secondary)
+            }
+            Spacer(minLength: 4)
+            Text("×\(item.count)")
+                .font(WrappedStyle.number(24))
+                .monospacedDigit()
+                .layoutPriority(1)
+        }
+        .wrappedCard(padding: 10, cornerRadius: 18)
+    }
+}
+
+/// #1, still under wraps: a shimmering strip of foil.
+private struct NumberOneTeaser: View {
+    let isActive: Bool
+
+    var body: some View {
+        HStack(spacing: 12) {
+            RankNumber(rank: 1)
+            HStack {
+                Text("? ? ?")
+                    .font(WrappedStyle.number(26))
+                Spacer()
+                Image(systemName: "gift.fill")
+                    .font(.system(size: 22, weight: .bold))
+            }
+            .foregroundStyle(WrappedStyle.ink)
+            .padding(.horizontal, 18)
+            .frame(height: 62)
+            .background(WrappedFX.foilGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .foilShimmer(isActive: isActive)
+        }
+        .padding(.horizontal, 10)
+    }
+}
+
+/// The rank at the start of a row, in a fixed width so the rows line up.
+private struct RankNumber: View {
+    let rank: Int
+
+    var body: some View {
+        Text("\(rank)")
+            .font(WrappedStyle.number(26))
+            .frame(width: 26)
+    }
+}
+
+#Preview {
+    TopItemsPage(wrapped: .sample, isActive: true)
+        .foregroundStyle(.white)
+        .background(Color(hex: 0xA3145A))
+}

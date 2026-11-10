@@ -3,9 +3,11 @@ import NoblesKit
 
 struct SettingsView: View {
     @Environment(DesignLibrary.self) private var library
+    @Environment(PreviewData.self) private var previewData
     @Environment(\.dismiss) private var dismiss
     @State private var storeAccount = StoreAccount()
     @State private var isConnectingStore = false
+    @State private var wrappedSource: CafeWrappedLauncher.Source?
 
     var body: some View {
         NavigationStack {
@@ -21,6 +23,23 @@ struct SettingsView: View {
                 }
 
                 StoreAccountSection(account: storeAccount) { isConnectingStore = true }
+
+                Section {
+                    Button {
+                        wrappedSource = .account
+                    } label: {
+                        Label("Open Cafe Wrapped", systemImage: "gift")
+                    }
+                    Button {
+                        wrappedSource = .sample
+                    } label: {
+                        Label("Open with Sample Data", systemImage: "sparkles")
+                    }
+                } header: {
+                    Text("Cafe Wrapped")
+                } footer: {
+                    Text("For testing: open your semester recap any time. It also appears on the home screen when each semester ends.")
+                }
 
                 Section {
                     ForEach(Array(Self.homeScreenSteps.enumerated()), id: \.offset) { index, step in
@@ -53,11 +72,16 @@ struct SettingsView: View {
                 }
             }
         }
-        // Presented from here rather than from the account's Form row, which would dismiss it.
+        // Presented from here rather than from a Form row, which would dismiss them.
         .sheet(isPresented: $isConnectingStore) {
             StoreLoginView { session in
                 Task { await storeAccount.connect(session) }
             }
+        }
+        .fullScreenCover(item: $wrappedSource) { source in
+            CafeWrappedLauncher(source: source)
+                .environment(library)
+                .environment(previewData)
         }
     }
 
