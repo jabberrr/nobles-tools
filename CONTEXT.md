@@ -239,6 +239,7 @@ Identifiers:
   - TestFlight build 4 crashed this way at launch, in `Game.hasStarted`. `min(_:_:)` uses `<` and is safe.
   - CI runs `.github/scripts/check-date-operators.sh` on the built app. It fails if any binary in it references either operator.
   - The script first compiles a one-line canary to prove the SDK produces the reference at all. With an older SDK it only warns.
+  - CI's Xcode 26.3 is such an SDK: the step only warns there. The crashing build came from a newer Xcode on the user's Mac. The check takes effect once CI's Xcode has the back-deployed operators. Moving CI to a newer runner image would make it effective now.
   - `LocalDate` is our own `Comparable` type, so its `<=` is fine.
 - In AppIntents types, use computed static properties (`static var title: LocalizedStringResource { "…" }`). Stored `static var` is a Swift 6 concurrency error.
 - **New persisted fields must decode with a default** (`container.decode(.key, or: default)` from `LenientDecoding.swift`), so designs saved by older builds keep loading.
