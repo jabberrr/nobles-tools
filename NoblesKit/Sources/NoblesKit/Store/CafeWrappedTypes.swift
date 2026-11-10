@@ -31,6 +31,10 @@ extension CafeWrapped {
 
         /// Its match key.
         public var id: String { name.matchKey }
+
+        /// The asset name of its product photo when it's a branded item, else `nil`
+        /// (`CafeItemArt.productImage(for: name)`).
+        public var productImage: String? { CafeItemArt.productImage(for: name) }
     }
 
     /// One cafe's share of the recap.
@@ -69,12 +73,14 @@ extension CafeWrapped {
     }
 
     /// One day's spending.
-    public struct Day: Hashable, Sendable {
+    public struct Day: Hashable, Sendable, Identifiable {
         public var date: LocalDate
         /// Net spending, tax included.
         public var total: Decimal
         /// Units bought that day.
         public var itemCount: Int
+
+        public var id: LocalDate { date }
     }
 
     /// Purchase days in a row, where only school days count as gaps: weekends, breaks and other

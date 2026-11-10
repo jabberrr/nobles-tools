@@ -23,10 +23,7 @@ struct WrappedPoster: View {
             }
             statGrid
             Spacer(minLength: 0)
-            Text("Nobles Tools")
-                .font(.system(size: 12, weight: .heavy, design: .rounded))
-                .tracking(1.2)
-                .foregroundStyle(WrappedStyle.secondary)
+            WrappedCardLabel("Nobles Tools")
         }
         .padding(24)
         .frame(width: Self.size.width, height: Self.size.height)
@@ -47,6 +44,7 @@ struct WrappedPoster: View {
             Spacer(minLength: 8)
             Text(WrappedFormat.period(wrapped.period).uppercased())
                 .font(WrappedStyle.eyebrow)
+                .tracking(WrappedStyle.eyebrowTracking)
                 .foregroundStyle(WrappedStyle.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -55,14 +53,14 @@ struct WrappedPoster: View {
 
     private func favorite(_ item: CafeWrapped.Item) -> some View {
         VStack(spacing: 6) {
-            WrappedItemPicture(emoji: item.emoji, size: 118)
+            WrappedItemPicture(item: item, size: 118)
                 .padding(.bottom, 6)
             Text("MY #1")
                 .font(WrappedStyle.eyebrow)
-                .tracking(1.4)
+                .tracking(WrappedStyle.eyebrowTracking)
                 .foregroundStyle(WrappedStyle.highlight)
             Text(item.name)
-                .font(WrappedStyle.title(22))
+                .font(WrappedStyle.hero(22))
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.6)
@@ -90,13 +88,10 @@ struct WrappedPoster: View {
     private func tile(_ stat: Stat) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(stat.value)
-                .font(WrappedStyle.number(19))
+                .font(WrappedStyle.title(17))
                 .lineLimit(2)
                 .minimumScaleFactor(0.6)
-            Text(stat.label.uppercased())
-                .font(.system(size: 10, weight: .heavy, design: .rounded))
-                .tracking(0.8)
-                .foregroundStyle(WrappedStyle.secondary)
+            WrappedCardLabel(stat.label)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -113,7 +108,7 @@ struct WrappedPoster: View {
             stats.append(Stat(value: cafe.name, label: "Top cafe"))
         }
         if let hour = wrapped.peakHour {
-            stats.append(Stat(value: WrappedFormat.hour(hour), label: "Peak hour"))
+            stats.append(Stat(value: WrappedFormat.hour(hour), label: "Busiest hour"))
         }
         if let streak = wrapped.longestStreak, streak.length > 1 {
             stats.append(Stat(value: WrappedFormat.count(streak.length, "day"), label: "Longest streak"))
@@ -140,9 +135,9 @@ struct WrappedPoster: View {
     }
 
     private var accessibilitySummary: String {
-        let lines = statList.map { "\($0.label): \($0.value)." }
-        let favorite = wrapped.favorite.map { "My number 1: \($0.name), \(WrappedFormat.count($0.count, "time"))." }
-        return (["\(wrapped.period.name) Cafe Wrapped."] + [favorite].compactMap { $0 } + lines).joined(separator: " ")
+        let lines = statList.map { "\($0.label), \($0.value)." }
+        let favorite = wrapped.favorite.map { "My number 1 is \($0.name), \(WrappedFormat.count($0.count, "time"))." }
+        return (["My \(wrapped.period.name) Cafe Wrapped."] + [favorite].compactMap { $0 } + lines).joined(separator: " ")
     }
 }
 

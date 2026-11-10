@@ -15,7 +15,7 @@ public enum CafeTimeOfDay: String, CaseIterable, Sendable {
     public var displayName: String {
         switch self {
         case .morning: "Morning"
-        case .midday: "Midday"
+        case .midday: "Lunch"
         case .afternoon: "Afternoon"
         case .evening: "Evening"
         }
@@ -24,10 +24,10 @@ public enum CafeTimeOfDay: String, CaseIterable, Sendable {
     /// A headline for someone whose busiest hour falls in this part of the day.
     public var title: String {
         switch self {
-        case .morning: "Morning Person"
-        case .midday: "Lunch Rush Regular"
-        case .afternoon: "Afternoon Snacker"
-        case .evening: "Evening Snacker"
+        case .morning: "Morning person"
+        case .midday: "Lunchtime snacker"
+        case .afternoon: "Afternoon snacker"
+        case .evening: "Evening snacker"
         }
     }
 
@@ -51,7 +51,7 @@ public enum CafeTimeOfDay: String, CaseIterable, Sendable {
     }
 }
 
-/// A playful label for how someone uses the cafes, chosen by the first rule that matches:
+/// A label for how someone uses the cafes, chosen by the first rule that matches:
 /// loyalist (favorite ≥ 25% of units and ≥ 5 units), nightOwl (≥ 40% of purchases at/after 17:00),
 /// earlyBird (≥ 50% before 10:00), regular (purchase days ≥ 50% of the period's school days so far),
 /// explorer (≥ 12 distinct items and distinct/purchases ≥ 0.4), else dropIn.
@@ -60,8 +60,8 @@ public enum CafePersona: String, CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .loyalist: "The Loyalist"
-        case .nightOwl: "The Night Owl"
+        case .loyalist: "The Superfan"
+        case .nightOwl: "The Late Snacker"
         case .earlyBird: "The Early Bird"
         case .regular: "The Regular"
         case .explorer: "The Explorer"
@@ -71,12 +71,12 @@ public enum CafePersona: String, CaseIterable, Sendable {
 
     public var tagline: String {
         switch self {
-        case .loyalist: "You know what you like, and you stick with it."
-        case .nightOwl: "Your best snacks happen after dark."
-        case .earlyBird: "Fueled up before the first bell."
-        case .regular: "The cafe just wouldn't be the same without you."
-        case .explorer: "Never the same order twice."
-        case .dropIn: "You stop by when it counts."
+        case .loyalist: "You found a favorite and kept buying it."
+        case .nightOwl: "Your cafe runs happen late in the day."
+        case .earlyBird: "You get to the cafe early."
+        case .regular: "You're at the cafe most days."
+        case .explorer: "You like trying new things."
+        case .dropIn: "You stop by now and then."
         }
     }
 

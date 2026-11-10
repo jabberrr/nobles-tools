@@ -1,22 +1,62 @@
 import SwiftUI
-import NoblesKit
 
 /// Cafe Wrapped's poster look: its type, colors and margins.
+///
+/// Type is SF Pro throughout: SF Pro Expanded for headlines and big figures, plain SF Pro for
+/// everything else. Every font in Wrapped comes from here.
 enum WrappedStyle {
-    /// Big figures: SF Rounded, black.
+    // MARK: Type
+
+    /// Big figures: SF Pro Expanded, bold.
     static func number(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .black, design: .rounded)
+        .system(size: size, weight: .bold).width(.expanded)
     }
 
-    /// Poster headlines: heavy and expanded.
+    /// Headlines: SF Pro Expanded, bold.
     static func title(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .bold).width(.expanded)
+    }
+
+    /// The #1 item's name: SF Pro Expanded, heavy. The one headline set heavier than the rest.
+    static func hero(_ size: CGFloat) -> Font {
         .system(size: size, weight: .heavy).width(.expanded)
     }
 
-    static var eyebrow: Font { .system(size: 15, weight: .heavy, design: .rounded) }
-    static var lead: Font { .system(size: 21, weight: .bold, design: .rounded) }
-    static var body: Font { .system(size: 18, weight: .semibold, design: .rounded) }
-    static var caption: Font { .system(size: 14, weight: .semibold, design: .rounded) }
+    /// A page's uppercase label (`WrappedEyebrow`), tracked out by `eyebrowTracking`.
+    static var eyebrow: Font { .system(size: 14, weight: .semibold) }
+    static let eyebrowTracking: CGFloat = 1.4
+    /// A card's uppercase label (`WrappedCardLabel`), tracked out by `cardLabelTracking`.
+    static var cardLabel: Font { .system(size: 11, weight: .semibold) }
+    static let cardLabelTracking: CGFloat = 1
+    /// The sentence under a headline.
+    static var lead: Font { .system(size: 20, weight: .medium) }
+    /// An item's name in a row or on a card.
+    static var itemName: Font { .system(size: 17, weight: .semibold) }
+    static var body: Font { .system(size: 17) }
+    static var caption: Font { .system(size: 14) }
+    /// A caption with a little more weight: counts in rows, chips and the story's header.
+    static var strongCaption: Font { .system(size: 14, weight: .medium) }
+    /// Labels under a chart's bars and along its axis.
+    static var chartLabel: Font { .system(size: 12, weight: .medium) }
+    /// Figures over a chart's bars.
+    static var chartFigure: Font { .system(size: 13, weight: .semibold) }
+    static var button: Font { .system(size: 17, weight: .semibold) }
+
+    /// SF Symbols drawn on their own or beside text.
+    static func symbol(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .semibold)
+    }
+
+    /// Emoji at `size` points.
+    static func emoji(_ size: CGFloat) -> Font {
+        .system(size: size)
+    }
+
+    /// The design list's banner, which follows Dynamic Type like the list around it.
+    static var bannerTitle: Font { .headline.width(.expanded) }
+    static var bannerDetail: Font { .subheadline }
+
+    // MARK: Color
 
     /// A warm yellow for the bar, figure or teaser a page is about: at least 4.5:1 on every page,
     /// and 3:1 on cards, where it's only used for big figures.
@@ -27,6 +67,8 @@ enum WrappedStyle {
     static var secondary: Color { Color.white.opacity(0.92) }
     /// The fill of cards and chips: faint enough that secondary text on it keeps 4.5:1.
     static var cardFill: Color { Color.white.opacity(0.10) }
+
+    // MARK: Layout
 
     /// Every page's side margin.
     static let margin: CGFloat = 24
@@ -50,7 +92,7 @@ struct WrappedEyebrow: View {
             Text(text.uppercased())
         }
         .font(WrappedStyle.eyebrow)
-        .tracking(1.4)
+        .tracking(WrappedStyle.eyebrowTracking)
         .foregroundStyle(WrappedStyle.secondary)
         .lineLimit(1)
         .minimumScaleFactor(0.7)
@@ -61,31 +103,21 @@ struct WrappedEyebrow: View {
     }
 }
 
-/// An item's "photo": its emoji on a warm, softly lit plate.
-struct WrappedItemPicture: View {
-    let emoji: String
-    var size: CGFloat = 220
+/// A card's small uppercase label, e.g. "BIGGEST DAY".
+struct WrappedCardLabel: View {
+    let text: String
+
+    init(_ text: String) {
+        self.text = text
+    }
 
     var body: some View {
-        Text(emoji)
-            .font(.system(size: size * 0.5))
-            .frame(width: size, height: size)
-            .background {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color(hex: 0xFFF9EF), Color(hex: 0xFFE3BA), Color(hex: 0xF2AE63)],
-                            center: UnitPoint(x: 0.38, y: 0.32),
-                            startRadius: 0,
-                            endRadius: size * 0.72
-                        )
-                    )
-                    .overlay {
-                        Circle().strokeBorder(Color.white.opacity(0.65), lineWidth: max(1, size * 0.012))
-                    }
-                    .shadow(color: .black.opacity(0.3), radius: size * 0.08, y: size * 0.04)
-            }
-            .accessibilityHidden(true)
+        Text(text.uppercased())
+            .font(WrappedStyle.cardLabel)
+            .tracking(WrappedStyle.cardLabelTracking)
+            .foregroundStyle(WrappedStyle.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
     }
 }
 
@@ -120,7 +152,7 @@ struct WrappedButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 17, weight: .bold, design: .rounded))
+            .font(WrappedStyle.button)
             .lineLimit(1)
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, minHeight: 52)
@@ -141,104 +173,5 @@ extension View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(WrappedStyle.cardFill, in: shape)
             .overlay { shape.strokeBorder(Color.white.opacity(0.2), lineWidth: 1) }
-    }
-}
-
-/// Wrapped's figures and dates as text. Dates and times are in school time, whatever the device's
-/// time zone.
-enum WrappedFormat {
-    static func double(_ value: Decimal) -> Double {
-        NSDecimalNumber(decimal: value).doubleValue
-    }
-
-    /// "$612.75", for a counting figure: as `Decimal.usd()` writes it, but with a format made once,
-    /// since a count asks for it every frame.
-    static func dollars(_ value: Double) -> String {
-        dollarFormat.format(value)
-    }
-
-    private static let dollarFormat = FloatingPointFormatStyle<Double>.Currency(code: "USD", locale: Locale(identifier: "en_US"))
-        .rounded(rule: .toNearestOrAwayFromZero)
-
-    /// A count of whole things as it counts up: "168".
-    static func whole(_ value: Double) -> String {
-        Int(value.rounded()).formatted()
-    }
-
-    /// "1 purchase", "168 purchases".
-    static func count(_ count: Int, _ singular: String, plural: String? = nil) -> String {
-        let noun = count == 1 ? singular : (plural ?? "\(singular)s")
-        return "\(count.formatted()) \(noun)"
-    }
-
-    /// "18%".
-    static func percent(_ fraction: Double) -> String {
-        "\(Int((fraction * 100).rounded()))%"
-    }
-
-    /// "Fall 2026", or "Fall 2026 · So far" while the semester is still going.
-    static func period(_ period: CafeWrapped.Period) -> String {
-        period.isComplete ? period.name : "\(period.name) · So far"
-    }
-
-    /// "Tue, Sep 8".
-    static func day(_ date: LocalDate) -> String {
-        "\(shortWeekday(date.weekday)), \(shortDay(date))"
-    }
-
-    /// "Sep 8".
-    static func shortDay(_ date: LocalDate) -> String {
-        "\(Calendar.school.shortMonthSymbols[date.month - 1]) \(date.day)"
-    }
-
-    /// "Tuesday", for a `Calendar` weekday 1...7.
-    static func weekday(_ weekday: Int) -> String {
-        Calendar.school.weekdaySymbols[weekday - 1]
-    }
-
-    /// "Tue", for a `Calendar` weekday 1...7.
-    static func shortWeekday(_ weekday: Int) -> String {
-        Calendar.school.shortWeekdaySymbols[weekday - 1]
-    }
-
-    /// "10 AM", "12 PM".
-    static func hour(_ hour: Int) -> String {
-        "\(twelveHour(hour)) \(meridiem(hour))"
-    }
-
-    /// "10a", "12p": chart axis labels.
-    static func compactHour(_ hour: Int) -> String {
-        "\(twelveHour(hour))\(hour % 24 < 12 ? "a" : "p")"
-    }
-
-    /// The hour starting at `hour`, for "between …": "10 and 11 AM", "11 AM and 12 PM".
-    static func hourSpan(_ hour: Int) -> String {
-        let end = hour + 1
-        guard meridiem(hour) == meridiem(end) else {
-            return "\(Self.hour(hour)) and \(Self.hour(end))"
-        }
-        return "\(twelveHour(hour)) and \(twelveHour(end)) \(meridiem(end))"
-    }
-
-    /// "10:42 AM".
-    private static func time(_ date: Date) -> String {
-        let parts = Calendar.school.dateComponents([.hour, .minute], from: date)
-        let hour = parts.hour ?? 0
-        let minute = parts.minute ?? 0
-        return "\(twelveHour(hour)):\(minute < 10 ? "0" : "")\(minute) \(meridiem(hour))"
-    }
-
-    /// "Tue, Sep 8 at 10:42 AM".
-    static func moment(_ date: Date) -> String {
-        "\(day(LocalDate(date))) at \(time(date))"
-    }
-
-    private static func twelveHour(_ hour: Int) -> Int {
-        let value = hour % 12
-        return value == 0 ? 12 : value
-    }
-
-    private static func meridiem(_ hour: Int) -> String {
-        hour % 24 < 12 ? "AM" : "PM"
     }
 }

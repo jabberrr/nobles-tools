@@ -2,7 +2,7 @@ import SwiftUI
 import NoblesKit
 
 /// Where the money went: a card per cafe, sliding in one after another, biggest first, each with
-/// what you got there most.
+/// what you got there most. The overall #1 stays under foil wherever it shows up, for its own page.
 struct CafesPage: View {
     let wrapped: CafeWrapped
     let isActive: Bool
@@ -14,16 +14,23 @@ struct CafesPage: View {
         VStack(alignment: .leading, spacing: 12) {
             WrappedEyebrow("Your cafes", symbol: "cup.and.saucer.fill")
                 .wrappedReveal(isActive, delay: 0.1, style: .fade)
-            Text(wrapped.cafes.count == 1 ? "Your spot" : "Where you went")
+            Text(wrapped.cafes.count == 1 ? "Your cafe" : "Where you went")
                 .font(WrappedStyle.title(34))
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 .wrappedReveal(isActive, delay: 0.25)
             ForEach(Array(cards.enumerated()), id: \.element.id) { rank, cafe in
-                CafeCard(cafe: cafe, itemLimit: itemLimit, isTop: rank == 0, isActive: isActive, delay: cardDelay(rank))
+                CafeCard(
+                    cafe: cafe,
+                    itemLimit: itemLimit,
+                    hiddenItemID: wrapped.favorite?.id,
+                    isTop: rank == 0,
+                    isActive: isActive,
+                    delay: cardDelay(rank)
+                )
             }
             if wrapped.cafes.count > Self.cardLimit {
-                Text("+ \(wrapped.cafes.count - Self.cardLimit) more")
+                Text("+\(wrapped.cafes.count - Self.cardLimit) more")
                     .font(WrappedStyle.caption)
                     .foregroundStyle(WrappedStyle.secondary)
                     .wrappedReveal(isActive, delay: cardDelay(cards.count))
@@ -58,17 +65,20 @@ struct CafesPage: View {
     private var footnote: String {
         guard let top = wrapped.cafes.first else { return "" }
         if wrapped.cafes.count == 1 {
-            return "All \(WrappedFormat.count(wrapped.purchaseCount, "purchase")), one spot. That's loyalty."
+            return wrapped.purchaseCount == 1
+                ? "Your one purchase was at \(top.name)."
+                : "All \(wrapped.purchaseCount.formatted()) purchases were at \(top.name)."
         }
-        return "\(top.name) got \(WrappedFormat.percent(top.share)) of your cafe money."
+        return "\(WrappedFormat.percent(top.share)) of your spending was at \(top.name)."
     }
 }
 
 /// One cafe: what you spent there (counting up), its share of the total, and what you got there
-/// most.
+/// most, with the overall #1 (`hiddenItemID`) under foil.
 private struct CafeCard: View {
     let cafe: CafeWrapped.Cafe
     let itemLimit: Int
+    let hiddenItemID: CafeWrapped.Item.ID?
     let isTop: Bool
     let isActive: Bool
     let delay: Double
@@ -98,9 +108,13 @@ private struct CafeCard: View {
             .font(WrappedStyle.caption)
             .foregroundStyle(WrappedStyle.secondary)
             if !cafe.topItems.isEmpty {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     ForEach(cafe.topItems.prefix(itemLimit)) { item in
-                        CafeItemRow(item: item)
+                        if item.id == hiddenItemID {
+                            HiddenItemRow()
+                        } else {
+                            CafeItemRow(item: item)
+                        }
                     }
                 }
             }
@@ -110,16 +124,15 @@ private struct CafeCard: View {
     }
 }
 
-/// One of a cafe's most-bought items, on a single line: "🧋 Iced Vanilla Latte ×41".
+/// One of a cafe's most-bought items, on a single line: "🍪 Jumbo Chocolate Chip Cookie ×41".
 private struct CafeItemRow: View {
     let item: CafeWrapped.Item
 
     var body: some View {
         HStack(spacing: 8) {
             // A touch smaller than the name, so it doesn't make the row taller.
-            Text(item.emoji)
-                .font(.system(size: 13))
-                .frame(width: 22)
+            WrappedItemArt(item: item, size: 13)
+                .frame(width: 22, height: 18)
             Text(item.name)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
@@ -129,7 +142,25 @@ private struct CafeItemRow: View {
                 .foregroundStyle(WrappedStyle.secondary)
                 .layoutPriority(1)
         }
-        .font(WrappedStyle.caption.weight(.bold))
+        .font(WrappedStyle.strongCaption)
+    }
+}
+
+/// The overall #1 in a cafe's list: a strip of foil with no name, picture or count, so the
+/// favorite page is still a surprise.
+private struct HiddenItemRow: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("? ? ?")
+            Spacer(minLength: 0)
+            Image(systemName: "gift.fill")
+                .font(WrappedStyle.symbol(12))
+        }
+        .font(WrappedStyle.strongCaption)
+        .foregroundStyle(WrappedStyle.ink)
+        .padding(.horizontal, 10)
+        .frame(height: 22)
+        .background { FoilSurface(cornerRadius: 7) }
     }
 }
 

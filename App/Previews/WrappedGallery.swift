@@ -2,16 +2,23 @@ import SwiftUI
 import NoblesKit
 
 /// Every page of Cafe Wrapped in its finished state, phone-sized: the sample recap (the favorite
-/// covered, part-torn and unwrapped), a sparse recap and a one-purchase one, the tallest pages on
-/// a small iPhone ("-compact"), the empty and stopped-early messages, and the share poster.
-/// Rendered to `docs/widgets` by the `WidgetSnapshots` tests so layouts can be checked without a
-/// device.
+/// under foil, three stages open and unwrapped), a recap whose #1 is a branded item with a
+/// product photo ("-branded"), a sparse recap and a one-purchase one, the tallest pages on a small
+/// iPhone ("-compact"), the empty and stopped-early messages, and the share poster. Rendered to
+/// `docs/widgets` by the `WidgetSnapshots` tests so layouts can be checked without a device.
 @MainActor
 enum WrappedGallery {
     static var entries: [WidgetGallery.Entry] {
         let sample = CafeWrapped.sample
         var entries = WrappedPage.pages(for: sample).flatMap { page in
-            page == .favorite ? favoriteEntries(sample) : [entry("wrapped-\(page.galleryName)", sample, page)]
+            page == .favorite ? favoriteEntries("wrapped", sample) : [entry("wrapped-\(page.galleryName)", sample, page)]
+        }
+        if let branded = Self.branded {
+            entries += [WrappedPage.cafes, .topItems].map { page in
+                entry("wrapped-branded-\(page.galleryName)", branded, page)
+            }
+            entries += favoriteEntries("wrapped-branded", branded)
+            entries.append(WidgetGallery.Entry(name: "wrapped-branded-poster", view: AnyView(WrappedPoster(wrapped: branded, cornerRadius: 0))))
         }
         if let sparse = Self.sparse {
             entries += [WrappedPage.total, .cafes, .topItems, .records, .summary].map { page in
@@ -23,7 +30,7 @@ enum WrappedGallery {
                 entry("wrapped-single-\(page.galleryName)", single, page)
             }
         }
-        entries += [WrappedPage.total, .cafes, .topItems, .records].map { page in
+        entries += [WrappedPage.total, .cafes, .topItems, .days, .records].map { page in
             entry("wrapped-compact-\(page.galleryName)", sample, page, screen: .compact)
         }
         entries.append(entry(
@@ -47,9 +54,9 @@ enum WrappedGallery {
         return entries
     }
 
-    /// The favorite before a tap, three taps in, and unwrapped.
-    private static func favoriteEntries(_ wrapped: CafeWrapped) -> [WidgetGallery.Entry] {
-        let name = "wrapped-\(WrappedPage.favorite.galleryName)"
+    /// The favorite before a tap, three stages open, and unwrapped.
+    private static func favoriteEntries(_ prefix: String, _ wrapped: CafeWrapped) -> [WidgetGallery.Entry] {
+        let name = "\(prefix)-\(WrappedPage.favorite.galleryName)"
         return [
             entry("\(name)-covered", wrapped, .favorite),
             entry("\(name)-torn", wrapped, .favorite, favoriteTaps: 3),
@@ -61,18 +68,43 @@ enum WrappedGallery {
     /// month, no streak, and an athletic-store charge that doesn't count.
     private static var sparse: CafeWrapped? {
         recap(of: [
-            charge(5, "Cafe at Gleason Hall", "Roasted Turkey & Cheddar Panini with Pesto", "7.25", day: 22, hour: 12, minute: 41),
+            charge(5, gleason, "Egg, Bacon, American on Croissant", "5.50", day: 22, hour: 9, minute: 41),
             charge(4, "Athletic Store", "Nobles Crew Sweatshirt", "56.00", day: 20, hour: 16, minute: 5),
-            charge(3, "Cafe at Gleason Hall", "Everything Bagel with Cream Cheese", "3.25", day: 14, hour: 10, minute: 32),
-            charge(2, "Cafe at Gleason Hall", "Iced Vanilla Latte", "4.75", day: 6, hour: 10, minute: 21),
-            charge(1, "Cafe at Gleason Hall", "Everything Bagel with Cream Cheese", "3.25", day: 6, hour: 10, minute: 20),
+            charge(3, gleason, "Blueberry Crumb Muffin", "3.00", day: 14, hour: 10, minute: 32),
+            charge(2, gleason, "Strawberry-Banana Smoothie", "3.00", day: 6, hour: 10, minute: 21),
+            charge(1, gleason, "Blueberry Crumb Muffin", "3.00", day: 6, hour: 10, minute: 20),
         ])
     }
 
     /// A semester of one purchase, which is at once the first and the biggest.
     private static var single: CafeWrapped? {
-        recap(of: [charge(1, "Cafe 2000", "Iced Vanilla Latte", "4.75", day: 6, hour: 19, minute: 42)])
+        recap(of: [charge(1, cafe2000, "Jumbo Chocolate Chip Cookie", "2.50", day: 6, hour: 15, minute: 42)])
     }
+
+    /// A month whose #1 is a branded item (Body Armor), with more branded items (Doritos, Oreo
+    /// Cookies) among the rest, so product photos show under the foil and in the lists.
+    private static var branded: CafeWrapped? {
+        let orders: [(store: String, item: String, price: String, days: [Int])] = [
+            (cafe2000, "Body Armor", "3.00", [5, 6, 7, 8, 13, 14, 15, 19, 20, 22]),
+            (gleason, "Doritos", "3.00", [6, 8, 13, 20, 22, 26]),
+            (cafe2000, "Jumbo Chocolate Chip Cookie", "2.50", [7, 14, 21, 26]),
+            (gleason, "Oreo Cookies", "2.00", [9, 16, 23]),
+            (cafe2000, "Whole Fruit", "1.25", [19, 21]),
+            (gleason, "Blueberry Crumb Muffin", "3.00", [5]),
+        ]
+        var charges: [StoreCharge] = []
+        for order in orders {
+            for day in order.days {
+                // Mornings at Gleason, afternoons at Cafe 2000, as the cafes are open.
+                let hour = order.store == gleason ? 9 : 15
+                charges.append(charge(charges.count + 1, order.store, order.item, order.price, day: day, hour: hour, minute: 5 + charges.count))
+            }
+        }
+        return recap(of: charges)
+    }
+
+    private static let gleason = "Cafe at Gleason Hall"
+    private static let cafe2000 = "Cafe 2000"
 
     /// The recap of `charges` as of the gallery's day.
     private static func recap(of charges: [StoreCharge]) -> CafeWrapped? {

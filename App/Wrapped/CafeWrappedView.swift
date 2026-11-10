@@ -127,7 +127,7 @@ struct CafeWrappedView: View {
             progressBar
             HStack {
                 Label(wrapped.period.name, systemImage: "gift.fill")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .font(WrappedStyle.strongCaption)
                     .foregroundStyle(WrappedStyle.secondary)
                     .accessibilityHidden(true)
                 Spacer()
@@ -135,7 +135,7 @@ struct CafeWrappedView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 15, weight: .bold))
+                        .font(WrappedStyle.symbol(15))
                         .frame(width: 34, height: 34)
                         .background(Color.white.opacity(0.18), in: Circle())
                         .frame(width: 44, height: 44)

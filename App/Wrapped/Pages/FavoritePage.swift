@@ -2,11 +2,12 @@ import SwiftUI
 import UIKit
 import NoblesKit
 
-/// The reveal of #1: its picture wrapped in foil that comes off a little with each tap, then
-/// confetti, its name and its numbers. Taps on the foil unwrap it; taps anywhere else still turn
-/// the page. VoiceOver finds the foil as a button and, once it's off, the item in one sentence.
+/// The reveal of #1: its picture in foil shaped like it, which comes off in stages, one per tap,
+/// then confetti, its name and its numbers. Taps on the foil open it; taps anywhere else still
+/// turn the page. VoiceOver finds the foil as a button and, once it's off, the item in one
+/// sentence.
 struct FavoritePage: View {
-    /// Taps it takes to get the foil off.
+    /// Taps it takes to get the foil off: one per stage.
     static let tapsToUnwrap = 5
 
     let item: CafeWrapped.Item
@@ -16,8 +17,8 @@ struct FavoritePage: View {
 
     /// Taps made on the foil so far, for the dots that count down.
     @State private var taps: Int
-    /// Whether this visit began wrapped. The foil then stays in place once it's off, so its final
-    /// burst plays out; a visit that begins unwrapped shows the plain picture.
+    /// Whether this visit began wrapped. The foil then stays in place once it's off, so its last
+    /// stage plays out; a visit that begins unwrapped shows the plain picture.
     @State private var beganWrapped: Bool
     @State private var confetti = 0
 
@@ -68,16 +69,18 @@ struct FavoritePage: View {
                 onTap: { taps = $0 },
                 onUnwrap: { unwrap() }
             ) {
-                WrappedItemPicture(emoji: item.emoji)
+                WrappedItemPicture(item: item)
+            } silhouette: {
+                WrappedItemPicture(item: item).silhouette
             }
         } else {
-            WrappedItemPicture(emoji: item.emoji)
+            WrappedItemPicture(item: item)
         }
     }
 
     private var hint: some View {
         VStack(spacing: 14) {
-            Text("Tap the foil to unwrap")
+            Text("Tap the foil to take it off")
                 .font(WrappedStyle.lead)
             HStack(spacing: 8) {
                 ForEach(0..<Self.tapsToUnwrap, id: \.self) { dot in
@@ -100,7 +103,7 @@ struct FavoritePage: View {
         let isRevealed = isActive && isUnwrapped
         return VStack(spacing: 14) {
             Text(item.name)
-                .font(WrappedStyle.title(28))
+                .font(WrappedStyle.hero(28))
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.6)
@@ -116,19 +119,22 @@ struct FavoritePage: View {
                 }
                 .wrappedReveal(isRevealed, delay: 0.9)
             }
-            Text("First one: \(WrappedFormat.day(LocalDate(item.firstBought))) · Mostly from \(item.cafeName)")
-                .font(WrappedStyle.caption)
-                .foregroundStyle(WrappedStyle.secondary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .wrappedReveal(isRevealed, delay: 1.3)
+            VStack(spacing: 2) {
+                Text("First bought on \(WrappedFormat.day(LocalDate(item.firstBought)))")
+                Text("Mostly from \(item.cafeName)")
+            }
+            .font(WrappedStyle.caption)
+            .foregroundStyle(WrappedStyle.secondary)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .wrappedReveal(isRevealed, delay: 1.3)
         }
     }
 
     /// What VoiceOver reads for the details.
     private var detailsDescription: String {
         let first = WrappedFormat.day(LocalDate(item.firstBought))
-        return "\(item.name). You got it \(WrappedFormat.count(item.count, "time")), \(item.total.usd()) in all. First one: \(first). Mostly from \(item.cafeName)."
+        return "\(item.name). You got it \(WrappedFormat.count(item.count, "time")), \(item.total.usd()) in all. First bought on \(first). Mostly from \(item.cafeName)."
     }
 
     private func unwrap() {
@@ -137,7 +143,7 @@ struct FavoritePage: View {
         }
         confetti += 1
         // The foil's VoiceOver button goes with the foil, so say what was under it.
-        UIAccessibility.post(notification: .announcement, argument: "Your number 1: \(item.name)!")
+        UIAccessibility.post(notification: .announcement, argument: "Your number 1 is \(item.name).")
     }
 }
 

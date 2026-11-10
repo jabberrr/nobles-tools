@@ -12,11 +12,11 @@ struct TimesPage: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            WrappedEyebrow("When you snack", symbol: "clock.fill")
+            WrappedEyebrow("When you buy", symbol: "clock.fill")
                 .wrappedReveal(isActive, delay: 0.1, style: .fade)
             if let timeOfDay = wrapped.timeOfDay {
                 Image(systemName: timeOfDay.symbolName)
-                    .font(.system(size: 44, weight: .bold))
+                    .font(WrappedStyle.symbol(44))
                     .foregroundStyle(WrappedStyle.highlight)
                     .wrappedReveal(isActive, delay: 0.3, style: .pop)
                 Text(timeOfDay.title)
@@ -89,12 +89,14 @@ private struct BucketChip: View {
     var body: some View {
         VStack(spacing: 4) {
             Image(systemName: bucket.symbolName)
-                .font(.system(size: 17, weight: .bold))
+                .font(WrappedStyle.symbol(17))
             Text(WrappedFormat.percent(share))
-                .font(WrappedStyle.number(20))
+                .font(WrappedStyle.number(18))
                 .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
             Text(bucket.displayName)
-                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .font(WrappedStyle.chartLabel)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }

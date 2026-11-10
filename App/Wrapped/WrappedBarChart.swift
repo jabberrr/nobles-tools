@@ -41,7 +41,7 @@ struct WrappedBarChart: View {
             if let valueLabel = bar.valueLabel {
                 slot(height: 16) {
                     Text(valueLabel)
-                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                        .font(WrappedStyle.chartFigure)
                         .foregroundStyle(bar.isHighlighted ? WrappedStyle.highlight : Color.white)
                 }
                 .wrappedReveal(isActive, delay: delay + 0.3, style: .fade)
@@ -52,7 +52,7 @@ struct WrappedBarChart: View {
                 .wrappedReveal(isActive, delay: delay, style: .growUp)
             slot(height: 14) {
                 Text(bar.label ?? "")
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .font(WrappedStyle.chartLabel)
                     .foregroundStyle(bar.isHighlighted ? WrappedStyle.highlight : WrappedStyle.secondary)
             }
         }

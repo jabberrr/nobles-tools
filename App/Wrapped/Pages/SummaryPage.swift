@@ -10,7 +10,7 @@ struct SummaryPage: View {
     var body: some View {
         ZStack {
             VStack(spacing: 18) {
-                WrappedEyebrow("That's a wrap", symbol: "gift.fill")
+                WrappedEyebrow("Your recap", symbol: "gift.fill")
                     .wrappedReveal(isActive, delay: 0.1, style: .fade)
                 GeometryReader { proxy in
                     let size = WrappedPoster.size

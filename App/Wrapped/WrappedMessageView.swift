@@ -26,19 +26,19 @@ struct WrappedMessage: Equatable {
     static let notConnected = WrappedMessage(
         symbol: "person.crop.circle.badge.exclamationmark",
         title: "Connect your Nobles account",
-        detail: "Connect your Nobles account in Settings to see your own Cafe Wrapped."
+        detail: "Go to Settings and connect your Nobles account to see your own recap."
     )
 
     static let unavailable = WrappedMessage(
         symbol: "wifi.exclamationmark",
         title: "Couldn't load your purchases",
-        detail: "Check your connection and try again. If it keeps happening, reconnect your Nobles account in Settings."
+        detail: "Check your connection and try again. If that doesn't work, reconnect your Nobles account in Settings."
     )
 
     static let noSemester = WrappedMessage(
         symbol: "calendar.badge.exclamationmark",
         title: "No semesters in your calendar",
-        detail: "Add your semester dates in Settings → School Calendar to see your Cafe Wrapped."
+        detail: "Add your semester dates in Settings → School Calendar to see your recap."
     )
 
     static func noPurchases(in periodName: String) -> WrappedMessage {
@@ -57,8 +57,8 @@ struct WrappedMessage: Equatable {
             symbol: isSignedOut ? "person.crop.circle.badge.exclamationmark" : "wifi.exclamationmark",
             title: "Your recap stops at \(date)",
             detail: isSignedOut
-                ? "Your Nobles sign-in has expired, so purchases after \(date) aren't in it. Reconnect your account in Settings to include everything since."
-                : "Nobles couldn't be reached, so purchases after \(date) aren't in it. Try again once you're online to include everything since.",
+                ? "Your Nobles sign-in expired, so purchases after \(date) are missing. Reconnect your account in Settings to add them."
+                : "Couldn't reach Nobles, so purchases after \(date) are missing. Try again when you're online to add them.",
             action: .showAnyway
         )
     }
@@ -77,7 +77,7 @@ struct WrappedMessageView: View {
         VStack(spacing: 18) {
             Spacer()
             Image(systemName: message.symbol)
-                .font(.system(size: 54, weight: .bold))
+                .font(WrappedStyle.symbol(54))
                 .foregroundStyle(WrappedStyle.highlight)
                 .accessibilityHidden(true)
             Text(message.title)
@@ -126,7 +126,7 @@ struct WrappedLoadingView: View {
             ProgressView()
                 .controlSize(.large)
                 .tint(.white)
-            Text("Unwrapping your semester…")
+            Text("Loading your purchases…")
                 .font(WrappedStyle.lead)
         }
         .foregroundStyle(.white)
@@ -134,7 +134,7 @@ struct WrappedLoadingView: View {
         .overlay(alignment: .topTrailing) {
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 15, weight: .bold))
+                    .font(WrappedStyle.symbol(15))
                     .frame(width: 34, height: 34)
                     .background(Color.white.opacity(0.18), in: Circle())
                     .frame(width: 44, height: 44)

@@ -13,8 +13,10 @@ public struct CafeWrapped: Hashable, Sendable {
     public var purchaseCount: Int
     /// Units bought: the sum of positive charges' quantities.
     public var itemCount: Int
-    /// Distinct days with a purchase.
+    /// Distinct days with a purchase: `days.count`.
     public var dayCount: Int
+    /// Every day with a purchase, in date order.
+    public var days: [Day]
     /// Distinct items (grouped by `String.matchKey` of the detail, whitespace collapsed).
     public var distinctItemCount: Int
     /// Every cafe with a purchase, most spent first (ties: name).
@@ -64,6 +66,7 @@ public struct CafeWrapped: Hashable, Sendable {
         purchaseCount = purchases.count
         itemCount = purchases.units
         dayCount = days.count
+        self.days = days
         distinctItemCount = items.count
         cafes = Cafe.all(in: charges, overallTotal: total)
         topItems = Array(items.prefix(5))

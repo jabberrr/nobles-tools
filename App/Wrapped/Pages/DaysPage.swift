@@ -1,7 +1,8 @@
 import SwiftUI
 import NoblesKit
 
-/// Your week: purchases by weekday with your day lit up, then your biggest day.
+/// Your week and your months: purchases by weekday with your busiest day lit up, then spending
+/// month by month with the biggest month lit up.
 struct DaysPage: View {
     let wrapped: CafeWrapped
     let isActive: Bool
@@ -14,23 +15,23 @@ struct DaysPage: View {
             WrappedEyebrow("Your week", symbol: "calendar")
                 .wrappedReveal(isActive, delay: 0.1, style: .fade)
             if let favorite = wrapped.favoriteWeekday {
-                Text("\(WrappedFormat.weekday(favorite))s were your day")
-                    .font(WrappedStyle.title(32))
+                Text("\(WrappedFormat.weekday(favorite)) was your busiest day")
+                    .font(WrappedStyle.title(30))
                     .lineLimit(2)
                     .minimumScaleFactor(0.6)
                     .fixedSize(horizontal: false, vertical: true)
                     .wrappedReveal(isActive, delay: 0.3)
             }
-            Text(visits)
+            Text(Self.visits(wrapped))
                 .font(WrappedStyle.body)
                 .foregroundStyle(WrappedStyle.secondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .wrappedReveal(isActive, delay: 0.6)
             Spacer(minLength: 12)
-            WrappedBarChart(bars: weekdayBars, isActive: isActive, height: 150, delay: 0.9, stagger: 0.1)
-            Spacer(minLength: 12)
-            if let day = wrapped.biggestDay {
-                BiggestDayCard(day: day, isActive: isActive, delay: 1.9)
+            WrappedBarChart(bars: weekdayBars, isActive: isActive, height: 120, delay: 0.9, stagger: 0.1)
+            if wrapped.months.count > 1 {
+                Spacer(minLength: 12)
+                months
             }
         }
         .padding(.horizontal, WrappedStyle.margin)
@@ -39,11 +40,11 @@ struct DaysPage: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    /// "You stopped by on 42 different days."
-    private var visits: String {
+    /// "You went on 42 different days."
+    nonisolated static func visits(_ wrapped: CafeWrapped) -> String {
         wrapped.dayCount == 1
-            ? "You stopped by on just one day."
-            : "You stopped by on \(wrapped.dayCount.formatted()) different days."
+            ? "You went on one day."
+            : "You went on \(wrapped.dayCount.formatted()) different days."
     }
 
     /// Monday to Friday, plus a weekend day only if you bought something on it.
@@ -61,36 +62,34 @@ struct DaysPage: View {
             )
         }
     }
+
+    private var months: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            WrappedEyebrow("Month by month", symbol: "chart.bar.fill")
+                .wrappedReveal(isActive, delay: 1.8, style: .fade)
+            WrappedBarChart(bars: monthBars, isActive: isActive, height: 90, delay: 1.9, stagger: 0.14)
+        }
+    }
+
+    /// One bar per month, its total over it; the biggest month highlighted.
+    private var monthBars: [WrappedBarChart.Bar] {
+        let biggest = wrapped.biggestMonth
+        return wrapped.months.enumerated().map { position, month in
+            WrappedBarChart.Bar(
+                id: position,
+                value: WrappedFormat.double(month.total),
+                label: month.name,
+                valueLabel: month.total.usd(showsCents: false),
+                isHighlighted: month.id == biggest?.id
+            )
+        }
+    }
 }
 
-/// The day you spent the most: the date, then the amount counting up.
-private struct BiggestDayCard: View {
-    let day: CafeWrapped.Day
-    let isActive: Bool
-    let delay: Double
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            WrappedEyebrow("Your biggest day", symbol: "flame.fill")
-            Text(WrappedFormat.day(day.date))
-                .font(WrappedStyle.title(24))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                CountingText(WrappedFormat.double(day.total), isActive: isActive, duration: 1, delay: delay + 0.3, format: WrappedFormat.dollars)
-                    .font(WrappedStyle.number(40))
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .foregroundStyle(WrappedStyle.highlight)
-                    .layoutPriority(1)
-                Text("on \(WrappedFormat.count(day.itemCount, "item"))")
-                    .font(WrappedStyle.lead)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-        }
-        .wrappedCard(padding: 18)
-        .wrappedReveal(isActive, delay: delay, style: .slide(.bottom))
+extension CafeWrapped {
+    /// The month with the most spent (ties: the earliest).
+    var biggestMonth: Month? {
+        months.max { $0.total < $1.total }
     }
 }
 

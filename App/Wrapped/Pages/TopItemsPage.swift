@@ -17,14 +17,14 @@ struct TopItemsPage: View {
                 .minimumScaleFactor(0.6)
                 .wrappedReveal(isActive, delay: 0.25)
                 .padding(.bottom, 4)
-            NumberOneTeaser(isActive: isActive)
+            NumberOneTeaser()
                 .wrappedReveal(isActive, delay: delay(forRank: 1), style: .pop)
             ForEach(Array(wrapped.topItems.enumerated().dropFirst()), id: \.element.id) { offset, item in
                 TopItemRow(rank: offset + 1, item: item)
                     .wrappedReveal(isActive, delay: delay(forRank: offset + 1), style: .slide(.leading))
             }
             Spacer(minLength: 8)
-            Text("Who's #1? Tap on…")
+            Text("Your #1 is next.")
                 .font(WrappedStyle.lead)
                 .foregroundStyle(WrappedStyle.secondary)
                 .wrappedReveal(isActive, delay: delay(forRank: 1) + 0.5)
@@ -50,10 +50,10 @@ private struct TopItemRow: View {
     var body: some View {
         HStack(spacing: 12) {
             RankNumber(rank: rank)
-            WrappedItemPicture(emoji: item.emoji, size: 46)
+            WrappedItemPicture(item: item, size: 46)
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.name)
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .font(WrappedStyle.itemName)
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
                     .fixedSize(horizontal: false, vertical: true)
@@ -63,7 +63,7 @@ private struct TopItemRow: View {
             }
             Spacer(minLength: 4)
             Text("×\(item.count)")
-                .font(WrappedStyle.number(24))
+                .font(WrappedStyle.number(22))
                 .monospacedDigit()
                 .layoutPriority(1)
         }
@@ -71,25 +71,22 @@ private struct TopItemRow: View {
     }
 }
 
-/// #1, still under wraps: a shimmering strip of foil.
+/// #1, still hidden: a strip of crinkled foil.
 private struct NumberOneTeaser: View {
-    let isActive: Bool
-
     var body: some View {
         HStack(spacing: 12) {
             RankNumber(rank: 1)
             HStack {
                 Text("? ? ?")
-                    .font(WrappedStyle.number(26))
+                    .font(WrappedStyle.number(24))
                 Spacer()
                 Image(systemName: "gift.fill")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(WrappedStyle.symbol(22))
             }
             .foregroundStyle(WrappedStyle.ink)
             .padding(.horizontal, 18)
             .frame(height: 62)
-            .background(WrappedFX.foilGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .foilShimmer(isActive: isActive)
+            .background { FoilSurface(cornerRadius: 16) }
         }
         .padding(.horizontal, 10)
     }
@@ -101,8 +98,8 @@ private struct RankNumber: View {
 
     var body: some View {
         Text("\(rank)")
-            .font(WrappedStyle.number(26))
-            .frame(width: 26)
+            .font(WrappedStyle.number(24))
+            .frame(width: 28)
     }
 }
 

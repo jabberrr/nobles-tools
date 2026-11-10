@@ -1,32 +1,34 @@
 import SwiftUI
 import NoblesKit
 
-/// Personal bests: the longest streak, how many different things you tried, the priciest buy and
-/// the semester's first (unless that was the priciest). Each card slides in after the one before;
-/// any with nothing to show is left out.
+/// Personal bests: the longest streak, how many different things you tried beside your biggest
+/// day, then your biggest purchase and your first (unless that was the biggest). Each row slides
+/// in after the one before; any with nothing to show is left out.
 struct RecordsPage: View {
     let wrapped: CafeWrapped
     let isActive: Bool
 
-    private enum Record: Hashable {
+    private enum Row: Hashable {
         case streak(CafeWrapped.Streak)
-        case variety(Int)
-        case biggest(StoreCharge)
-        case first(StoreCharge)
+        /// Two short records side by side; at least one is set.
+        case tallies(variety: Int?, biggestDay: CafeWrapped.Day?)
+        case biggestPurchase(StoreCharge)
+        case firstPurchase(StoreCharge)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        // Spaced to fit every record on a 375 × 667 pt iPhone.
+        VStack(alignment: .leading, spacing: 8) {
             WrappedEyebrow("Records", symbol: "trophy.fill")
                 .wrappedReveal(isActive, delay: 0.1, style: .fade)
             Text("Personal bests")
-                .font(WrappedStyle.title(32))
+                .font(WrappedStyle.title(30))
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 .wrappedReveal(isActive, delay: 0.25)
                 .padding(.bottom, 4)
-            ForEach(Array(records.enumerated()), id: \.element) { position, record in
-                card(for: record, delay: 0.6 + 0.45 * Double(position))
+            ForEach(Array(rows.enumerated()), id: \.element) { position, row in
+                card(for: row, delay: 0.6 + 0.4 * Double(position))
             }
             Spacer(minLength: 0)
         }
@@ -36,37 +38,64 @@ struct RecordsPage: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    private var records: [Record] {
-        var records: [Record] = []
+    private var rows: [Row] {
+        var rows: [Row] = []
         if let streak = wrapped.longestStreak, streak.length > 1 {
-            records.append(.streak(streak))
+            rows.append(.streak(streak))
         }
-        if wrapped.distinctItemCount > 1 {
-            records.append(.variety(wrapped.distinctItemCount))
+        let variety = wrapped.distinctItemCount > 1 ? wrapped.distinctItemCount : nil
+        // On a single day, the biggest day is the whole recap.
+        let biggestDay = wrapped.dayCount > 1 ? wrapped.biggestDay : nil
+        if variety != nil || biggestDay != nil {
+            rows.append(.tallies(variety: variety, biggestDay: biggestDay))
         }
         if let charge = wrapped.biggestPurchase {
-            records.append(.biggest(charge))
+            rows.append(.biggestPurchase(charge))
         }
         if let charge = wrapped.firstPurchase, charge.id != wrapped.biggestPurchase?.id {
-            records.append(.first(charge))
+            rows.append(.firstPurchase(charge))
         }
-        return records
+        return rows
     }
 
     @ViewBuilder
-    private func card(for record: Record, delay: Double) -> some View {
-        switch record {
+    private func card(for row: Row, delay: Double) -> some View {
+        switch row {
         case .streak(let streak):
             StreakCard(streak: streak, isActive: isActive, delay: delay)
-        case .variety(let count):
-            VarietyCard(count: count, isActive: isActive, delay: delay)
-        case .biggest(let charge):
-            ChargeCard(title: "Biggest single buy", charge: charge, detail: WrappedFormat.moment(charge.madeAt), showsPrice: true)
+        case .tallies(let variety, let biggestDay):
+            HStack(spacing: 10) {
+                if let variety {
+                    varietyTile(variety, delay: delay)
+                }
+                if let biggestDay {
+                    biggestDayTile(biggestDay, delay: delay + 0.15)
+                }
+            }
+            // Both tiles as tall as the taller one.
+            .fixedSize(horizontal: false, vertical: true)
+        case .biggestPurchase(let charge):
+            ChargeCard(title: "Biggest purchase", charge: charge, showsPrice: true)
                 .wrappedReveal(isActive, delay: delay, style: .slide(.trailing))
-        case .first(let charge):
-            ChargeCard(title: "First of the semester", charge: charge, detail: WrappedFormat.moment(charge.madeAt), showsPrice: false)
+        case .firstPurchase(let charge):
+            ChargeCard(title: "First purchase", charge: charge, showsPrice: false)
                 .wrappedReveal(isActive, delay: delay, style: .slide(.trailing))
         }
+    }
+
+    private func varietyTile(_ count: Int, delay: Double) -> some View {
+        RecordTile(title: "You tried", caption: "different things") {
+            CountingText(Double(count), isActive: isActive, duration: 1, delay: delay + 0.2, format: WrappedFormat.whole)
+        }
+        .wrappedReveal(isActive, delay: delay, style: .slide(.leading))
+    }
+
+    private func biggestDayTile(_ day: CafeWrapped.Day, delay: Double) -> some View {
+        let caption = "\(WrappedFormat.shortDay(day.date)) · \(WrappedFormat.count(day.itemCount, "item"))"
+        return RecordTile(title: "Biggest day", caption: caption) {
+            CountingText(WrappedFormat.double(day.total), isActive: isActive, duration: 1, delay: delay + 0.2, format: WrappedFormat.dollars)
+        }
+        .wrappedReveal(isActive, delay: delay, style: .slide(.trailing))
     }
 }
 
@@ -80,10 +109,10 @@ private struct StreakCard: View {
     private static let flameLimit = 10
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 CountingText(Double(streak.length), isActive: isActive, duration: 0.9, delay: delay + 0.2, format: WrappedFormat.whole)
-                    .font(WrappedStyle.number(42))
+                    .font(WrappedStyle.number(36))
                     .monospacedDigit()
                     .foregroundStyle(WrappedStyle.highlight)
                 Text("days in a row")
@@ -92,54 +121,50 @@ private struct StreakCard: View {
             HStack(spacing: 3) {
                 ForEach(0..<min(streak.length, Self.flameLimit), id: \.self) { flame in
                     Text("🔥")
-                        .font(.system(size: 22))
+                        .font(WrappedStyle.emoji(18))
                         .wrappedReveal(isActive, delay: delay + 0.4 + 0.07 * Double(flame), style: .pop)
                 }
                 if streak.length > Self.flameLimit {
                     Text("+\(streak.length - Self.flameLimit)")
-                        .font(WrappedStyle.caption.weight(.heavy))
+                        .font(WrappedStyle.strongCaption)
                         .padding(.leading, 4)
                         .wrappedReveal(isActive, delay: delay + 0.4 + 0.07 * Double(Self.flameLimit), style: .pop)
                 }
             }
             .accessibilityHidden(true)
-            Text(dates)
+            Text(WrappedFormat.streakDates(streak))
                 .font(WrappedStyle.caption)
                 .foregroundStyle(WrappedStyle.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .wrappedCard()
+        .wrappedCard(padding: 14)
         .wrappedReveal(isActive, delay: delay, style: .slide(.leading))
-    }
-
-    /// "Oct 5 – Oct 16", noting any days off the run skipped: only a missed school day ends it.
-    private var dates: String {
-        let span = "\(WrappedFormat.shortDay(streak.start)) – \(WrappedFormat.shortDay(streak.end))"
-        let days = streak.start.days(until: streak.end) + 1
-        guard days > streak.length else { return span }
-        let spansWeekend = (0..<days).contains { streak.start.adding(days: $0).isWeekend }
-        return "\(span) · \(spansWeekend ? "Weekends" : "Holidays") off"
     }
 }
 
-/// How many different things you tried.
-private struct VarietyCard: View {
-    let count: Int
-    let isActive: Bool
-    let delay: Double
+/// A short record on a card that shares its row: a label, a figure and a caption.
+private struct RecordTile<Figure: View>: View {
+    let title: String
+    let caption: String
+    @ViewBuilder let figure: Figure
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            CountingText(Double(count), isActive: isActive, duration: 1, delay: delay + 0.2, format: WrappedFormat.whole)
-                .font(WrappedStyle.number(36))
+        VStack(alignment: .leading, spacing: 4) {
+            WrappedCardLabel(title)
+            figure
+                .font(WrappedStyle.number(26))
                 .monospacedDigit()
                 .foregroundStyle(WrappedStyle.highlight)
-            Text("different things tried")
-                .font(WrappedStyle.lead)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+            Text(caption)
+                .font(WrappedStyle.caption)
+                .foregroundStyle(WrappedStyle.secondary)
+                .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .wrappedCard()
-        .wrappedReveal(isActive, delay: delay, style: .slide(.trailing))
+        .frame(maxHeight: .infinity, alignment: .topLeading)
+        .wrappedCard(padding: 14)
     }
 }
 
@@ -147,23 +172,19 @@ private struct VarietyCard: View {
 private struct ChargeCard: View {
     let title: String
     let charge: StoreCharge
-    let detail: String
     let showsPrice: Bool
 
     var body: some View {
         HStack(spacing: 12) {
-            WrappedItemPicture(emoji: CafeItemArt.emoji(for: charge.detail), size: 44)
+            WrappedItemPicture(itemNamed: charge.detail, size: 44)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title.uppercased())
-                    .font(.system(size: 12, weight: .heavy, design: .rounded))
-                    .tracking(1)
-                    .foregroundStyle(WrappedStyle.secondary)
-                Text(itemName)
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                WrappedCardLabel(title)
+                Text(name)
+                    .font(WrappedStyle.itemName)
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(detail)
+                Text(WrappedFormat.moment(charge.madeAt))
                     .font(WrappedStyle.caption)
                     .foregroundStyle(WrappedStyle.secondary)
                     .lineLimit(1)
@@ -172,17 +193,17 @@ private struct ChargeCard: View {
             Spacer(minLength: 4)
             if showsPrice {
                 Text(charge.total.usd())
-                    .font(WrappedStyle.number(24))
+                    .font(WrappedStyle.number(20))
                     .monospacedDigit()
                     .foregroundStyle(WrappedStyle.highlight)
                     .layoutPriority(1)
             }
         }
-        .wrappedCard(padding: 10)
+        .wrappedCard(padding: 12)
     }
 
-    /// "Chocolate Chip Cookie", or "2 × Chocolate Chip Cookie".
-    private var itemName: String {
+    /// "Jumbo Chocolate Chip Cookie", or "2 × Jumbo Chocolate Chip Cookie".
+    private var name: String {
         charge.quantity > 1 ? "\(charge.quantity) × \(charge.detail)" : charge.detail
     }
 }

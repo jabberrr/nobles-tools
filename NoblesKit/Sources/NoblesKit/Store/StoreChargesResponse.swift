@@ -111,17 +111,28 @@ private struct GrandTotals: Decodable {
 
 /// Field formats used only by the charges feed.
 enum StoreChargesParsing {
-    /// A `created` stamp like "2026-11-09 14:59" (school-local), read into a `Date`; `nil` without a
-    /// readable date. A missing or unreadable time defaults to midnight that day.
+    /// A `created` stamp like "2026-11-09 14:59", read as UTC into a `Date`; `nil` without a readable
+    /// date. A stamp without a readable time keeps its day: midnight that day, school time.
+    ///
+    /// The feed writes UTC, not school time: real purchases fall inside the cafes' opening hours only
+    /// when read as UTC, and they shift an hour in UTC when daylight saving time ends.
     static func date(from text: String) -> Date? {
         let parts = text.trimmed.split(separator: " ", maxSplits: 1)
         guard let day = parts.first.flatMap({ LocalDate(iso: String($0)) }) else { return nil }
-        guard parts.count == 2 else { return day.startOfDay() }
-        let clock = parts[1].split(separator: ":")
+        let clock = parts.dropFirst().first?.split(separator: ":") ?? []
         guard let hour = clock.first.flatMap({ Int($0) }) else { return day.startOfDay() }
         let minute = clock.count > 1 ? Int(clock[1]) ?? 0 : 0
-        return day.at(hour: hour, minute: minute)
+        return day.at(hour: hour, minute: minute, in: .utc)
     }
+}
+
+private extension Calendar {
+    /// Gregorian, in UTC: the charges feed's clock.
+    static let utc: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }()
 }
 
 private extension KeyedDecodingContainer {

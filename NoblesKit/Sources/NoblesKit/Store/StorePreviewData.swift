@@ -1,20 +1,25 @@
 import Foundation
 
 extension StoreStatement {
-    /// A realistic statement for previews and widget placeholders: six weeks of made-up cafe and
-    /// athletic-store charges across the three real Nobles stores, grand total $158.25.
+    /// A realistic statement for previews and widget placeholders: six weeks of made-up charges at
+    /// the three real Nobles stores, grand total $151.75.
     public static var sample: StoreStatement { sample(now: .now) }
 
     /// The sample statement with charges dated around `now`, so renders don't change day to day.
-    /// Each store's running total is the sum of the charges shown for it. The newest charge, made
-    /// today and still pending, has a long name to stress the Lock Screen layouts.
+    /// Cafe charges are real menu items at their real prices, during each cafe's hours, on the
+    /// school days before today. Each store's running total is the sum of the charges shown for it.
+    /// The newest charge, made this morning and still pending, has the longest name of anything sold
+    /// at Gleason, to stress the Lock Screen layouts.
     public static func sample(now: Date) -> StoreStatement {
         let today = LocalDate(now)
+        // Today, then the school days before it, newest first.
+        let earlier = sequence(first: today.adding(days: -1)) { $0.adding(days: -1) }.lazy.filter { $0.isSampleSchoolDay }
+        let days = [today] + earlier.prefix(30)
         var nextID = 318_406
         func charge(_ store: String, _ item: String, _ amount: String,
-                    daysAgo: Int, hour: Int, minute: Int, pending: Bool = false) -> StoreCharge {
+                    schoolDaysAgo: Int, hour: Int, minute: Int, pending: Bool = false) -> StoreCharge {
             defer { nextID -= 1 }
-            let day = today.adding(days: -daysAgo)
+            let day = days[schoolDaysAgo]
             return StoreCharge(
                 id: nextID,
                 storeName: store,
@@ -26,33 +31,35 @@ extension StoreStatement {
             )
         }
 
+        let gleason = "Cafe at Gleason Hall"
+        let cafe2000 = "Cafe 2000"
+        let athletic = "Athletic Store"
         // Newest first, so ids fall with age as in the real feed.
         let charges = [
-            charge("Cafe at Gleason Hall", "Roasted Turkey & Cheddar Panini with Pesto", "7.25",
-                   daysAgo: 0, hour: 10, minute: 48, pending: true),
-            charge("Cafe 2000", "Oatmeal Raisin Cookie", "2.25", daysAgo: 1, hour: 19, minute: 27, pending: true),
-            charge("Cafe 2000", "Kettle Chips", "1.50", daysAgo: 4, hour: 20, minute: 13),
-            charge("Cafe at Gleason Hall", "Everything Bagel with Butter", "2.25", daysAgo: 5, hour: 10, minute: 48),
-            charge("Cafe 2000", "Coconut Water", "3.00", daysAgo: 6, hour: 21, minute: 22),
-            charge("Cafe at Gleason Hall", "Pumpkin Bread", "2.50", daysAgo: 7, hour: 13, minute: 51),
-            charge("Cafe at Gleason Hall", "Ham & Cheddar Melt", "6.25", daysAgo: 13, hour: 13, minute: 7),
-            charge("Cafe at Gleason Hall", "Apple Cinnamon Oatmeal", "3.00", daysAgo: 14, hour: 13, minute: 35),
-            charge("Cafe at Gleason Hall", "Everything Bagel with Butter", "2.25", daysAgo: 15, hour: 13, minute: 24),
-            charge("Athletic Store", "Nobles Baseball Cap", "30.00", daysAgo: 18, hour: 16, minute: 18),
-            charge("Cafe at Gleason Hall", "Cold Brew", "3.75", daysAgo: 19, hour: 10, minute: 22),
-            charge("Cafe 2000", "Oatmeal Raisin Cookie", "2.25", daysAgo: 20, hour: 21, minute: 6),
-            charge("Cafe at Gleason Hall", "Orange Juice", "2.25", daysAgo: 21, hour: 9, minute: 48),
-            charge("Cafe at Gleason Hall", "Vanilla Steamer", "2.75", daysAgo: 26, hour: 10, minute: 50),
-            charge("Cafe at Gleason Hall", "Cold Brew", "3.75", daysAgo: 27, hour: 12, minute: 7),
-            charge("Cafe at Gleason Hall", "Blackberry Yogurt Bowl", "3.75", daysAgo: 28, hour: 12, minute: 38),
-            charge("Cafe at Gleason Hall", "Blackberry Yogurt Bowl", "3.75", daysAgo: 29, hour: 8, minute: 5),
-            charge("Cafe 2000", "Lemonade", "2.50", daysAgo: 32, hour: 21, minute: 14),
-            charge("Cafe at Gleason Hall", "Apple Cinnamon Oatmeal", "3.00", daysAgo: 33, hour: 9, minute: 46),
-            charge("Cafe at Gleason Hall", "Matcha Latte", "4.75", daysAgo: 36, hour: 10, minute: 0),
-            charge("Cafe at Gleason Hall", "Matcha Latte", "4.75", daysAgo: 39, hour: 9, minute: 42),
-            charge("Athletic Store", "Nobles Crew Sweatshirt", "56.00", daysAgo: 41, hour: 17, minute: 7),
-            charge("Cafe at Gleason Hall", "Orange Juice", "2.25", daysAgo: 42, hour: 9, minute: 38),
-            charge("Cafe at Gleason Hall", "Pumpkin Bread", "2.50", daysAgo: 43, hour: 14, minute: 50),
+            charge(gleason, "Egg, Bacon, American on Croissant", "5.00", schoolDaysAgo: 0, hour: 10, minute: 41, pending: true),
+            charge(cafe2000, "Jumbo Chocolate Chip Cookie", "2.50", schoolDaysAgo: 1, hour: 15, minute: 52, pending: true),
+            charge(cafe2000, "Doritos", "2.00", schoolDaysAgo: 3, hour: 16, minute: 20),
+            charge(gleason, "Body Armor", "3.00", schoolDaysAgo: 4, hour: 10, minute: 12),
+            charge(gleason, "Chocolate Croissant", "3.00", schoolDaysAgo: 5, hour: 8, minute: 47),
+            charge(cafe2000, "Chicken Tenders", "6.00", schoolDaysAgo: 6, hour: 17, minute: 14),
+            charge(gleason, "Strawberry-Banana Smoothie", "3.00", schoolDaysAgo: 8, hour: 10, minute: 33),
+            charge(gleason, "Jumbo Chocolate Chip Cookie", "2.00", schoolDaysAgo: 9, hour: 10, minute: 5),
+            charge(gleason, "Quaker Oatmeal Bowl", "2.50", schoolDaysAgo: 10, hour: 8, minute: 39),
+            charge(athletic, "Nobles Baseball Cap", "30.00", schoolDaysAgo: 12, hour: 15, minute: 48),
+            charge(cafe2000, "King Soft Baked Pretzel", "3.00", schoolDaysAgo: 13, hour: 15, minute: 31),
+            charge(gleason, "Cup of Strawberries", "3.00", schoolDaysAgo: 14, hour: 10, minute: 27),
+            charge(cafe2000, "Body Armor", "3.00", schoolDaysAgo: 15, hour: 16, minute: 2),
+            charge(gleason, "Cinnamon Sugar Donut", "3.00", schoolDaysAgo: 17, hour: 9, minute: 58),
+            charge(gleason, "Nestle Hot Cocoa", "2.50", schoolDaysAgo: 18, hour: 8, minute: 52),
+            charge(cafe2000, "Cheese Pizza", "6.00", schoolDaysAgo: 19, hour: 17, minute: 36),
+            charge(gleason, "Chobani Yogurt Drink", "3.00", schoolDaysAgo: 21, hour: 10, minute: 40),
+            charge(cafe2000, "Whole Fruit", "1.25", schoolDaysAgo: 22, hour: 14, minute: 58),
+            charge(gleason, "Blueberry Crumb Muffin", "3.00", schoolDaysAgo: 24, hour: 10, minute: 16),
+            charge(cafe2000, "Oreo Ice Cream Sandwich", "2.50", schoolDaysAgo: 25, hour: 16, minute: 44),
+            charge(gleason, "Jumbo Chocolate Chip Cookie", "2.00", schoolDaysAgo: 26, hour: 10, minute: 21),
+            charge(athletic, "Nobles Crew Sweatshirt", "56.00", schoolDaysAgo: 27, hour: 16, minute: 10),
+            charge(gleason, "Powerade", "2.50", schoolDaysAgo: 28, hour: 9, minute: 12),
+            charge(gleason, "Dried Mango", "2.00", schoolDaysAgo: 29, hour: 10, minute: 35),
         ]
 
         let totalsByStore = Dictionary(grouping: charges, by: \.storeName)

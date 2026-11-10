@@ -2,44 +2,49 @@ import Foundation
 import NoblesKit
 
 extension WrappedPage {
-    /// What VoiceOver reads for the page: its story in a sentence or two.
+    /// What VoiceOver reads for the page: its story in a sentence or two. Like the pages, nothing
+    /// before the favorite's page names the #1.
     func accessibilitySummary(for wrapped: CafeWrapped) -> String {
         switch self {
-        case .intro: "\(WrappedFormat.period(wrapped.period)): Cafe Wrapped, your semester at the cafes."
+        case .intro: "Cafe Wrapped for \(wrapped.period.name). \(IntroPage.subtitle(for: wrapped))"
         case .total: Self.totalSummary(wrapped)
         case .cafes: Self.cafesSummary(wrapped)
         case .topItems: Self.topItemsSummary(wrapped)
-        // No spoilers: the page's own elements name the item once the foil is off.
+        // The page's own elements name the item once the foil is off.
         case .favorite: "Your number 1."
         case .times: Self.timesSummary(wrapped)
         case .days: Self.daysSummary(wrapped)
         case .records: Self.recordsSummary(wrapped)
-        case .persona: "Your cafe personality: \(wrapped.persona.title). \(wrapped.persona.tagline)"
-        case .summary: "That's a wrap."
+        case .persona: "Your cafe personality is \(wrapped.persona.title). \(wrapped.persona.tagline)"
+        case .summary: "Your recap poster. Share it or tap Done."
         }
     }
 
     private static func totalSummary(_ wrapped: CafeWrapped) -> String {
         let purchases = WrappedFormat.count(wrapped.purchaseCount, "cafe purchase")
         let days = WrappedFormat.count(wrapped.dayCount, "day")
-        return "You spent \(wrapped.total.usd()) on \(purchases) across \(days), \(wrapped.averagePerDay.usd()) a day."
+        return "You spent \(wrapped.total.usd()) on \(purchases) across \(days), \(wrapped.averagePerDay.usd()) a day on average."
     }
 
     private static func cafesSummary(_ wrapped: CafeWrapped) -> String {
+        let favorite = wrapped.favorite?.id
         let lines: [String] = wrapped.cafes.map { cafe in
-            let items = cafe.topItems.map { "\($0.name), \(WrappedFormat.count($0.count, "time"))" }
-            let mostBought = items.isEmpty ? "" : " Most bought: \(items.joined(separator: "; "))."
-            return "\(cafe.name): \(cafe.total.usd()), \(WrappedFormat.percent(cafe.share)) of your spending, \(WrappedFormat.count(cafe.purchaseCount, "purchase")).\(mostBought)"
+            let share = "You spent \(cafe.total.usd()) there, \(WrappedFormat.percent(cafe.share)) of your spending, on \(WrappedFormat.count(cafe.purchaseCount, "purchase"))."
+            let items = cafe.topItems.map { item in
+                item.id == favorite ? "Your number 1, still hidden." : "\(item.name), \(WrappedFormat.count(item.count, "time"))."
+            }
+            let mostBought = items.isEmpty ? [] : ["Most bought there."] + items
+            return ([cafe.name + ".", share] + mostBought).joined(separator: " ")
         }
         return (["Where you went."] + lines).joined(separator: " ")
     }
 
-    /// Keeps #1 under wraps, as the page does, for the favorite page to reveal.
+    /// Keeps #1 hidden, as the page does, for the favorite page to reveal.
     private static func topItemsSummary(_ wrapped: CafeWrapped) -> String {
         let lines: [String] = wrapped.topItems.enumerated().dropFirst().map { rank, item in
-            "Number \(rank + 1): \(item.name), \(WrappedFormat.count(item.count, "time"))."
+            "Number \(rank + 1) is \(item.name), \(WrappedFormat.count(item.count, "time"))."
         }
-        return (["Your top \(wrapped.topItems.count)."] + lines + ["Number 1 is still under wraps."]).joined(separator: " ")
+        return (["Your top \(wrapped.topItems.count)."] + lines + ["Your number 1 is on the next page."]).joined(separator: " ")
     }
 
     private static func timesSummary(_ wrapped: CafeWrapped) -> String {
@@ -52,10 +57,11 @@ extension WrappedPage {
     private static func daysSummary(_ wrapped: CafeWrapped) -> String {
         var parts: [String] = []
         if let weekday = wrapped.favoriteWeekday {
-            parts.append("\(WrappedFormat.weekday(weekday))s were your day.")
+            parts.append("\(WrappedFormat.weekday(weekday)) was your busiest day.")
         }
-        if let day = wrapped.biggestDay {
-            parts.append("Your biggest day: \(WrappedFormat.day(day.date)), \(day.total.usd()) on \(WrappedFormat.count(day.itemCount, "item")).")
+        parts.append(DaysPage.visits(wrapped))
+        if wrapped.months.count > 1, let month = wrapped.biggestMonth {
+            parts.append("You spent the most in \(WrappedFormat.month(month.month)), \(month.total.usd()).")
         }
         return parts.joined(separator: " ")
     }
@@ -63,16 +69,19 @@ extension WrappedPage {
     private static func recordsSummary(_ wrapped: CafeWrapped) -> String {
         var parts = ["Personal bests."]
         if let streak = wrapped.longestStreak, streak.length > 1 {
-            parts.append("\(streak.length) days in a row, \(WrappedFormat.shortDay(streak.start)) to \(WrappedFormat.shortDay(streak.end)).")
+            parts.append("\(streak.length) days in a row, \(WrappedFormat.streakDates(streak)).")
         }
         if wrapped.distinctItemCount > 1 {
             parts.append("You tried \(wrapped.distinctItemCount) different things.")
         }
+        if wrapped.dayCount > 1, let day = wrapped.biggestDay {
+            parts.append("Your biggest day was \(WrappedFormat.day(day.date)), with \(day.total.usd()) on \(WrappedFormat.count(day.itemCount, "item")).")
+        }
         if let charge = wrapped.biggestPurchase {
-            parts.append("Biggest single buy: \(charge.total.usd()), \(charge.detail).")
+            parts.append("Your biggest purchase was \(charge.detail), \(charge.total.usd()), on \(WrappedFormat.moment(charge.madeAt)).")
         }
         if let charge = wrapped.firstPurchase, charge.id != wrapped.biggestPurchase?.id {
-            parts.append("First of the semester: \(charge.detail), \(WrappedFormat.moment(charge.madeAt)).")
+            parts.append("Your first purchase was \(charge.detail), on \(WrappedFormat.moment(charge.madeAt)).")
         }
         return parts.joined(separator: " ")
     }

@@ -14,7 +14,7 @@ public struct StoreCharge: Hashable, Identifiable, Sendable {
     /// The charge amount before tax.
     public var amount: Decimal
     public var tax: Decimal
-    /// When the purchase was made, in school time.
+    /// When the purchase was made. Read its day and hour in school time (`Calendar.school`).
     public var madeAt: Date
     /// The day it posted to the account, or `nil` while still pending.
     public var postedOn: LocalDate?

@@ -1,7 +1,8 @@
 import SwiftUI
 import NoblesKit
 
-/// The cover: "Cafe Wrapped" in foil over a drift of the semester's favorite foods.
+/// The cover: "Cafe Wrapped" in foil over a drift of the semester's favorite foods, leaving out
+/// the #1 so its page is still a surprise.
 struct IntroPage: View {
     let wrapped: CafeWrapped
     let isActive: Bool
@@ -24,7 +25,7 @@ struct IntroPage: View {
                     .foregroundStyle(WrappedFX.foilGradient)
                     .foilShimmer(isActive: isActive)
                     .wrappedReveal(isActive, delay: 0.3, style: .pop)
-                Text(subtitle)
+                Text(Self.subtitle(for: wrapped))
                     .font(WrappedStyle.body)
                     .foregroundStyle(WrappedStyle.secondary)
                     .multilineTextAlignment(.center)
@@ -39,16 +40,21 @@ struct IntroPage: View {
         }
     }
 
-    private var subtitle: String {
+    /// The line under the title, which VoiceOver reads too.
+    nonisolated static func subtitle(for wrapped: CafeWrapped) -> String {
         wrapped.period.isComplete
-            ? "Everything you grabbed at the cafes this semester, unwrapped."
-            : "Everything you've grabbed at the cafes this semester so far, unwrapped."
+            ? "What you bought at the cafes this semester."
+            : "What you've bought at the cafes so far."
     }
 
-    /// The top items' emoji first, then some cafe staples, without repeats.
+    /// Foods from the cafes' menus, to fill out the drift.
+    private static let staples = ["🍪", "🥐", "🍩", "🧁", "🍕", "🥤", "🍫", "🍌"]
+
+    /// The top items' emoji after #1, then the staples, without repeats or #1's emoji.
     private var emojis: [String] {
+        let favorite = wrapped.favorite?.emoji
         var emojis: [String] = []
-        for emoji in wrapped.topItems.map(\.emoji) + ["☕️", "🍪", "🥯", "🧁", "🥤", "🍩"] where !emojis.contains(emoji) {
+        for emoji in wrapped.topItems.dropFirst().map(\.emoji) + Self.staples where emoji != favorite && !emojis.contains(emoji) {
             emojis.append(emoji)
         }
         return emojis
@@ -56,8 +62,8 @@ struct IntroPage: View {
 
     @ViewBuilder
     private var hint: some View {
-        let label = Label("Tap to unwrap your semester", systemImage: "hand.tap.fill")
-            .font(WrappedStyle.caption)
+        let label = Label("Tap to start", systemImage: "hand.tap.fill")
+            .font(WrappedStyle.strongCaption)
             .padding(.horizontal, 18)
             .padding(.vertical, 10)
             .background(Color.white.opacity(0.16), in: Capsule())

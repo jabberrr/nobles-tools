@@ -38,7 +38,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Cafe Wrapped")
                 } footer: {
-                    Text("For testing: open your semester recap any time. Connect your Nobles account above to see your own; at the end of each semester it also shows at the top of the app's design list.")
+                    Text("These buttons are for testing. Connect your Nobles account above to see your own recap. At the end of each semester, it also shows at the top of your designs.")
                 }
 
                 Section {

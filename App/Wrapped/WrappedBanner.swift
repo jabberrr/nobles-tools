@@ -8,21 +8,21 @@ struct WrappedBanner: View {
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: "gift.fill")
-                .font(.system(size: 22, weight: .bold))
+                .font(WrappedStyle.symbol(22))
                 .symbolEffect(.pulse)
                 .frame(width: 46, height: 46)
                 .background(Color.white.opacity(0.2), in: Circle())
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Your \(periodName) Cafe Wrapped is here")
-                    .font(.system(.headline, design: .rounded).weight(.heavy))
-                Text("Tap to unwrap your semester")
-                    .font(.subheadline.weight(.semibold))
+                Text("Your \(periodName) Cafe Wrapped is ready")
+                    .font(WrappedStyle.bannerTitle)
+                Text("See your semester at the cafes.")
+                    .font(WrappedStyle.bannerDetail)
                     .foregroundStyle(WrappedStyle.secondary)
             }
             Spacer(minLength: 0)
             Image(systemName: "chevron.right")
-                .font(.footnote.weight(.bold))
+                .font(WrappedStyle.bannerDetail.weight(.semibold))
                 .accessibilityHidden(true)
         }
         .foregroundStyle(.white)

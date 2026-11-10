@@ -44,7 +44,7 @@ struct StoreModelTests {
         #expect(newest.quantity == 1)
         #expect(newest.amount == Decimal(string: "6.00"))
         #expect(newest.tax == 0)
-        #expect(newest.madeAt == LocalDate(2026, 11, 9).at(hour: 12, minute: 42))
+        #expect(newest.madeAt == LocalDate(2026, 11, 9).at(hour: 10, minute: 12)) // "15:12" UTC
         #expect(newest.postedOn == nil)
         #expect(newest.isPending)
         #expect(charges.filter(\.isPending).map(\.id) == [447649, 447281, 446936]) // only the newest
@@ -56,7 +56,7 @@ struct StoreModelTests {
         let socks = try #require(charges.first { $0.storeName == "Athletic Store" })
         #expect(socks.detail == "Athletic Socks")
         #expect(socks.amount == Decimal(string: "15.00"))
-        #expect(socks.madeAt == LocalDate(2026, 10, 28).at(hour: 11, minute: 8))
+        #expect(socks.madeAt == LocalDate(2026, 10, 27).at(hour: 17, minute: 8)) // "21:08" UTC
 
         // `total_cost` is the whole line, so a quantity of two is already counted in the amount.
         let pair = try #require(charges.first { $0.id == 442055 })
@@ -93,6 +93,46 @@ struct StoreModelTests {
         #expect(statement.latestCharge()?.id == 447649)
         #expect(statement.latestCharge(in: ["Cafe 2000"])?.detail == "Soft Pretzel")
         #expect(statement.latestCharge(in: ["Nowhere"]) == nil)
+    }
+
+    @Test func fixtureTimesFallInsideCafeHours() throws {
+        let cafeCharges = try statement().charges.filter { CafeWrapped.isCafe($0.storeName) }
+        #expect(cafeCharges.count == 26)
+        for charge in cafeCharges {
+            #expect(CafeMenus.isDuringHours(charge), "\(charge.id)")
+        }
+    }
+
+    // MARK: Times
+
+    @Test func readsCreatedTimesAsUTC() throws {
+        let body = """
+        {"ok": true, "charges": [{"charge_id": 1, "store_name": "Cafe 2000", "description": "Doritos",
+        "quantity": 1, "total_cost": "2.00", "sales_tax": "0.00", "created": "2026-11-10 01:30", "posted_on": null}]}
+        """
+        let charge = try #require(try StoreService.parse(Data(body.utf8), fetchedAt: now).charges.first)
+
+        // 1:30 AM UTC on Tuesday is 8:30 PM on Monday in school time.
+        #expect(charge.madeAt == LocalDate(2026, 11, 9).at(hour: 20, minute: 30))
+        #expect(LocalDate(charge.madeAt) == LocalDate(2026, 11, 9))
+        #expect(Calendar.school.component(.hour, from: charge.madeAt) == 20)
+    }
+
+    @Test func readsCreatedTimesAcrossTheDaylightSavingChange() {
+        // Daylight saving time ends on Sunday, Nov 1: 14:00 UTC is 10 AM before it and 9 AM after.
+        #expect(StoreChargesParsing.date(from: "2026-10-30 14:00") == LocalDate(2026, 10, 30).at(hour: 10))
+        #expect(StoreChargesParsing.date(from: "2026-11-02 14:00") == LocalDate(2026, 11, 2).at(hour: 9))
+        // So a 10 AM purchase is written an hour later after the change.
+        #expect(StoreChargesParsing.date(from: "2026-11-02 15:00") == LocalDate(2026, 11, 2).at(hour: 10))
+    }
+
+    @Test func readsCreatedStampsLeniently() {
+        #expect(StoreChargesParsing.date(from: " 2026-11-09 15:12 ") == LocalDate(2026, 11, 9).at(hour: 10, minute: 12))
+        #expect(StoreChargesParsing.date(from: "2026-11-09 15") == LocalDate(2026, 11, 9).at(hour: 10))
+        // Without a time, the day stays put.
+        #expect(StoreChargesParsing.date(from: "2026-11-09") == LocalDate(2026, 11, 9).startOfDay())
+        #expect(StoreChargesParsing.date(from: "2026-11-09 noon") == LocalDate(2026, 11, 9).startOfDay())
+        #expect(StoreChargesParsing.date(from: "yesterday") == nil)
     }
 
     // MARK: Money and configuration
@@ -137,14 +177,34 @@ struct StoreModelTests {
         let sample = StoreStatement.sample(now: fixed)
         #expect(sample.charges.count == 24)
         #expect(sample.stores == ["Athletic Store", "Cafe 2000", "Cafe at Gleason Hall"])
-        #expect(sample.grandTotal == Decimal(string: "158.25"))
-        #expect(sample.charges.contains { $0.isPending })
+        #expect(sample.grandTotal == Decimal(string: "151.75"))
+        #expect(sample.charges.filter(\.isPending).count == 2)
 
-        // The gallery's Lock Screen stress case: today's pending charge, with a long name.
+        // The gallery's Lock Screen stress case: this morning's pending charge, with a long name.
         let newest = try #require(sample.latestCharge())
-        #expect(newest.detail == "Roasted Turkey & Cheddar Panini with Pesto")
-        #expect(newest.amount == Decimal(string: "7.25"))
-        #expect(LocalDate(newest.madeAt) == LocalDate(fixed))
+        #expect(newest.detail == "Egg, Bacon, American on Croissant")
+        #expect(newest.amount == Decimal(string: "5.00"))
+        #expect(newest.madeAt == LocalDate(fixed).at(hour: 10, minute: 41))
         #expect(newest.isPending)
+    }
+
+    @Test func sampleBuysRealItemsOnSchoolDays() {
+        let tuesday = LocalDate(2026, 10, 27).at(hour: 11, minute: 30) // the gallery's moment
+        for now in [tuesday, LocalDate(2026, 11, 14).at(hour: 12)] {
+            let sample = StoreStatement.sample(now: now)
+            let today = LocalDate(now)
+            // Today's charge, then the rest on the school days before today.
+            #expect(sample.charges.first.map { LocalDate($0.madeAt) } == today)
+            let earlier = sample.charges.dropFirst()
+            #expect(earlier.allSatisfy { LocalDate($0.madeAt) < today })
+            #expect(earlier.allSatisfy { SchoolCalendar.nobles2026_27.isSchoolDay(LocalDate($0.madeAt)) })
+            for charge in sample.charges where CafeWrapped.isCafe(charge.storeName) {
+                #expect(CafeMenus.isOnMenu(charge), "\(charge.detail)")
+            }
+            for charge in earlier where CafeWrapped.isCafe(charge.storeName) {
+                #expect(CafeMenus.isDuringHours(charge), "\(charge.detail)")
+            }
+        }
+        #expect(StoreStatement.sample(now: tuesday).charges.first.map(CafeMenus.isDuringHours) == true)
     }
 }
