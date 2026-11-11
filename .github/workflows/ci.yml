@@ -22,7 +22,9 @@ jobs:
 
   ios:
     name: iOS build + NoblesKit tests (macOS)
-    runs-on: macos-15
+    # The Xcode 27 image (a GitHub preview), so CI builds with the Xcode that makes the TestFlight
+    # builds. Its SDK back-deploys Date.<= and Date.>=, which the date-operator check needs to see.
+    runs-on: xcode-27
     timeout-minutes: 30
     permissions:
       contents: write # to commit the regenerated Xcode project

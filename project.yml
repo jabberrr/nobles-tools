@@ -9,7 +9,7 @@ options:
   createIntermediateGroups: true
   # The Xcode the project was last checked against, so opening it doesn't offer to "update"
   # (and edit) it. Bump it when CI's latest-stable Xcode moves on.
-  xcodeVersion: "26.3"
+  xcodeVersion: "27.2"
 
 # The development team comes from an optional, gitignored Config/Local.xcconfig.
 configFiles:
