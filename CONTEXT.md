@@ -211,7 +211,10 @@ Identifiers:
   docker run --rm -v "$PWD/NoblesKit:/pkg" -w /pkg swift:6.1-noble swift test
   ```
   The App, Widgets and Shared targets (SwiftUI/WidgetKit/AppIntents) only compile in CI on macOS.
-- CI builds with `xcodebuild build -project NoblesTools.xcodeproj -scheme NoblesTools -destination 'generic/platform=iOS Simulator'`. There's no signing override, so the build proves a fresh clone builds as-is. Then `.github/scripts/commit-xcode-project.sh` commits the regenerated project. When the branch moves mid-run, the script regenerates from the new tip instead of replaying an older project. As of 2026-10-25 the `macos-15` runner's latest stable Xcode is **26.3, with the iOS 26.2 SDK**. A full CI run takes about 3 minutes.
+- CI builds with `xcodebuild build -project NoblesTools.xcodeproj -scheme NoblesTools -destination 'generic/platform=iOS Simulator'`. There's no signing override, so the build proves a fresh clone builds as-is. Then `.github/scripts/commit-xcode-project.sh` commits the regenerated project. When the branch moves mid-run, the script regenerates from the new tip instead of replaying an older project. A full CI run takes about 4 minutes.
+- **Xcode versions:**
+  - CI's iOS job runs on GitHub's **`xcode-27` image** (a public preview). Its latest stable is **Xcode 27.2**, the same Xcode that makes the TestFlight builds (a crash log's `AppStoreTools: 27B52`). `project.yml`'s `xcodeVersion` matches it.
+  - The render workflow still runs on `macos-15` with Xcode 26.3, where the iOS 26.2 simulator draws the renders. Move it when that image is retired or the renders need iOS 27.
 - **Seeing the widgets without Xcode:** push a change under `Shared/`, `App/Previews/`, `Snapshots/`, `NoblesKit/Sources/` or `project.yml`.
   - The "Render widget previews" workflow renders `WidgetGallery` and commits the PNGs to `docs/widgets/` (about 6 minutes). Then `git pull --rebase` and open the PNGs with the Read tool.
   - Renders are @2x, on an opaque backdrop, and quantized with pngquant to keep the repo small. The sample data and the moment are fixed (Tue 2026-10-27 11:30), so a render only changes when the views do.
@@ -239,7 +242,7 @@ Identifiers:
   - TestFlight build 4 crashed this way at launch, in `Game.hasStarted`. `min(_:_:)` uses `<` and is safe.
   - CI runs `.github/scripts/check-date-operators.sh` on the built app. It fails if any binary in it references either operator.
   - The script first compiles a one-line canary to prove the SDK produces the reference at all. With an older SDK it only warns.
-  - CI's Xcode 26.3 is such an SDK: the step only warns there. The crashing build came from a newer Xcode on the user's Mac. The check takes effect once CI's Xcode has the back-deployed operators. Moving CI to a newer runner image would make it effective now.
+  - Xcode 26.3's SDK doesn't back-deploy the operators, so CI's check only warned there. Since CI moved to Xcode 27.2 (below), it scans the app for real.
   - `LocalDate` is our own `Comparable` type, so its `<=` is fine.
 - In AppIntents types, use computed static properties (`static var title: LocalizedStringResource { "…" }`). Stored `static var` is a Swift 6 concurrency error.
 - **New persisted fields must decode with a default** (`container.decode(.key, or: default)` from `LenientDecoding.swift`), so designs saved by older builds keep loading.
@@ -378,3 +381,5 @@ Newest last. Add an entry after each piece of work. Keep each to a few lines: wh
   - The crash log showed a jump to address 0 in `Date.<=`, called from `Game.hasStarted` while the first design thumbnails drew.
   - swift-foundation's source shows `Date.<=`/`>=` are back-deployed, and the beta OS lacks the symbols.
   - Replaced the four date `<=`/`>=`/`max` call sites with `Date.isAtOrBefore`/`later` (see Conventions). NoblesKit has 179 tests.
+
+- **2026-11-11: CI moved to Xcode 27.2** (the `xcode-27` runner), matching the user's Xcode, so the `Date.<=`/`>=` check scans the app instead of warning. It passed: no calls.
