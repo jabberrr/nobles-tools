@@ -121,31 +121,6 @@ struct WrappedCardLabel: View {
     }
 }
 
-/// A figure with a small caption under it, on a card.
-struct WrappedStatTile<Figure: View>: View {
-    let caption: String
-    @ViewBuilder let figure: Figure
-
-    var body: some View {
-        VStack(spacing: 4) {
-            figure
-                .font(WrappedStyle.number(32))
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-            Text(caption)
-                .font(WrappedStyle.caption)
-                .foregroundStyle(WrappedStyle.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity)
-        .background(WrappedStyle.cardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-    }
-}
-
 /// A big capsule button: white with dark text, or (not prominent) translucent with white text.
 struct WrappedButtonStyle: ButtonStyle {
     var isProminent = true

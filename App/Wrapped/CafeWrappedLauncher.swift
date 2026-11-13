@@ -4,7 +4,9 @@ import NoblesKit
 /// Opens Cafe Wrapped full screen: the sample at once, or the connected account's own semester once
 /// its purchases load, with a friendly message (and the sample on offer) when there's no recap.
 /// A saved copy of the purchases, all there is when the sign-in has expired or Nobles can't be
-/// reached, is recapped only through the day it was saved, and says so first.
+/// reached, is recapped only through the day it was saved, and says so first. The account's own
+/// recap shows at once, and its streak's standing among other students' fills in from
+/// `StreakBoard` when it arrives.
 struct CafeWrappedLauncher: View {
     /// Whose purchases to recap.
     enum Source: String, Identifiable {
@@ -28,9 +30,13 @@ struct CafeWrappedLauncher: View {
     @State private var showsSample = false
     /// Set by "Show It Anyway", for a recap that stops before today.
     @State private var showsPartialRecap = false
+    /// Where the account's streak stands, once `StreakBoard` answers.
+    @State private var streakStanding: StreakStanding?
 
     private enum Phase {
+        /// The account's own recap.
         case recap(CafeWrapped)
+        case sample
         case loading
         case message(WrappedMessage)
     }
@@ -40,7 +46,13 @@ struct CafeWrappedLauncher: View {
         ZStack {
             switch phase {
             case .recap(let wrapped):
-                CafeWrappedView(wrapped: wrapped)
+                CafeWrappedView(wrapped: wrapped, streakStanding: streakStanding)
+                    .task(id: wrapped.longestStreak) {
+                        guard let length = wrapped.longestStreak?.length else { return }
+                        streakStanding = await StreakBoard.standing(of: length, in: wrapped.period.name)
+                    }
+            case .sample:
+                CafeWrappedView(wrapped: .sample, streakStanding: .sample)
             case .loading:
                 WrappedLoadingView { dismiss() }
             case .message(let message):
@@ -57,7 +69,7 @@ struct CafeWrappedLauncher: View {
 
     private var phase: Phase {
         if source == .sample || showsSample {
-            return .recap(.sample)
+            return .sample
         }
         guard hasCheckedAccount else { return .loading }
         guard previewData.isStoreConnected else { return .message(.notConnected) }

@@ -9,6 +9,8 @@ import NoblesKit
 /// (the favorite's foil, the persona card, buttons) takes taps on it first.
 struct CafeWrappedView: View {
     let wrapped: CafeWrapped
+    /// Where the recap's streak stands among other students', once known.
+    let streakStanding: StreakStanding?
 
     @State private var index: Int
     /// The page whose reveals are playing. It follows `position` a moment later, so a page always
@@ -27,11 +29,13 @@ struct CafeWrappedView: View {
     @Environment(\.wrappedIsStatic) private var isStatic
 
     /// - Parameters:
+    ///   - streakStanding: Where the streak stands among other students'; `nil` hides that line.
     ///   - startPage: The page to open on; the first page if `wrapped` has nothing for it.
     ///   - favoriteTaps: Taps already made on the favorite's foil, for snapshots.
     ///     `FavoritePage.tapsToUnwrap` or more opens it unwrapped.
-    init(wrapped: CafeWrapped, startPage: WrappedPage = .intro, favoriteTaps: Int = 0) {
+    init(wrapped: CafeWrapped, streakStanding: StreakStanding? = nil, startPage: WrappedPage = .intro, favoriteTaps: Int = 0) {
         self.wrapped = wrapped
+        self.streakStanding = streakStanding
         _index = State(initialValue: WrappedPage.pages(for: wrapped).firstIndex(of: startPage) ?? 0)
         _isFavoriteUnwrapped = State(initialValue: favoriteTaps >= FavoritePage.tapsToUnwrap)
         initialFoilTaps = favoriteTaps
@@ -81,7 +85,7 @@ struct CafeWrappedView: View {
     private func pageView(_ page: WrappedPage) -> some View {
         let view = content(of: page, isActive: isStatic || revealedIndex == position)
             .accessibilityElement(children: page == .favorite || page == .summary ? .contain : .ignore)
-            .accessibilityLabel(page.accessibilitySummary(for: wrapped))
+            .accessibilityLabel(page.accessibilitySummary(for: wrapped, standing: streakStanding))
             .accessibilityValue("Page \(position + 1) of \(pages.count)")
             .accessibilityAction { go(by: 1) }
             .accessibilityAction(named: "Next") { go(by: 1) }
@@ -120,7 +124,7 @@ struct CafeWrappedView: View {
         case .days:
             DaysPage(wrapped: wrapped, isActive: isActive)
         case .records:
-            RecordsPage(wrapped: wrapped, isActive: isActive)
+            RecordsPage(wrapped: wrapped, isActive: isActive, standing: streakStanding)
         case .persona:
             PersonaPage(wrapped: wrapped, isActive: isActive, isRevealed: $isPersonaRevealed)
         case .summary:
@@ -200,7 +204,7 @@ struct CafeWrappedView: View {
 }
 
 #Preview("Cafe Wrapped") {
-    CafeWrappedView(wrapped: .sample)
+    CafeWrappedView(wrapped: .sample, streakStanding: .sample)
 }
 
 #Preview("Favorite, half unwrapped") {

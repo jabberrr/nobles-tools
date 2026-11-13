@@ -19,6 +19,7 @@ struct NoblesToolsApp: App {
     var body: some Scene {
         WindowGroup {
             DesignListView(path: $path)
+                .modifier(StreakSync())
                 .environment(library)
                 .environment(previewData)
                 .onOpenURL { openDesign(from: $0) }

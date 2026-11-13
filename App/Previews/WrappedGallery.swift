@@ -1,18 +1,19 @@
 import SwiftUI
 import NoblesKit
 
-/// Every page of Cafe Wrapped in its finished state, phone-sized: the sample recap (the favorite
-/// under foil, three stages open and unwrapped), a recap whose #1 is a branded item with a
-/// product photo and whose purchases fall in two parts of the day ("-branded"), a sparse recap
-/// with one part of the day and a one-purchase recap, the tallest pages on a small iPhone
-/// ("-compact"), the empty and stopped-early messages, and the share poster. Rendered to
-/// `docs/widgets` by the `WidgetSnapshots` tests so layouts can be checked without a device.
+/// Every page of Cafe Wrapped in its finished state, phone-sized: the sample recap (with the sample
+/// streak standing, and the favorite under foil, three stages open and unwrapped), a recap whose
+/// #1 is a branded item with a product photo and whose purchases fall in two parts of the day
+/// ("-branded"), a sparse recap with one part of the day and a one-purchase recap, the tallest
+/// pages on a small iPhone ("-compact"), the empty and stopped-early messages, the persona
+/// card face down, and the share poster. Rendered to `docs/widgets` by the `WidgetSnapshots`
+/// tests so layouts can be checked without a device.
 @MainActor
 enum WrappedGallery {
     static var entries: [WidgetGallery.Entry] {
         let sample = CafeWrapped.sample
         var entries = WrappedPage.pages(for: sample).flatMap { page in
-            page == .favorite ? favoriteEntries("wrapped", sample) : [entry("wrapped-\(page.galleryName)", sample, page)]
+            page == .favorite ? favoriteEntries("wrapped", sample) : [entry("wrapped-\(page.galleryName)", sample, page, streakStanding: .sample)]
         }
         if let branded = Self.branded {
             entries += [WrappedPage.cafes, .topItems].map { page in
@@ -33,7 +34,7 @@ enum WrappedGallery {
             }
         }
         entries += [WrappedPage.total, .cafes, .topItems, .days, .records].map { page in
-            entry("wrapped-compact-\(page.galleryName)", sample, page, screen: .compact)
+            entry("wrapped-compact-\(page.galleryName)", sample, page, streakStanding: .sample, screen: .compact)
         }
         entries.append(entry(
             "wrapped-compact-\(WrappedPage.favorite.galleryName)-unwrapped",
@@ -51,6 +52,12 @@ enum WrappedGallery {
                 onSample: {},
                 onClose: {}
             )
+        })
+        entries.append(phone("wrapped-\(WrappedPage.persona.galleryName)-card-back", .large) {
+            PersonaCardBack(isShimmering: false)
+                .frame(width: PersonaPage.cardSize.width, height: PersonaPage.cardSize.height)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background { WrappedBackground(colors: WrappedPage.persona.colors).ignoresSafeArea() }
         })
         entries.append(WidgetGallery.Entry(name: "wrapped-poster", view: AnyView(WrappedPoster(wrapped: sample, cornerRadius: 0))))
         return entries
@@ -170,11 +177,12 @@ enum WrappedGallery {
         _ name: String,
         _ wrapped: CafeWrapped,
         _ page: WrappedPage,
+        streakStanding: StreakStanding? = nil,
         favoriteTaps: Int = 0,
         screen: Screen = .large
     ) -> WidgetGallery.Entry {
         phone(name, screen) {
-            CafeWrappedView(wrapped: wrapped, startPage: page, favoriteTaps: favoriteTaps)
+            CafeWrappedView(wrapped: wrapped, streakStanding: streakStanding, startPage: page, favoriteTaps: favoriteTaps)
         }
     }
 

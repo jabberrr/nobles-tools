@@ -157,18 +157,19 @@ struct FavoritePage: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    /// A figure over its label, centered in its column.
+    /// A figure over its label, centered in an equal share of the row. Sized so a figure like
+    /// "$63.50" fits a third of a 375 pt wide iPhone.
     private func column<Figure: View>(_ label: String, @ViewBuilder figure: () -> Figure) -> some View {
         VStack(spacing: 2) {
             figure()
-                .font(WrappedStyle.number(30))
+                .font(WrappedStyle.number(26))
                 .monospacedDigit()
                 .foregroundStyle(WrappedStyle.highlight)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
             WrappedCardLabel(label)
         }
-        .padding(.horizontal, 6)
+        .padding(.horizontal, 2)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
     }

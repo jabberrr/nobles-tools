@@ -1,20 +1,25 @@
 import SwiftUI
 
 /// A surface of real crumpled foil (the `FoilTexture` photo scan), with a light sweep now and
-/// then while `isShimmering`. Fills its frame, clipped to `cornerRadius`. Still in static mode and
-/// under Reduce Motion.
-struct FoilSurface: View {
+/// then while `isShimmering`. Anything stamped into it (such as a `FoilStamp`) lies on the foil,
+/// under its edge and its sweep. Fills its frame, clipped to `cornerRadius`. Still in static mode
+/// and under Reduce Motion.
+struct FoilSurface<Stamp: View>: View {
     private let cornerRadius: CGFloat
     private let isShimmering: Bool
+    private let stamp: Stamp
 
-    init(cornerRadius: CGFloat = 0, isShimmering: Bool = true) {
+    /// - Parameter stamp: What's pressed into the foil, laid out in the surface's frame.
+    init(cornerRadius: CGFloat = 0, isShimmering: Bool = true, @ViewBuilder stamp: () -> Stamp) {
         self.cornerRadius = cornerRadius
         self.isShimmering = isShimmering
+        self.stamp = stamp()
     }
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         FoilTextureFill()
+            .overlay { stamp }
             .overlay {
                 // A pressed edge: bright where it faces the light, dark where it turns away.
                 shape.strokeBorder(
@@ -29,6 +34,13 @@ struct FoilSurface: View {
             .clipShape(shape)
             .foilShimmer(isActive: isShimmering, strength: FoilArt.sweepStrength)
             .accessibilityHidden(true)
+    }
+}
+
+extension FoilSurface where Stamp == EmptyView {
+    /// Plain foil, with nothing stamped into it.
+    init(cornerRadius: CGFloat = 0, isShimmering: Bool = true) {
+        self.init(cornerRadius: cornerRadius, isShimmering: isShimmering) { EmptyView() }
     }
 }
 

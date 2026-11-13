@@ -1,9 +1,13 @@
 import SwiftUI
 
-/// A slowly drifting gradient backdrop of large soft color blobs over a base gradient of
-/// `colors` (2–4). Changing `colors` cross-fades. Fills its frame; callers add `.ignoresSafeArea()`.
+/// The story's backdrop: a slow swirl of `colors` (2–4). A gradient of them turns under soft
+/// pools of the same colors and of shade, which circle the middle of the screen at their own
+/// speeds, so the colors keep flowing through each other. Changing `colors` cross-fades. Fills
+/// its frame; callers add `.ignoresSafeArea()`. One still frame in static mode and under Reduce
+/// Motion.
 ///
-/// The blobs only ever use `colors`, so text that contrasts with every one of them stays readable.
+/// It only ever draws `colors` and darker shades of them, so text that contrasts with every one
+/// of them stays readable.
 struct WrappedBackground: View {
     private let colors: [Color]
 
@@ -46,7 +50,7 @@ struct WrappedBackground: View {
     private func field(at time: TimeInterval) -> some View {
         ZStack {
             ForEach(layers) { layer in
-                BlobField(colors: layer.colors, time: time)
+                SwirlField(colors: layer.colors, time: time)
                     .transition(.opacity)
             }
         }
@@ -58,64 +62,97 @@ struct WrappedBackground: View {
     }
 }
 
-/// One palette's base gradient and drifting blobs, at one moment.
-private struct BlobField: View {
+/// One palette's swirl, at one moment.
+private struct SwirlField: View {
     let colors: [Color]
     let time: TimeInterval
 
     var body: some View {
-        let painter = BlobPainter(colors: colors, time: time)
+        let painter = SwirlPainter(colors: colors, time: time)
         Canvas { context, size in
             painter.draw(in: &context, size: size)
         }
     }
 }
 
-/// Draws a base gradient and a few large radial blobs that wander slowly around fixed homes.
-private struct BlobPainter: Sendable {
+/// Draws a turning base gradient, then soft pools of color and shade circling a slowly
+/// wandering middle. Time 0 is the still frame.
+private struct SwirlPainter: Sendable {
     let colors: [Color]
     let time: TimeInterval
 
-    /// A blob's home (unit coordinates), radius (fraction of the longer side), which palette
-    /// color it takes (counting from the end), its strength, and its own drift phase.
-    private struct Blob: Sendable {
-        let x: Double
-        let y: Double
-        let radius: Double
-        let colorFromEnd: Int
-        let opacity: Double
+    /// The base gradient's direction at time 0, in radians, and how fast it turns, in radians a
+    /// second.
+    private static let baseAngle = 0.9
+    private static let baseSpeed = 0.05
+
+    /// A pool circling the swirl's middle. Its orbit's radius is a share of the frame's width
+    /// across and of its height down, so it sweeps a tall screen top to bottom.
+    private struct Pool: Sendable {
+        enum Paint: Sendable {
+            /// The palette color this many from the end.
+            case color(fromEnd: Int)
+            case shade
+        }
+
+        let paint: Paint
+        let orbit: Double
+        /// Radians a second, all the same way round.
+        let speed: Double
+        /// Where on its orbit it is at time 0, in radians.
         let phase: Double
+        /// Its radius, as a share of the frame's longer side.
+        let size: Double
+        let opacity: Double
     }
 
-    private static let blobs = [
-        Blob(x: 0.18, y: 0.22, radius: 0.55, colorFromEnd: 1, opacity: 0.55, phase: 0),
-        Blob(x: 0.86, y: 0.50, radius: 0.60, colorFromEnd: 0, opacity: 0.50, phase: 1.7),
-        Blob(x: 0.28, y: 0.86, radius: 0.50, colorFromEnd: 2, opacity: 0.50, phase: 3.1),
-        Blob(x: 0.78, y: 0.10, radius: 0.45, colorFromEnd: 3, opacity: 0.45, phase: 4.6),
+    /// Outer pools turn slower than inner ones, so the colors twist as they go round. Colors
+    /// first, then shade over them.
+    private static let pools = [
+        Pool(paint: .color(fromEnd: 0), orbit: 0.34, speed: 0.13, phase: 0.6, size: 0.48, opacity: 0.9),
+        Pool(paint: .color(fromEnd: 1), orbit: 0.30, speed: 0.16, phase: 2.7, size: 0.42, opacity: 0.85),
+        Pool(paint: .color(fromEnd: 2), orbit: 0.40, speed: 0.10, phase: 4.6, size: 0.50, opacity: 0.85),
+        Pool(paint: .color(fromEnd: 1), orbit: 0.14, speed: 0.21, phase: 1.6, size: 0.34, opacity: 0.7),
+        Pool(paint: .shade, orbit: 0.36, speed: 0.09, phase: 3.6, size: 0.50, opacity: 0.2),
+        Pool(paint: .shade, orbit: 0.24, speed: 0.14, phase: 0.2, size: 0.40, opacity: 0.16),
     ]
 
     func draw(in context: inout GraphicsContext, size: CGSize) {
         let palette = Self.palette(colors)
         let width = Double(size.width)
         let height = Double(size.height)
+
+        let angle = Self.baseAngle + Self.baseSpeed * time
+        let reach = hypot(width, height) / 2
         context.fill(
             Path(CGRect(origin: .zero, size: size)),
             with: .linearGradient(
                 Gradient(colors: palette),
-                startPoint: .zero,
-                endPoint: CGPoint(x: width, y: height)
+                startPoint: CGPoint(x: width / 2 - cos(angle) * reach, y: height / 2 - sin(angle) * reach),
+                endPoint: CGPoint(x: width / 2 + cos(angle) * reach, y: height / 2 + sin(angle) * reach)
             )
         )
+
+        let middleX = 0.5 + 0.06 * sin(0.05 * time)
+        let middleY = 0.48 + 0.05 * cos(0.07 * time)
         let longest = max(width, height)
-        for blob in Self.blobs {
-            let color = palette[palette.count - 1 - blob.colorFromEnd % palette.count]
-            let x = (blob.x + 0.14 * sin(time * 0.13 + blob.phase)) * width
-            let y = (blob.y + 0.10 * cos(time * 0.17 + blob.phase * 1.3)) * height
-            let radius = blob.radius * longest
+        for pool in Self.pools {
+            let color = switch pool.paint {
+            case .color(let fromEnd): palette[palette.count - 1 - fromEnd % palette.count]
+            case .shade: Color.black
+            }
+            let turn = pool.phase + pool.speed * time
+            let x = (middleX + pool.orbit * cos(turn)) * width
+            let y = (middleY + pool.orbit * 0.9 * sin(turn)) * height
+            let radius = pool.size * longest
             context.fill(
                 Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)),
                 with: .radialGradient(
-                    Gradient(colors: [color.opacity(blob.opacity), color.opacity(0)]),
+                    Gradient(stops: [
+                        .init(color: color.opacity(pool.opacity), location: 0),
+                        .init(color: color.opacity(pool.opacity * 0.45), location: 0.5),
+                        .init(color: color.opacity(0), location: 1),
+                    ]),
                     center: CGPoint(x: x, y: y),
                     startRadius: 0,
                     endRadius: CGFloat(radius)
@@ -134,18 +171,16 @@ private struct BlobPainter: Sendable {
     }
 }
 
+/// Tap to step through every page's colors.
 private struct WrappedBackgroundPreview: View {
-    private static let palettes: [[Color]] = [
-        [Color(red: 0.29, green: 0.11, blue: 0.55), Color(red: 0.75, green: 0.13, blue: 0.42)],
-        [Color(red: 0.02, green: 0.30, blue: 0.40), Color(red: 0.09, green: 0.18, blue: 0.48), Color(red: 0.30, green: 0.10, blue: 0.45)],
-        [Color(red: 0.55, green: 0.17, blue: 0.05), Color(red: 0.62, green: 0.08, blue: 0.20)],
-    ]
-    @State private var index = 0
+    @State private var page = WrappedPage.intro
 
     var body: some View {
-        WrappedBackground(colors: Self.palettes[index])
+        WrappedBackground(colors: page.colors)
             .ignoresSafeArea()
-            .onTapGesture { index = (index + 1) % Self.palettes.count }
+            .onTapGesture {
+                page = WrappedPage(rawValue: (page.rawValue + 1) % WrappedPage.allCases.count) ?? .intro
+            }
             .overlay {
                 Text("Tap to change colors").font(WrappedStyle.lead).foregroundStyle(.white)
             }

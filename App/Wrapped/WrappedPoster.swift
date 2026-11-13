@@ -2,7 +2,10 @@ import SwiftUI
 import UIKit
 import NoblesKit
 
-/// The shareable recap: the semester's headline stats on one poster, shaped like a story (9:16).
+/// The shareable recap, shaped like a story (9:16) and set like a poster: the #1's plate hanging
+/// off the top right corner beside the masthead and a giant "#1", the item's name under them, then
+/// what the semester came to as the one big figure and the other headline stats two to a row,
+/// with hairlines between. It's shared as an image, so it reads on its own.
 struct WrappedPoster: View {
     static let size = CGSize(width: 360, height: 640)
 
@@ -10,66 +13,117 @@ struct WrappedPoster: View {
     /// 0 for the shared image, which apps crop themselves.
     var cornerRadius: CGFloat = 32
 
+    private static let margin: CGFloat = 24
+    private static let plateSize: CGFloat = 220
+    /// How far the plate hangs off the poster's right and top edges.
+    private static let plateOverhang = CGSize(width: 40, height: 36)
+    /// The masthead's width: the poster's top left, clear of the plate.
+    private static var mastheadWidth: CGFloat {
+        size.width - plateSize + plateOverhang.width - margin - 8
+    }
+
     private struct Stat: Identifiable {
-        let value: String
         let label: String
+        let value: String
         var id: String { label }
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            header
+        VStack(alignment: .leading, spacing: 0) {
+            masthead
             if let item = wrapped.favorite {
                 favorite(item)
             }
-            statGrid
-            Spacer(minLength: 0)
+            WrappedRule()
+                .padding(.vertical, 11)
+            WrappedStat(label: "Spent", caption: WrappedFormat.count(wrapped.purchaseCount, "purchase"), size: 44) {
+                Text(wrapped.total.usd())
+            }
+            ForEach(Array(statRows.enumerated()), id: \.offset) { _, row in
+                WrappedRule()
+                    .padding(.vertical, 11)
+                HStack(alignment: .top, spacing: 16) {
+                    ForEach(row) { stat in
+                        statView(stat)
+                    }
+                }
+            }
+            Spacer(minLength: 10)
             footer
         }
-        .padding(24)
+        .padding(Self.margin)
         .frame(width: Self.size.width, height: Self.size.height)
         .foregroundStyle(.white)
+        .background(alignment: .topTrailing) { plate }
         .background { backdrop }
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilitySummary)
     }
 
-    private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
+    /// "CAFE WRAPPED" over the semester, then a giant "#1" when there's a favorite.
+    private var masthead: some View {
+        VStack(alignment: .leading, spacing: 0) {
             Text("CAFE WRAPPED")
-                .font(WrappedStyle.title(20))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+                .font(WrappedStyle.title(24))
                 .foregroundStyle(WrappedFX.foilGradient)
-            Spacer(minLength: 8)
-            Text(WrappedFormat.period(wrapped.period).uppercased())
-                .font(WrappedStyle.eyebrow)
-                .tracking(WrappedStyle.eyebrowTracking)
-                .foregroundStyle(WrappedStyle.secondary)
-                .lineLimit(1)
+                .lineLimit(2)
                 .minimumScaleFactor(0.7)
+                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(wrapped.period.name.uppercased())
+                if !wrapped.period.isComplete {
+                    Text("SO FAR")
+                }
+            }
+            .font(WrappedStyle.eyebrow)
+            .tracking(WrappedStyle.eyebrowTracking)
+            .foregroundStyle(WrappedStyle.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .padding(.top, 6)
+            if wrapped.favorite != nil {
+                Text("#1")
+                    .font(WrappedStyle.number(72))
+                    .foregroundStyle(WrappedStyle.highlight)
+                    .padding(.top, 8)
+            }
+        }
+        .frame(width: Self.mastheadWidth, alignment: .leading)
+    }
+
+    /// The #1's picture, big, cut off by the poster's top right corner.
+    @ViewBuilder
+    private var plate: some View {
+        if let item = wrapped.favorite {
+            WrappedItemPicture(item: item, size: Self.plateSize)
+                .offset(x: Self.plateOverhang.width, y: -Self.plateOverhang.height)
         }
     }
 
     private func favorite(_ item: CafeWrapped.Item) -> some View {
-        VStack(spacing: 6) {
-            WrappedItemPicture(item: item, size: 118)
-                .padding(.bottom, 6)
-            Text("MY #1")
-                .font(WrappedStyle.eyebrow)
-                .tracking(WrappedStyle.eyebrowTracking)
-                .foregroundStyle(WrappedStyle.highlight)
+        VStack(alignment: .leading, spacing: 4) {
             Text(item.name)
-                .font(WrappedStyle.hero(22))
-                .multilineTextAlignment(.center)
+                .font(WrappedStyle.hero(24))
                 .lineLimit(2)
-                .minimumScaleFactor(0.6)
+                .minimumScaleFactor(0.7)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("\(WrappedFormat.count(item.count, "time")) · \(item.total.usd())")
+            Text("Bought \(WrappedFormat.count(item.count, "time"))")
                 .font(WrappedStyle.caption)
                 .foregroundStyle(WrappedStyle.secondary)
         }
+    }
+
+    private func statView(_ stat: Stat) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            WrappedCardLabel(stat.label)
+            Text(stat.value)
+                .font(WrappedStyle.title(17))
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// The app's name, with the photo's credit beside it when the #1 shows an Open Food Facts
@@ -95,50 +149,26 @@ struct WrappedPoster: View {
         return UIImage(named: name) != nil
     }
 
-    /// Two tiles to a row; an odd last tile takes the whole row.
-    private var statGrid: some View {
-        let stats = statList
-        return VStack(spacing: 8) {
-            ForEach(Array(stride(from: 0, to: stats.count, by: 2)), id: \.self) { start in
-                HStack(spacing: 8) {
-                    ForEach(stats[start..<min(start + 2, stats.count)]) { stat in
-                        tile(stat)
-                    }
-                }
-            }
-        }
-    }
-
-    private func tile(_ stat: Stat) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(stat.value)
-                .font(WrappedStyle.title(17))
-                .lineLimit(2)
-                .minimumScaleFactor(0.6)
-            WrappedCardLabel(stat.label)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
-        .background(WrappedStyle.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-
-    private var statList: [Stat] {
-        var stats = [
-            Stat(value: wrapped.total.usd(), label: "Spent"),
-            Stat(value: wrapped.purchaseCount.formatted(), label: "Purchases"),
-        ]
+    /// The stats under the total, as many as the recap has.
+    private var stats: [Stat] {
+        var stats: [Stat] = []
         if let cafe = wrapped.cafes.first {
-            stats.append(Stat(value: cafe.name, label: "Top cafe"))
+            stats.append(Stat(label: "Top cafe", value: cafe.name))
         }
         if let hour = wrapped.peakHour {
-            stats.append(Stat(value: WrappedFormat.hour(hour), label: "Busiest hour"))
+            stats.append(Stat(label: "Busiest hour", value: WrappedFormat.hour(hour)))
         }
         if let streak = wrapped.longestStreak, streak.length > 1 {
-            stats.append(Stat(value: WrappedFormat.count(streak.length, "day"), label: "Longest streak"))
+            stats.append(Stat(label: "Days in a row", value: streak.length.formatted()))
         }
-        stats.append(Stat(value: "\(wrapped.persona.emoji) \(wrapped.persona.title)", label: "Cafe personality"))
+        stats.append(Stat(label: "Cafe personality", value: "\(wrapped.persona.emoji) \(wrapped.persona.title)"))
         return stats
+    }
+
+    /// `stats` two to a row; an odd last one has its row to itself.
+    private var statRows: [[Stat]] {
+        let stats = self.stats
+        return stride(from: 0, to: stats.count, by: 2).map { Array(stats[$0..<min($0 + 2, stats.count)]) }
     }
 
     private var backdrop: some View {
@@ -159,9 +189,13 @@ struct WrappedPoster: View {
     }
 
     private var accessibilitySummary: String {
-        let lines = statList.map { "\($0.label), \($0.value)." }
-        let favorite = wrapped.favorite.map { "My number 1 is \($0.name), \(WrappedFormat.count($0.count, "time"))." }
-        return (["My \(wrapped.period.name) Cafe Wrapped."] + [favorite].compactMap { $0 } + lines).joined(separator: " ")
+        var lines = ["My \(wrapped.period.name) Cafe Wrapped."]
+        if let item = wrapped.favorite {
+            lines.append("My number 1 is \(item.name), bought \(WrappedFormat.count(item.count, "time")).")
+        }
+        lines.append("Spent, \(wrapped.total.usd()), on \(WrappedFormat.count(wrapped.purchaseCount, "purchase")).")
+        lines += stats.map { "\($0.label), \($0.value)." }
+        return lines.joined(separator: " ")
     }
 }
 

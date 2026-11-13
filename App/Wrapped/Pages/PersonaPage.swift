@@ -1,11 +1,11 @@
 import SwiftUI
 import NoblesKit
 
-/// Your cafe personality, revealed like a show. A foil card waits face down until you tap it.
-/// Then it charges up, shaking and glowing, and flips over in a burst of light and confetti. The
-/// persona's emoji, title and tagline come in one by one, with the numbers behind it below.
-/// Once turned, it stays face up on later visits. Static mode shows it face up; under Reduce
-/// Motion it cross-fades.
+/// Your cafe personality, revealed like a show. A foil card with a "?" stamped into it waits face
+/// down until you tap it. Then it charges up, shaking and glowing, and flips over in a burst of
+/// light and confetti. The persona's emoji, title and tagline come in one by one, with the figure
+/// behind it below. Once turned, it stays face up on later visits. Static mode shows it face up;
+/// under Reduce Motion it cross-fades.
 struct PersonaPage: View {
     let wrapped: CafeWrapped
     let isActive: Bool
@@ -20,7 +20,8 @@ struct PersonaPage: View {
     /// on the card go back to turning the page.
     @State private var hasLanded: Bool
 
-    private static let cardSize = CGSize(width: 290, height: 370)
+    /// The card's size, on either face.
+    static let cardSize = CGSize(width: 290, height: 370)
 
     /// A visit that begins with the card already turned shows it face up, with no show.
     init(wrapped: CafeWrapped, isActive: Bool, isRevealed: Binding<Bool>) {
@@ -36,23 +37,20 @@ struct PersonaPage: View {
         let isLit = isStatic || hasLanded
         ZStack {
             VStack(spacing: 24) {
-                WrappedEyebrow("Your cafe personality", symbol: "sparkles")
+                WrappedEyebrow("Your cafe personality")
                     .wrappedReveal(isActive, delay: 0.1, style: .fade)
                 Spacer(minLength: 0)
                 card(isFaceUp: isFaceUp, isLit: isLit)
                     .wrappedReveal(isActive, delay: 0.25, style: .pop)
                 // Both stay laid out, so the card doesn't move when one gives way to the other.
                 ZStack(alignment: .top) {
-                    WrappedHint("Tap the card to find out")
+                    WrappedHint("Tap to reveal")
                         .opacity(isFaceUp ? 0 : 1)
                         .animation(.easeOut(duration: 0.2), value: isFaceUp)
                         .wrappedReveal(isActive, delay: 0.9, style: .fade)
-                    Text(reason)
-                        .font(WrappedStyle.body)
-                        .foregroundStyle(WrappedStyle.secondary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .wrappedReveal(isActive && isLit, delay: 0.7)
+                    if let evidence = PersonaEvidence(wrapped) {
+                        evidenceView(evidence, isRevealed: isActive && isLit)
+                    }
                 }
                 Spacer(minLength: 0)
             }
@@ -108,26 +106,61 @@ struct PersonaPage: View {
         reduceMotion ? .easeInOut(duration: 0.4) : .linear(duration: 0.01).delay(Show.landing)
     }
 
-    /// The numbers behind the persona, in a sentence.
-    private var reason: String {
+    /// The figure behind the persona, over what it counts.
+    private func evidenceView(_ evidence: PersonaEvidence, isRevealed: Bool) -> some View {
+        VStack(spacing: 2) {
+            Text(evidence.figure)
+                .font(WrappedStyle.number(30))
+                .monospacedDigit()
+                .foregroundStyle(WrappedStyle.highlight)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .wrappedReveal(isRevealed, delay: 0.7, style: .pop)
+            Text(evidence.label)
+                .font(WrappedStyle.body)
+                .foregroundStyle(WrappedStyle.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .wrappedReveal(isRevealed, delay: 0.85)
+        }
+    }
+}
+
+/// The figure behind a persona and what it counts: "45%" over "After 5 PM".
+struct PersonaEvidence {
+    let figure: String
+    let label: String
+    /// Both, as VoiceOver reads them.
+    let spoken: String
+
+    /// `nil` for a superfan with no favorite, which the persona rules never pick.
+    init?(_ wrapped: CafeWrapped) {
         switch wrapped.persona {
         case .loyalist:
-            guard let favorite = wrapped.favorite, wrapped.itemCount > 0 else { return wrapped.persona.tagline }
-            let share = Double(favorite.count) / Double(wrapped.itemCount)
-            return "\(favorite.name) was \(WrappedFormat.percent(share)) of everything you bought."
+            guard let favorite = wrapped.favorite else { return nil }
+            figure = "×\(favorite.count.formatted())"
+            label = favorite.name
+            spoken = "\(favorite.name), \(WrappedFormat.count(favorite.count, "time"))"
         case .nightOwl:
-            return "\(WrappedFormat.percent(wrapped.share(ofHours: 17...23))) of your purchases came after 5 PM."
+            figure = WrappedFormat.percent(wrapped.share(ofHours: 17...23))
+            label = "After 5 PM"
+            spoken = "\(figure) of purchases after 5 PM"
         case .earlyBird:
-            return "\(WrappedFormat.percent(wrapped.share(ofHours: 0...9))) of your purchases came before 10 AM."
+            figure = WrappedFormat.percent(wrapped.share(ofHours: 0...9))
+            label = "Before 10 AM"
+            spoken = "\(figure) of purchases before 10 AM"
         case .regular:
-            let days = WrappedFormat.count(wrapped.dayCount, "day")
-            return wrapped.period.isComplete
-                ? "You bought something on \(days), at least every other school day."
-                : "You've bought something on \(days) so far, at least every other school day."
+            figure = WrappedFormat.count(wrapped.dayCount, "day")
+            label = "At least every other school day"
+            spoken = "\(figure), at least every other school day"
         case .explorer:
-            return "You tried \(wrapped.distinctItemCount) different things."
+            figure = wrapped.distinctItemCount.formatted()
+            label = "Different items"
+            spoken = "\(figure) different items"
         case .dropIn:
-            return "You bought something \(WrappedFormat.count(wrapped.purchaseCount, "time")), with no set routine."
+            figure = WrappedFormat.count(wrapped.purchaseCount, "time")
+            label = "No set routine"
+            spoken = "\(figure), no set routine"
         }
     }
 }
@@ -204,25 +237,16 @@ private struct Charge: Sendable {
 /// The persona card's corners.
 private let cardCornerRadius: CGFloat = 32
 
-/// The side you see first: foil, with a question mark. Its shimmer stops once it has turned away.
-private struct PersonaCardBack: View {
+/// The side you see first: foil with a "?" stamped into it, which the shimmer sweeps over. Its
+/// shimmer stops once it has turned away.
+struct PersonaCardBack: View {
     let isShimmering: Bool
 
     var body: some View {
-        VStack(spacing: 12) {
-            Text("?")
-                .font(WrappedStyle.number(120))
-            Text("Who are you\nat the cafe?")
-                .font(WrappedStyle.lead)
-                .multilineTextAlignment(.center)
-        }
-        .foregroundStyle(WrappedStyle.ink)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            FoilSurface(cornerRadius: cardCornerRadius, isShimmering: isShimmering)
-                // A light wash, so the dark text stays clear over the foil's darkest creases.
-                .overlay { Color.white.opacity(0.22) }
-                .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
+        FoilSurface(cornerRadius: cardCornerRadius, isShimmering: isShimmering) {
+            // A light wash calms the crinkles around the "?", so it reads at a glance.
+            Color.white.opacity(0.22)
+            FoilStamp("?", size: 220)
         }
     }
 }

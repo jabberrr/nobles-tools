@@ -46,6 +46,11 @@ targets:
       properties:
         com.apple.security.application-groups:
           - group.app.dabora.noblestools
+        # CloudKit's public database holds each student's anonymous cafe streak (StreakBoard).
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.app.dabora.noblestools
+        com.apple.developer.icloud-services:
+          - CloudKit
     info:
       path: App/Info.plist
       properties:

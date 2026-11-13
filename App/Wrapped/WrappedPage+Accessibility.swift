@@ -3,8 +3,9 @@ import NoblesKit
 
 extension WrappedPage {
     /// What VoiceOver reads for the page: its story in a sentence or two. Like the pages, nothing
-    /// before the favorite's page names the #1.
-    func accessibilitySummary(for wrapped: CafeWrapped) -> String {
+    /// before the favorite's page names the #1. `standing` is how the streak ranks among other
+    /// students, once it's known.
+    func accessibilitySummary(for wrapped: CafeWrapped, standing: StreakStanding? = nil) -> String {
         switch self {
         case .intro: "Cafe Wrapped for \(wrapped.period.name). \(IntroPage.subtitle(for: wrapped))"
         case .total: Self.totalSummary(wrapped)
@@ -14,8 +15,8 @@ extension WrappedPage {
         case .favorite: "Your number 1."
         case .times: Self.timesSummary(wrapped)
         case .days: Self.daysSummary(wrapped)
-        case .records: Self.recordsSummary(wrapped)
-        case .persona: "Your cafe personality is \(wrapped.persona.title). \(wrapped.persona.tagline)"
+        case .records: Self.recordsSummary(wrapped, standing: standing)
+        case .persona: Self.personaSummary(wrapped)
         case .summary: "Your recap poster. Share it or tap Done."
         }
     }
@@ -66,10 +67,13 @@ extension WrappedPage {
         return parts.joined(separator: " ")
     }
 
-    private static func recordsSummary(_ wrapped: CafeWrapped) -> String {
+    private static func recordsSummary(_ wrapped: CafeWrapped, standing: StreakStanding?) -> String {
         var parts = ["Personal bests."]
         if let streak = wrapped.longestStreak, streak.length > 1 {
             parts.append("\(streak.length) days in a row, \(WrappedFormat.streakDates(streak)).")
+            if let standing {
+                parts.append("Top \(standing.topPercent)% of Nobles students.")
+            }
         }
         if wrapped.distinctItemCount > 1 {
             parts.append("You tried \(wrapped.distinctItemCount) different things.")
@@ -84,5 +88,11 @@ extension WrappedPage {
             parts.append("Your first purchase was \(charge.detail), on \(WrappedFormat.moment(charge.madeAt)).")
         }
         return parts.joined(separator: " ")
+    }
+
+    private static func personaSummary(_ wrapped: CafeWrapped) -> String {
+        let persona = "Your cafe personality is \(wrapped.persona.title). \(wrapped.persona.tagline)"
+        guard let evidence = PersonaEvidence(wrapped) else { return persona }
+        return "\(persona) \(evidence.spoken)."
     }
 }
