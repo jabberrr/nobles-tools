@@ -67,19 +67,19 @@ struct FavoritePage: View {
 
     @ViewBuilder
     private var picture: some View {
+        let itemPicture = WrappedItemPicture(item: item)
         if beganWrapped {
             FoilWrap(
                 tapsToUnwrap: Self.tapsToUnwrap,
                 initialTaps: initialTaps,
+                covering: itemPicture.itemBounds,
                 onTap: { taps = $0 },
                 onUnwrap: { unwrap() }
             ) {
-                WrappedItemPicture(item: item)
-            } silhouette: {
-                WrappedItemPicture(item: item).silhouette
+                itemPicture
             }
         } else {
-            WrappedItemPicture(item: item)
+            itemPicture
         }
     }
 

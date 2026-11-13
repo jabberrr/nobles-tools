@@ -29,11 +29,9 @@ struct WrappedItemPicture: View {
             .accessibilityHidden(true)
     }
 
-    /// The item's shape without the plate, laid out exactly like the picture: what `FoilWrap`
-    /// shapes its foil to.
-    var silhouette: some View {
-        art.silhouette
-            .frame(width: size, height: size)
+    /// The rounded box the item fills in the middle of the picture: what `FoilWrap` covers.
+    var itemBounds: FoilItemBounds {
+        art.bounds
     }
 
     private var plate: some View {
@@ -56,10 +54,10 @@ struct WrappedItemPicture: View {
 /// An item on its own, with no plate: its product photo fitted in a rounded square, or its emoji.
 struct WrappedItemArt: View {
     private let emoji: String
-    private let productImage: String?
+    /// The product photo's asset name and size, when the app has a photo of the item.
+    private let photo: (name: String, size: CGSize)?
     /// The emoji's size in points. A photo fits a square a quarter bigger.
     private let size: CGFloat
-    private var isSilhouette = false
 
     init(item: CafeWrapped.Item, size: CGFloat) {
         self.init(emoji: item.emoji, productImage: item.productImage, size: size)
@@ -73,41 +71,43 @@ struct WrappedItemArt: View {
     /// Falls back to the emoji for a product the app has no photo of.
     private init(emoji: String, productImage: String?, size: CGFloat) {
         self.emoji = emoji
-        self.productImage = productImage.flatMap { UIImage(named: $0) == nil ? nil : $0 }
+        photo = productImage.flatMap { name in UIImage(named: name).map { (name: name, size: $0.size) } }
         self.size = size
     }
 
-    /// The same art as a shape: opaque exactly where the item is drawn.
-    var silhouette: WrappedItemArt {
-        var silhouette = self
-        silhouette.isSilhouette = true
-        return silhouette
+    /// The rounded box the art fills, centered in its frame: the photo as fitted, or a square an
+    /// emoji's drawing stays inside, its corners well rounded since emoji rarely fill them.
+    var bounds: FoilItemBounds {
+        guard let photo, photo.size.width > 0, photo.size.height > 0 else {
+            let side = size * 1.15
+            return FoilItemBounds(size: CGSize(width: side, height: side), cornerRadius: side * 0.35)
+        }
+        let scale = min(photoSide / photo.size.width, photoSide / photo.size.height)
+        return FoilItemBounds(
+            size: CGSize(width: photo.size.width * scale, height: photo.size.height * scale),
+            cornerRadius: photoCornerRadius
+        )
     }
 
     var body: some View {
-        if let productImage {
-            photo(productImage)
+        if let photo {
+            Image(photo.name)
+                .resizable()
+                .scaledToFit()
+                .clipShape(RoundedRectangle(cornerRadius: photoCornerRadius, style: .continuous))
+                .frame(width: photoSide, height: photoSide)
         } else {
-            // An emoji is already opaque only where it's drawn, so it's its own silhouette.
             Text(emoji)
                 .font(WrappedStyle.emoji(size))
         }
     }
 
-    private func photo(_ name: String) -> some View {
-        let side = size * 1.25
-        let shape = RoundedRectangle(cornerRadius: side * 0.12, style: .continuous)
-        let image = Image(name).resizable().scaledToFit()
-        return Group {
-            if isSilhouette {
-                // Laid out as the photo, so the shape lands exactly where the photo would.
-                image
-                    .hidden()
-                    .overlay { shape.fill(Color.black) }
-            } else {
-                image.clipShape(shape)
-            }
-        }
-        .frame(width: side, height: side)
+    /// The square a photo is fitted in.
+    private var photoSide: CGFloat {
+        size * 1.25
+    }
+
+    private var photoCornerRadius: CGFloat {
+        photoSide * 0.12
     }
 }

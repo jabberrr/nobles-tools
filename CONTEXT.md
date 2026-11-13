@@ -30,7 +30,7 @@ All kinds share a `Theme`: palette, font style and background style.
 2. Total, with a cumulative spending line that draws in.
 3. Where you went: one bar split across the cafes, each cafe's share and total, then spending by weekday and week by week, stacked by cafe (`CafeWrapped.cafeBreakdown` in NoblesKit; `WrappedStackedColumns`, `CafeShareBar`). Three cafes get their own color; the rest share one row. No items per cafe, at the user's request. One cafe gets its name as the title.
 4. Most ordered: the top 5 as ranked rows. #1 is a foil blank.
-5. The #1 item in a **lumpy foil bundle that only loosely follows its shape**, opened in stages, one per tap (4 taps, `FoilWrap`): a small torn hole, a larger hole with the foil folded back at its edge, a hole the item's size, then the rest crumples away. Then its name, times bought, spend, **share of all spending**, first bought and usual cafe.
+5. The #1 item in a **lumpy foil bundle that covers its whole box** (`FoilItemBounds`, so no photo's outline shows), opened in stages, one per tap (4 taps, `FoilWrap`): a small torn hole, a larger hole with the foil folded back at its edge, a hole the item's size, then the rest crumples away. Then its name, times bought, spend, **share of all spending**, first bought and usual cafe.
 6. Busiest hours.
 7. Days.
 8. Personal bests: the streak (with "Top X% of Nobles students" when there's a standing, see Architecture), things tried, biggest day, biggest purchase, first purchase.
@@ -97,7 +97,7 @@ App/                        App target: DesignLibrary (state), design list, edit
                             Wrapped/ is Cafe Wrapped: CafeWrappedView (story container), CafeWrappedLauncher
                             (loads the account's recap or the sample, with message screens), Pages/ (one per
                             page), Effects/ (FoilWrap with FoilCover/FoilLayers/FoilBundle/FoilTear/FoilFinish/
-                            FoilMasks/FoilGeometry/FoilBall; FoilSurface and FoilStamp; reveals, counting text,
+                            FoilGeometry/FoilBall; FoilSurface and FoilStamp; reveals, counting text,
                             confetti, light burst, the swirl backdrop, shimmer, hint),
                             WrappedStyle/WrappedLayout/WrappedPage/WrappedFormat (type, rules and stats,
                             palettes, wording of figures), CafeBreakdown+Drawing/CafeShareBar/

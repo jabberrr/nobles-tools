@@ -175,42 +175,18 @@ private struct UnwrapPop: ViewModifier {
 
 // MARK: - Previews
 
-/// A stand-in for the favorite's picture: a cookie on a plate, or (as its silhouette) the cookie
-/// alone.
-private struct PreviewCookie: View {
-    var isSilhouette = false
-
-    var body: some View {
-        Text("🍪")
-            .font(WrappedStyle.emoji(110))
-            .frame(width: 220, height: 220)
-            .background {
-                if !isSilhouette {
-                    Circle().fill(
-                        RadialGradient(
-                            colors: [Color(hex: 0xFFF9EF), Color(hex: 0xF2AE63)],
-                            center: UnitPoint(x: 0.38, y: 0.32),
-                            startRadius: 0,
-                            endRadius: 160
-                        )
-                    )
-                }
-            }
-    }
-}
-
 private let previewTaps = 4
 
 private struct FoilWrapPreview: View {
+    let itemName: String
     @State private var taps = 0
     @State private var wrapping = 0
 
     var body: some View {
+        let picture = WrappedItemPicture(itemNamed: itemName)
         VStack(spacing: 36) {
-            FoilWrap(tapsToUnwrap: previewTaps, onTap: { taps = $0 }) {
-                PreviewCookie()
-            } silhouette: {
-                PreviewCookie(isSilhouette: true)
+            FoilWrap(tapsToUnwrap: previewTaps, covering: picture.itemBounds, onTap: { taps = $0 }) {
+                picture
             }
             .id(wrapping)
             Text(taps >= previewTaps ? "Unwrapped" : "\(previewTaps - taps) to go")
@@ -228,17 +204,22 @@ private struct FoilWrapPreview: View {
 }
 
 #Preview("Foil wrap") {
-    FoilWrapPreview()
+    FoilWrapPreview(itemName: "Jumbo Chocolate Chip Cookie")
+}
+
+#Preview("Foil wrap, wide photo") {
+    FoilWrapPreview(itemName: "Cup of Noodles")
 }
 
 #Preview("Foil wrap stages (static)") {
     ScrollView {
         VStack(spacing: 70) {
-            ForEach(0...previewTaps, id: \.self) { taps in
-                FoilWrap(tapsToUnwrap: previewTaps, initialTaps: taps) {
-                    PreviewCookie()
-                } silhouette: {
-                    PreviewCookie(isSilhouette: true)
+            ForEach(["Jumbo Chocolate Chip Cookie", "Cup of Noodles"], id: \.self) { name in
+                let picture = WrappedItemPicture(itemNamed: name)
+                ForEach(0...previewTaps, id: \.self) { taps in
+                    FoilWrap(tapsToUnwrap: previewTaps, initialTaps: taps, covering: picture.itemBounds) {
+                        picture
+                    }
                 }
             }
         }

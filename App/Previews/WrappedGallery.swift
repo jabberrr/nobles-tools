@@ -2,13 +2,13 @@ import SwiftUI
 import NoblesKit
 
 /// Every page of Cafe Wrapped in its finished state, phone-sized: the sample recap (with the sample
-/// streak standing, and the favorite under foil at every stage and unwrapped), a recap whose
-/// #1 is a branded item with a product photo and whose purchases fall in two parts of the day
-/// ("-branded"), a sparse recap with one part of the day and a one-purchase recap, a recap at four
-/// cafes ("-four-cafes"), the menus' longest names in the top 5 ("-long-names"), the tallest pages
-/// on a small iPhone ("-compact"), the empty and stopped-early messages, the persona card face
-/// down, and the share poster. Rendered to `docs/widgets` by the `WidgetSnapshots` tests so
-/// layouts can be checked without a device.
+/// streak standing, and the favorite under foil at every stage and unwrapped), a recap whose #1 is
+/// a branded item with a product photo and whose purchases fall in two parts of the day
+/// ("-branded"), the same with a wide product photo as #1 under foil ("-wide"), a sparse recap with
+/// one part of the day and a one-purchase recap, a recap at four cafes ("-four-cafes"), the menus'
+/// longest names in the top 5 ("-long-names"), the tallest pages on a small iPhone ("-compact"),
+/// the empty and stopped-early messages, the persona card face down, and the share poster. Rendered
+/// to `docs/widgets` by the `WidgetSnapshots` tests so layouts can be checked without a device.
 @MainActor
 enum WrappedGallery {
     static var entries: [WidgetGallery.Entry] {
@@ -23,6 +23,9 @@ enum WrappedGallery {
             entries += favoriteEntries("wrapped-branded", branded)
             entries.append(entry("wrapped-branded-\(WrappedPage.times.galleryName)", branded, .times))
             entries.append(WidgetGallery.Entry(name: "wrapped-branded-poster", view: AnyView(WrappedPoster(wrapped: branded, cornerRadius: 0))))
+        }
+        if let wide = Self.wide {
+            entries += favoriteEntries("wrapped-wide", wide)
         }
         if let sparse = Self.sparse {
             entries += [WrappedPage.total, .cafes, .topItems, .times, .records, .summary].map { page in
@@ -105,8 +108,19 @@ enum WrappedGallery {
     /// Cookies) among the rest, so product photos show under the foil, in the lists and on the
     /// poster. Every purchase is in the morning or the afternoon.
     private static var branded: CafeWrapped? {
+        brandedMonth(favorite: (cafe2000, "Body Armor", "3.00"))
+    }
+
+    /// The branded month with a wide product photo as its #1 (Cup of Noodles), which the foil has
+    /// to grow to cover.
+    private static var wide: CafeWrapped? {
+        brandedMonth(favorite: (cafe2000, "Cup of Noodles", "3.00"))
+    }
+
+    /// A month of branded items and a few others, with `favorite` bought most.
+    private static func brandedMonth(favorite: (store: String, item: String, price: String)) -> CafeWrapped? {
         let orders: [(store: String, item: String, price: String, days: [Int])] = [
-            (cafe2000, "Body Armor", "3.00", [5, 6, 7, 8, 13, 14, 15, 19, 20, 22]),
+            (favorite.store, favorite.item, favorite.price, [5, 6, 7, 8, 13, 14, 15, 19, 20, 22]),
             (gleason, "Doritos", "3.00", [6, 8, 13, 20, 22, 26]),
             (cafe2000, "Jumbo Chocolate Chip Cookie", "2.50", [7, 14, 21, 26]),
             (gleason, "Oreo Cookies", "2.00", [9, 16, 23]),

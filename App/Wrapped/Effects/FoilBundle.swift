@@ -4,9 +4,9 @@ import SwiftUI
 /// the item's shape, with pinches where the foil is gathered and creases running in from them.
 /// Seeded, so it's the same on every run and in every snapshot.
 ///
-/// Every item gets at least the standard bundle, which covers an emoji. A big product photo gets a
-/// bigger one, stretched only partway toward the photo's proportions, so its outline still gives
-/// nothing away.
+/// Each bundle is the standard one, stretched just enough to cover the item's box with room to
+/// spare: a little for an emoji, more for a big product photo. It stretches only partway toward
+/// the item's proportions, so its outline gives nothing away.
 struct FoilBundle: Sendable {
     let outline: Path
     let creases: Path
@@ -35,8 +35,9 @@ struct FoilBundle: Sendable {
         // Stretched only partway toward the item's proportions, so a can and a cookie get much
         // the same bundle.
         let stretch = pow(halfWidth / halfHeight, 0.35)
-        // The outline comes no nearer the middle than `innerReach`, so the bundle covers the item
-        // once that ellipse takes in the grown box. The box's rounded corners reach furthest.
+        // The outline comes no nearer its middle than `innerReach` of its half widths and heights,
+        // so it covers the item once that inner ellipse takes in the item's grown box. The box's
+        // rounded corners reach furthest.
         let farthest = (0...8).map { step in
             let angle = Double(step) / 8 * .pi / 2
             let x = halfWidth - corner + corner * cos(angle)
