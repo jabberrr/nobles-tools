@@ -104,7 +104,8 @@ struct WrappedEyebrow: View {
     }
 }
 
-/// A stat's small uppercase label, e.g. "BIGGEST DAY".
+/// A stat's small uppercase label, e.g. "BIGGEST DAY". Always at its full size: labels are short,
+/// and one allowed to scale down came out at 80% beside other text even when it fit.
 struct WrappedLabel: View {
     let text: String
 
@@ -118,7 +119,7 @@ struct WrappedLabel: View {
             .tracking(WrappedStyle.labelTracking)
             .foregroundStyle(WrappedStyle.secondary)
             .lineLimit(1)
-            .minimumScaleFactor(0.8)
+            .fixedSize()
     }
 }
 

@@ -161,8 +161,6 @@ private struct StreakRecord: View {
                     .font(WrappedStyle.caption)
                     .foregroundStyle(WrappedStyle.secondary)
             }
-            // Full width, so the label isn't scaled down to the figure's width.
-            .frame(maxWidth: .infinity, alignment: .leading)
             .wrappedReveal(isActive, delay: delay, style: .slide(.leading))
             if let standing {
                 // Revealed on its own, so one that arrives late still rises in.
@@ -215,10 +213,8 @@ private struct StandingLine: View {
             Text("of Nobles students")
                 .font(WrappedStyle.caption)
                 .foregroundStyle(WrappedStyle.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .fixedSize()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
