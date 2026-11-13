@@ -1,5 +1,12 @@
 import CoreGraphics
 
+/// The rounded box an item fills, centered in the content `FoilWrap` wraps: what the foil must
+/// cover.
+struct FoilItemBounds: Sendable, Equatable {
+    var size: CGSize
+    var cornerRadius: CGFloat
+}
+
 /// Where things are on the foil's stage: the wrapped content's frame with `margin` all around, so
 /// foil that puffs out past the content's edges isn't cut off.
 struct FoilGeometry: Sendable {
@@ -8,8 +15,18 @@ struct FoilGeometry: Sendable {
 
     /// The stage: the content's frame plus `margin` on every side.
     let size: CGSize
+    /// How much bigger than the standard bundle this item's bundle is, across and down: 1 for a
+    /// small item, more for a big product photo.
+    private(set) var bundleScale: CGSize
 
-    /// The content's frame, where the item's silhouette is laid out.
+    init(size: CGSize, item: FoilItemBounds) {
+        self.size = size
+        // Measured against the standard bundle, then stretched to cover the item.
+        bundleScale = CGSize(width: 1, height: 1)
+        bundleScale = FoilBundle.scale(covering: item, on: self)
+    }
+
+    /// The content's frame, where the item is laid out.
     var itemFrame: CGRect {
         CGRect(
             x: Self.margin,
@@ -24,7 +41,7 @@ struct FoilGeometry: Sendable {
         CGPoint(x: itemFrame.midX, y: itemFrame.midY)
     }
 
-    /// Half the content's shorter side: the bundle and its hole are sized from it.
+    /// Half the content's shorter side: the standard bundle and its hole are sized from it.
     var radius: CGFloat {
         min(itemFrame.width, itemFrame.height) / 2
     }
@@ -39,8 +56,16 @@ struct FoilGeometry: Sendable {
         radius * 0.56
     }
 
-    /// The point `offset` radii from the middle: x across, y down.
-    func point(_ offset: CGVector) -> CGPoint {
-        CGPoint(x: center.x + offset.dx * radius, y: center.y + offset.dy * radius)
+    /// `radius` stretched as the bundle is, on average: for sizing things across the bundle.
+    var bundleRadius: CGFloat {
+        radius * (bundleScale.width + bundleScale.height) / 2
+    }
+
+    /// The point `offset` radii from the middle on the standard bundle, stretched with this one.
+    func bundlePoint(_ offset: CGVector) -> CGPoint {
+        CGPoint(
+            x: center.x + offset.dx * radius * bundleScale.width,
+            y: center.y + offset.dy * radius * bundleScale.height
+        )
     }
 }

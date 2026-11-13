@@ -24,7 +24,7 @@ struct WrappedStat<Figure: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            WrappedCardLabel(label)
+            WrappedLabel(label)
             figure
                 .font(WrappedStyle.number(size))
                 .monospacedDigit()

@@ -148,7 +148,7 @@ private struct StreakRecord: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             VStack(alignment: .leading, spacing: 4) {
-                WrappedCardLabel("Days in a row")
+                WrappedLabel("Days in a row")
                 HStack(spacing: 14) {
                     CountingText(Double(streak.length), isActive: isActive, duration: 0.9, delay: delay + 0.2, format: WrappedFormat.whole)
                         .font(WrappedStyle.number(60))
@@ -233,7 +233,7 @@ private struct PurchaseRecord: View {
         HStack(spacing: 14) {
             WrappedItemPicture(itemNamed: charge.detail, size: 56)
             VStack(alignment: .leading, spacing: 3) {
-                WrappedCardLabel(label)
+                WrappedLabel(label)
                 Text(name)
                     .font(WrappedStyle.itemName)
                     .lineLimit(2)

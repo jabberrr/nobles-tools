@@ -3,28 +3,53 @@ import SwiftUI
 /// The foil's outline: a puffy, lumpy bundle well bigger than the item and rounded off, so it hides
 /// the item's shape, with pinches where the foil is gathered and creases running in from them.
 /// Seeded, so it's the same on every run and in every snapshot.
+///
+/// Every item gets at least the standard bundle, which covers an emoji. A big product photo gets a
+/// bigger one, stretched only partway toward the photo's proportions, so its outline still gives
+/// nothing away.
 struct FoilBundle: Sendable {
-    /// How far the foil stands off the item at the least, in points for a 220-point picture: the
-    /// bundle also takes in the item's silhouette grown this much, so no part of a big item pokes
-    /// out of it.
-    static let cover: CGFloat = 10
-
-    /// The bundle's half width and half height, in `FoilGeometry.radius`.
-    private static let extent = CGSize(width: 0.8, height: 0.77)
-
     let outline: Path
     let creases: Path
 
     init(geometry: FoilGeometry) {
         let corners = Self.lumps.map { lump in
-            Self.point(lump.angle, reach: lump.reach, geometry: geometry)
+            geometry.bundlePoint(Self.offset(lump.angle, reach: lump.reach))
         }
         outline = Self.curve(through: corners)
         creases = Path { path in
             for crease in Self.creaseLines {
-                path.addLines(crease.map { Self.point($0, geometry: geometry) })
+                path.addLines(crease.map { geometry.bundlePoint(Self.offset($0)) })
             }
         }
+    }
+
+    /// How much bigger than the standard bundle one must be to cover `item` with `cover` to spare,
+    /// across and down.
+    static func scale(covering item: FoilItemBounds, on geometry: FoilGeometry) -> CGSize {
+        let radius = Double(geometry.radius)
+        guard radius > 0 else { return CGSize(width: 1, height: 1) }
+        let cover = Double(Self.cover * geometry.unit)
+        let halfWidth = Double(item.size.width) / 2 + cover
+        let halfHeight = Double(item.size.height) / 2 + cover
+        let corner = min(Double(item.cornerRadius) + cover, halfWidth, halfHeight)
+        // Stretched only partway toward the item's proportions, so a can and a cookie get much
+        // the same bundle.
+        let stretch = pow(halfWidth / halfHeight, 0.35)
+        // The outline comes no nearer the middle than `innerReach`, so the bundle covers the item
+        // once that ellipse takes in the grown box. The box's rounded corners reach furthest.
+        let farthest = (0...8).map { step in
+            let angle = Double(step) / 8 * .pi / 2
+            let x = halfWidth - corner + corner * cos(angle)
+            let y = halfHeight - corner + corner * sin(angle)
+            return hypot(x / stretch, y)
+        }.max() ?? 0
+        let needed = farthest / innerReach
+        let standardWidth = Double(Self.extent.width) * radius
+        let standardHeight = Double(Self.extent.height) * radius
+        return CGSize(
+            width: max(stretch * needed / standardWidth, 1),
+            height: max(needed / standardHeight, 1)
+        )
     }
 
     /// A smooth curve through the midpoints between corners, bending toward each lump and coming
@@ -46,13 +71,14 @@ struct FoilBundle: Sendable {
         return path
     }
 
-    private static func point(_ angle: Double, reach: Double, geometry: FoilGeometry) -> CGPoint {
-        point(CGVector(dx: cos(angle) * reach, dy: sin(angle) * reach), geometry: geometry)
+    /// A point given in the bundle's half widths and heights from its middle, in radii of the
+    /// standard bundle.
+    private static func offset(_ angle: Double, reach: Double) -> CGVector {
+        offset(CGVector(dx: cos(angle) * reach, dy: sin(angle) * reach))
     }
 
-    /// A point given in the bundle's own half widths and heights from its middle.
-    private static func point(_ offset: CGVector, geometry: FoilGeometry) -> CGPoint {
-        geometry.point(CGVector(dx: offset.dx * Self.extent.width, dy: offset.dy * Self.extent.height))
+    private static func offset(_ unit: CGVector) -> CGVector {
+        CGVector(dx: unit.dx * extent.width, dy: unit.dy * extent.height)
     }
 
     private static func midpoint(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
@@ -63,6 +89,12 @@ struct FoilBundle: Sendable {
 // MARK: - The seeded shape
 
 extension FoilBundle {
+    /// How far the foil stands off the item at the least, in points for a 220-point picture.
+    private static let cover: CGFloat = 8
+
+    /// The standard bundle's half width and half height, in `FoilGeometry.radius`.
+    private static let extent = CGSize(width: 0.8, height: 0.77)
+
     /// A bulge of the outline, or a pinch between two.
     private struct Lump: Sendable {
         /// Radians, clockwise from the right.
@@ -83,6 +115,31 @@ extension FoilBundle {
             return Lump(angle: angle, reach: reach, isPinch: isPinch)
         }
     }()
+
+    /// How near its middle the outline comes, in its half widths and heights. The outline runs
+    /// through the midpoints between lumps, out from the chords between them and in to each
+    /// pinch, so the nearest of those chords and pinch lines bounds it.
+    private static let innerReach: Double = {
+        let corners = lumps.map { CGPoint(x: cos($0.angle) * $0.reach, y: sin($0.angle) * $0.reach) }
+        var chain: [CGPoint] = []
+        for index in corners.indices {
+            if lumps[index].isPinch {
+                chain.append(corners[index])
+            }
+            chain.append(midpoint(corners[index], corners[(index + 1) % corners.count]))
+        }
+        return chain.indices.map { index in
+            distanceFromOrigin(chain[index], chain[(index + 1) % chain.count])
+        }.min() ?? 1
+    }()
+
+    /// How near the line from `a` to `b` comes to (0, 0).
+    private static func distanceFromOrigin(_ a: CGPoint, _ b: CGPoint) -> Double {
+        let run = CGVector(dx: b.x - a.x, dy: b.y - a.y)
+        let length = run.dx * run.dx + run.dy * run.dy
+        let along = length > 0 ? min(max(-(a.x * run.dx + a.y * run.dy) / length, 0), 1) : 0
+        return Double(hypot(a.x + run.dx * along, a.y + run.dy * along))
+    }
 
     /// Two creases fanning in from each pinch, each with a slight kink, in the bundle's half
     /// widths and heights from its middle.
@@ -114,9 +171,10 @@ struct FoilBundleShape: Shape {
     }
 
     let part: Part
+    let item: FoilItemBounds
 
     nonisolated func path(in rect: CGRect) -> Path {
-        let bundle = FoilBundle(geometry: FoilGeometry(size: rect.size))
+        let bundle = FoilBundle(geometry: FoilGeometry(size: rect.size, item: item))
         let path = part == .outline ? bundle.outline : bundle.creases
         return path.offsetBy(dx: rect.minX, dy: rect.minY)
     }

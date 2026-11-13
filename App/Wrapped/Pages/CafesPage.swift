@@ -142,7 +142,7 @@ struct CafesPage: View {
     /// A chart under its small uppercase title.
     private func chartSection<Chart: View>(_ title: String, delay: Double, @ViewBuilder chart: () -> Chart) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            WrappedCardLabel(title)
+            WrappedLabel(title)
                 .wrappedReveal(isActive, delay: delay, style: .fade)
             chart()
         }

@@ -25,12 +25,12 @@ enum WrappedStyle {
     /// A page's uppercase label (`WrappedEyebrow`), tracked out by `eyebrowTracking`.
     static var eyebrow: Font { .system(size: 14, weight: .semibold) }
     static let eyebrowTracking: CGFloat = 1.4
-    /// A card's uppercase label (`WrappedCardLabel`), tracked out by `cardLabelTracking`.
-    static var cardLabel: Font { .system(size: 11, weight: .semibold) }
-    static let cardLabelTracking: CGFloat = 1
+    /// A stat's small uppercase label (`WrappedLabel`), tracked out by `labelTracking`.
+    static var label: Font { .system(size: 11, weight: .semibold) }
+    static let labelTracking: CGFloat = 1
     /// The sentence under a headline.
     static var lead: Font { .system(size: 20, weight: .medium) }
-    /// An item's name in a row or on a card.
+    /// An item's name in a row.
     static var itemName: Font { .system(size: 17, weight: .semibold) }
     static var body: Font { .system(size: 17) }
     static var caption: Font { .system(size: 14) }
@@ -59,14 +59,15 @@ enum WrappedStyle {
     // MARK: Color
 
     /// A warm yellow for the bar, figure or teaser a page is about: at least 4.5:1 on every page,
-    /// and 3:1 on cards, where it's only used for big figures.
+    /// and 3:1 on `tileFill` tiles, where it's only used for big figures.
     static var highlight: Color { Color(hex: 0xFDE047) }
     /// Dark text, for the highlight, white buttons and the foil.
     static var ink: Color { Color(hex: 0x1C1530) }
-    /// Secondary text: slightly dimmed white, still at least 4.5:1 on every page and on its cards.
+    /// Secondary text: slightly dimmed white, still at least 4.5:1 on every page and on its tiles.
     static var secondary: Color { Color.white.opacity(0.92) }
-    /// The fill of cards and chips: faint enough that secondary text on it keeps 4.5:1.
-    static var cardFill: Color { Color.white.opacity(0.10) }
+    /// The fill of the few tiles left (the times of day): faint enough that secondary text on it
+    /// keeps 4.5:1.
+    static var tileFill: Color { Color.white.opacity(0.10) }
 
     // MARK: Layout
 
@@ -103,8 +104,8 @@ struct WrappedEyebrow: View {
     }
 }
 
-/// A card's small uppercase label, e.g. "BIGGEST DAY".
-struct WrappedCardLabel: View {
+/// A stat's small uppercase label, e.g. "BIGGEST DAY".
+struct WrappedLabel: View {
     let text: String
 
     init(_ text: String) {
@@ -113,8 +114,8 @@ struct WrappedCardLabel: View {
 
     var body: some View {
         Text(text.uppercased())
-            .font(WrappedStyle.cardLabel)
-            .tracking(WrappedStyle.cardLabelTracking)
+            .font(WrappedStyle.label)
+            .tracking(WrappedStyle.labelTracking)
             .foregroundStyle(WrappedStyle.secondary)
             .lineLimit(1)
             .minimumScaleFactor(0.8)

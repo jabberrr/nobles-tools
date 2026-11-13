@@ -4,8 +4,8 @@ import SwiftUI
 /// every side. Each tap tears its hole wider with a spring, or cross-fades to the next stage under
 /// Reduce Motion. Once the foil is off, what's left of it crumples into a ball that drops out of
 /// sight.
-struct FoilCover<Silhouette: View>: View {
-    let silhouette: Silhouette
+struct FoilCover: View {
+    let item: FoilItemBounds
     let stage: FoilStage
     /// Taps so far: each one squishes the foil.
     let taps: Int
@@ -13,7 +13,7 @@ struct FoilCover<Silhouette: View>: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let geometry = FoilGeometry(size: proxy.size)
+            let geometry = FoilGeometry(size: proxy.size, item: item)
             ZStack {
                 foil(geometry)
                 if motion == .full {
@@ -29,7 +29,7 @@ struct FoilCover<Silhouette: View>: View {
     private func foil(_ geometry: FoilGeometry) -> some View {
         let isCrumpling = stage.isOff && motion == .full
         return ZStack {
-            FoilLayers(silhouette: silhouette, geometry: geometry, openness: stage.openness)
+            FoilLayers(item: item, geometry: geometry, openness: stage.openness)
                 // Under Reduce Motion each stage is a new view, so it cross-fades in.
                 .id(motion == .reduced ? taps : 0)
                 .transition(.opacity)

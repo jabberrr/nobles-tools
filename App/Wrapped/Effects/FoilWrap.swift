@@ -3,9 +3,9 @@ import SwiftUI
 /// Wraps an item in a puffy bundle of crumpled foil and tears it open in stages, one per tap.
 ///
 /// The foil is a photo of real foil cut to a lumpy, pinched bundle well bigger than the item, so
-/// its outline gives nothing away. It also takes in the item's `silhouette` grown a little, so no
-/// part of a big item pokes out. Whatever `content` draws around the item (a plate) shows around
-/// the bundle. With four taps, the first tears a small jagged hole a little off the middle,
+/// its outline gives nothing away. It grows to cover a big item's box (`item`) with room to spare,
+/// stretching only partway toward its proportions. Whatever `content` draws around the item (a
+/// plate) shows around the bundle. With four taps, the first tears a small jagged hole a little off the middle,
 /// showing a bit of the item. The second tears it wider and folds its edge back: a band of the
 /// foil's duller inside rolled over at a bright crest, casting a shadow on the item. The third
 /// leaves only a ragged rim around the item. The last crumples the rim into a ball that hops and
@@ -17,12 +17,12 @@ import SwiftUI
 /// through. `initialTaps` starts it that far along, drawn at once, for snapshots. Static mode
 /// draws the stage without moving; under Reduce Motion stages cross-fade. VoiceOver finds one
 /// button that tears the foil a stage further each time it's activated.
-struct FoilWrap<Content: View, Silhouette: View>: View {
+struct FoilWrap<Content: View>: View {
     private let tapsToUnwrap: Int
+    private let item: FoilItemBounds
     private let onTap: (Int) -> Void
     private let onUnwrap: () -> Void
     private let content: Content
-    private let silhouette: Silhouette
 
     @Environment(\.wrappedIsStatic) private var isStatic
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -32,23 +32,23 @@ struct FoilWrap<Content: View, Silhouette: View>: View {
 
     /// - Parameters:
     ///   - initialTaps: Stages already done, drawn at once (for snapshots).
+    ///   - item: The box the item fills in the middle of `content`, for the foil to cover.
     ///   - content: The picture under the foil.
-    ///   - silhouette: The item's shape: opaque where the item is, laid out exactly like `content`.
     init(
         tapsToUnwrap: Int = 4,
         initialTaps: Int = 0,
+        covering item: FoilItemBounds,
         onTap: @escaping (_ taps: Int) -> Void = { _ in },
         onUnwrap: @escaping () -> Void = {},
-        @ViewBuilder content: () -> Content,
-        @ViewBuilder silhouette: () -> Silhouette
+        @ViewBuilder content: () -> Content
     ) {
         let tapsToUnwrap = max(tapsToUnwrap, 1)
         let taps = min(max(initialTaps, 0), tapsToUnwrap)
         self.tapsToUnwrap = tapsToUnwrap
+        self.item = item
         self.onTap = onTap
         self.onUnwrap = onUnwrap
         self.content = content()
-        self.silhouette = silhouette()
         _taps = State(initialValue: taps)
         _isGone = State(initialValue: taps == tapsToUnwrap)
     }
@@ -61,7 +61,7 @@ struct FoilWrap<Content: View, Silhouette: View>: View {
             .accessibilityHidden(!stage.isOff)
             .overlay {
                 if !isGone {
-                    FoilCover(silhouette: silhouette, stage: stage, taps: taps, motion: motion)
+                    FoilCover(item: item, stage: stage, taps: taps, motion: motion)
                         .padding(-FoilGeometry.margin)
                         .allowsHitTesting(false)
                     tapTarget(isOff: stage.isOff)

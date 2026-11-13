@@ -6,8 +6,9 @@ import SwiftUI
 /// The first third of the way tears a small hole a little up and right of the middle, its edge
 /// jagged. The second widens it and folds its edge back: the torn edge rolls outward, leaving a
 /// smoother crest around the hole and the jagged free edge further out. The last third widens it
-/// to about the item's size, centered, so only a rim is left. Every size comes from the same
-/// seeded points, so the hole tears wider rather than jumping.
+/// to about the item's size, centered, so only a rim is left. It's laid out on the standard bundle
+/// and stretched as the item's bundle is, so a bigger bundle gets a bigger hole. Every size comes
+/// from the same seeded points, so the hole tears wider rather than jumping.
 struct FoilTear: Sendable {
     /// The hole's edge: the torn edge, or the fold's crest once it folds back.
     let crest: [CGPoint]
@@ -20,7 +21,7 @@ struct FoilTear: Sendable {
         let radius = Double(geometry.radius)
         let size = radius * Self.ramp(openness, 0, 0.22, 0.42, 0.6)
         isTorn = size > 0
-        let center = geometry.point(CGVector(
+        let center = geometry.bundlePoint(CGVector(
             dx: Self.ramp(openness, 0.15, 0.15, 0.06, 0.01),
             dy: Self.ramp(openness, -0.12, -0.12, -0.04, 0)
         ))
@@ -28,14 +29,16 @@ struct FoilTear: Sendable {
         let folded = min(max(Self.ramp(openness, 0, 0, 1, 1), 0), 1)
         // Teeth come in as the hole grows, so a hole just starting isn't a star.
         let teeth = radius > 0 ? 3.5 * Double(geometry.unit) * min(1, size / (0.35 * radius)) : 0
+        let stretch = geometry.bundleScale
         var crest: [CGPoint] = []
         var freeEdge: [CGPoint] = []
         for notch in Self.notches {
+            let direction = CGVector(dx: notch.direction.dx * stretch.width, dy: notch.direction.dy * stretch.height)
             // The crest smooths out as the torn edge folds away from it.
             let reach = max(size * (1 + notch.wobble) + teeth * notch.tooth * (1 - 0.8 * folded), 0)
             let foldReach = max(reach + foldWidth * notch.foldWidth + 0.9 * teeth * notch.edgeTooth * folded, reach)
-            crest.append(Self.point(from: center, toward: notch.direction, by: reach))
-            freeEdge.append(Self.point(from: center, toward: notch.direction, by: foldReach))
+            crest.append(Self.point(from: center, toward: direction, by: reach))
+            freeEdge.append(Self.point(from: center, toward: direction, by: foldReach))
         }
         self.crest = crest
         self.freeEdge = freeEdge
@@ -143,6 +146,7 @@ struct FoilTearShape: Shape {
 
     var openness: Double
     let part: Part
+    let item: FoilItemBounds
 
     nonisolated var animatableData: Double {
         get { openness }
@@ -150,7 +154,7 @@ struct FoilTearShape: Shape {
     }
 
     nonisolated func path(in rect: CGRect) -> Path {
-        let tear = FoilTear(openness: openness, geometry: FoilGeometry(size: rect.size))
+        let tear = FoilTear(openness: openness, geometry: FoilGeometry(size: rect.size, item: item))
         let path = switch part {
         case .hole: tear.hole
         case .fold: tear.fold

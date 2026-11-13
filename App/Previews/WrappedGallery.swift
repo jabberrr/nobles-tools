@@ -5,9 +5,10 @@ import NoblesKit
 /// streak standing, and the favorite under foil at every stage and unwrapped), a recap whose
 /// #1 is a branded item with a product photo and whose purchases fall in two parts of the day
 /// ("-branded"), a sparse recap with one part of the day and a one-purchase recap, a recap at four
-/// cafes ("-four-cafes"), the tallest pages on a small iPhone ("-compact"), the empty and
-/// stopped-early messages, the persona card face down, and the share poster. Rendered to
-/// `docs/widgets` by the `WidgetSnapshots` tests so layouts can be checked without a device.
+/// cafes ("-four-cafes"), the menus' longest names in the top 5 ("-long-names"), the tallest pages
+/// on a small iPhone ("-compact"), the empty and stopped-early messages, the persona card face
+/// down, and the share poster. Rendered to `docs/widgets` by the `WidgetSnapshots` tests so
+/// layouts can be checked without a device.
 @MainActor
 enum WrappedGallery {
     static var entries: [WidgetGallery.Entry] {
@@ -37,6 +38,10 @@ enum WrappedGallery {
             let page = WrappedPage.cafes
             entries.append(entry("wrapped-four-cafes-\(page.galleryName)", fourCafes, page))
             entries.append(entry("wrapped-compact-four-cafes-\(page.galleryName)", fourCafes, page, screen: .compact))
+        }
+        if let longNames = Self.longNames {
+            let page = WrappedPage.topItems
+            entries.append(entry("wrapped-compact-long-names-\(page.galleryName)", longNames, page, screen: .compact))
         }
         entries += [WrappedPage.total, .cafes, .topItems, .days, .records].map { page in
             entry("wrapped-compact-\(page.galleryName)", sample, page, streakStanding: .sample, screen: .compact)
@@ -122,12 +127,30 @@ enum WrappedGallery {
     /// A month at four cafes, so the cafes page draws three in full and counts the fourth. The
     /// two smaller cafes are stand-ins.
     private static var fourCafes: CafeWrapped? {
-        let orders: [(store: String, item: String, price: String, hour: Int, days: [Int])] = [
+        recap(ofOrders: [
             (gleason, "Jumbo Chocolate Chip Cookie", "2.00", 10, [5, 6, 7, 8, 13, 14, 20, 22, 26]),
             (cafe2000, "Chicken Tenders", "6.00", 15, [6, 7, 14, 21, 22]),
             ("Gleason Hall Snack Bar", "Goldfish", "2.00", 12, [8, 9, 15, 16, 23]),
             ("Coffee Cart", "Nestle Hot Cocoa", "2.50", 8, [9, 16]),
-        ]
+        ])
+    }
+
+    /// A month at Cafe 2000 whose #2 to #5 are the longest names on the cafe menus.
+    private static var longNames: CafeWrapped? {
+        recap(ofOrders: [
+            (cafe2000, "Jumbo Chocolate Chip Cookie", "2.50", 15, [5, 6, 7, 8, 9, 26]),
+            (cafe2000, "Strawberry Shortcake Ice Cream Sundae", "2.50", 16, [13, 14, 15, 16, 19]),
+            (cafe2000, "Sunchips- Original & Garden Salsa", "2.00", 15, [20, 21, 22, 23]),
+            (cafe2000, "Chips Galore Ice Cream Sandwich", "2.50", 16, [6, 13, 20]),
+            (cafe2000, "Gatorade Recovery Protein Bar", "4.00", 17, [7, 14]),
+        ])
+    }
+
+    /// Something bought at one cafe and hour on each of `days` in October 2026.
+    private typealias Order = (store: String, item: String, price: String, hour: Int, days: [Int])
+
+    /// The recap of `orders`, each purchase a minute after the one before.
+    private static func recap(ofOrders orders: [Order]) -> CafeWrapped? {
         var charges: [StoreCharge] = []
         for order in orders {
             for day in order.days {

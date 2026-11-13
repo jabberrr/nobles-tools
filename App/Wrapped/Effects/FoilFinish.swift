@@ -40,9 +40,9 @@ struct FoilFinish: View {
                 .init(color: .white.opacity(0), location: 0.45),
                 .init(color: .black.opacity(0.32), location: 1),
             ],
-            center: unitPoint(geometry.point(CGVector(dx: -0.12, dy: -0.16))),
+            center: unitPoint(geometry.bundlePoint(CGVector(dx: -0.12, dy: -0.16))),
             startRadius: 0,
-            endRadius: geometry.radius * 0.95
+            endRadius: geometry.bundleRadius * 0.95
         )
     }
 
@@ -51,9 +51,9 @@ struct FoilFinish: View {
         let color = isRaised ? Color.white : Color.black
         return RadialGradient(
             colors: [color.opacity(0.14), color.opacity(0)],
-            center: unitPoint(geometry.point(lump.center)),
+            center: unitPoint(geometry.bundlePoint(lump.center)),
             startRadius: 0,
-            endRadius: geometry.radius * lump.size
+            endRadius: geometry.bundleRadius * lump.size
         )
     }
 
@@ -61,7 +61,7 @@ struct FoilFinish: View {
         UnitPoint(x: point.x / max(geometry.size.width, 1), y: point.y / max(geometry.size.height, 1))
     }
 
-    /// A lump's middle and size, in radii from the bundle's middle.
+    /// A lump's middle and size, in radii of the standard bundle.
     private struct Lump {
         let center: CGVector
         let size: CGFloat

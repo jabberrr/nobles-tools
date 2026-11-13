@@ -110,7 +110,7 @@ private struct BucketChip: View {
         .padding(.vertical, 12)
         .padding(.horizontal, 4)
         .frame(maxWidth: .infinity)
-        .background(isTop ? WrappedStyle.highlight : WrappedStyle.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(isTop ? WrappedStyle.highlight : WrappedStyle.tileFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 

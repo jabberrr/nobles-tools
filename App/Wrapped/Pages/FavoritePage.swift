@@ -167,7 +167,7 @@ struct FavoritePage: View {
                 .foregroundStyle(WrappedStyle.highlight)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
-            WrappedCardLabel(label)
+            WrappedLabel(label)
         }
         .padding(.horizontal, 2)
         .padding(.vertical, 12)
@@ -178,7 +178,7 @@ struct FavoritePage: View {
     private func fact(_ label: String, _ value: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 16) {
             // At its full size: beside a short value, the row would otherwise scale it down.
-            WrappedCardLabel(label)
+            WrappedLabel(label)
                 .fixedSize()
             Spacer(minLength: 0)
             Text(value)

@@ -3,8 +3,8 @@ import SwiftUI
 /// The foil at one openness, filling the stage: a puffy bundle over the item with a hole torn in
 /// it, the foil folded back around the hole, and the shade it all casts on the item inside. The
 /// tear's shapes animate with `openness`, so the hole tears wider and the fold rolls back.
-struct FoilLayers<Silhouette: View>: View {
-    let silhouette: Silhouette
+struct FoilLayers: View {
+    let item: FoilItemBounds
     let geometry: FoilGeometry
     let openness: Double
 
@@ -26,7 +26,7 @@ struct FoilLayers<Silhouette: View>: View {
             FoilFinish(face: .outside, geometry: geometry)
                 .overlay { edge(.black.opacity(0.4), shift: CGSize(width: -2.5 * unit, height: -3.5 * unit), blur: 3 * unit) }
                 .overlay { edge(.white.opacity(0.6), shift: CGSize(width: 1.5 * unit, height: 2 * unit), blur: unit) }
-                .overlay { creases(FoilBundleShape(part: .creases), width: 2.5 * unit, blur: 1.2 * unit) }
+                .overlay { creases(FoilBundleShape(part: .creases, item: item), width: 2.5 * unit, blur: 1.2 * unit) }
             fold
             // The hole's edge catching the light: the torn edge, then the fold's crest, brightest
             // on the far side of the hole, where it turns toward the light.
@@ -34,7 +34,7 @@ struct FoilLayers<Silhouette: View>: View {
                 .stroke(Self.crestLight(from: 0.35, to: 0.95), lineWidth: 2.5 * unit)
         }
         .foilCutout { tear(.hole) }
-        .mask { bundle() }
+        .mask { outline }
         .foilShimmer(strength: FoilArt.sweepStrength)
     }
 
@@ -72,7 +72,7 @@ struct FoilLayers<Silhouette: View>: View {
     /// outside its own outline moved by `shift`.
     private func edge(_ color: Color, shift: CGSize, blur: CGFloat) -> some View {
         color
-            .foilCutout { bundle(copies: 8).offset(shift) }
+            .foilCutout { outline.offset(shift) }
             .blur(radius: blur)
     }
 
@@ -89,21 +89,13 @@ struct FoilLayers<Silhouette: View>: View {
         }
     }
 
-    /// The bundle's shape: its lumpy outline, taking in the item grown by `FoilBundle.cover`.
-    /// Fewer stamps do for the edges' shading.
-    private func bundle(copies: Int = 12) -> some View {
-        ZStack {
-            FoilBundleShape(part: .outline)
-            GrownSilhouette(
-                silhouette: silhouette,
-                geometry: geometry,
-                outline: FoilOutline(growth: FoilBundle.cover * geometry.unit, rumple: 0.2, seed: 0xC0E2, copies: copies)
-            )
-        }
+    /// The bundle's outline, which the foil is cut to.
+    private var outline: FoilBundleShape {
+        FoilBundleShape(part: .outline, item: item)
     }
 
     private func tear(_ part: FoilTearShape.Part) -> FoilTearShape {
-        FoilTearShape(openness: openness, part: part)
+        FoilTearShape(openness: openness, part: part, item: item)
     }
 
     /// Light along the crest, from `start` opacity at the upper left to `end` at the lower right.
@@ -113,5 +105,14 @@ struct FoilLayers<Silhouette: View>: View {
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
+    }
+}
+
+extension View {
+    /// This view with the opaque parts of `hole` cut out of it.
+    fileprivate func foilCutout<Hole: View>(@ViewBuilder _ hole: () -> Hole) -> some View {
+        let hole = hole()
+        return overlay { hole.blendMode(.destinationOut) }
+            .compositingGroup()
     }
 }

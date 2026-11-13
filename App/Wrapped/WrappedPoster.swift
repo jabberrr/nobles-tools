@@ -116,7 +116,7 @@ struct WrappedPoster: View {
 
     private func statView(_ stat: Stat) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            WrappedCardLabel(stat.label)
+            WrappedLabel(stat.label)
             Text(stat.value)
                 .font(WrappedStyle.title(17))
                 .lineLimit(2)
@@ -130,11 +130,11 @@ struct WrappedPoster: View {
     /// product photo, as its license (CC BY-SA) asks of anything that shares it.
     private var footer: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            WrappedCardLabel("Nobles Tools")
+            WrappedLabel("Nobles Tools")
             if showsProductPhoto {
                 Spacer(minLength: 0)
                 Text("Photo: Open Food Facts, CC BY-SA")
-                    .font(WrappedStyle.cardLabel)
+                    .font(WrappedStyle.label)
                     .foregroundStyle(WrappedStyle.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)

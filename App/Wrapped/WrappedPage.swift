@@ -24,7 +24,7 @@ enum WrappedPage: Int, CaseIterable {
 
     /// The page's backdrop: vivid, but dark enough for white text. White and
     /// `WrappedStyle.secondary` are at least 4.5:1 on every color and blend of them, and on
-    /// `WrappedStyle.cardFill` cards drawn over them.
+    /// `WrappedStyle.tileFill` tiles drawn over them.
     var colors: [Color] {
         let hexes: [UInt32] = switch self {
         case .intro: [0x2A0A5E, 0x6B1FA0, 0x1A1360]
