@@ -10,6 +10,11 @@ struct CafesPage: View {
     private let isActive: Bool
     private let breakdown: CafeBreakdown
 
+    private static let chartGap: CGFloat = 18
+    /// The tallest each chart gets, its title included.
+    private static let weekdayChartHeight: CGFloat = 220
+    private static let weekChartHeight: CGFloat = 120
+
     init(wrapped: CafeWrapped, isActive: Bool) {
         self.wrapped = wrapped
         self.isActive = isActive
@@ -23,32 +28,8 @@ struct CafesPage: View {
             } else {
                 header
             }
-            chartSection("By weekday", delay: chartsDelay) {
-                WrappedStackedColumns(
-                    columns: breakdown.weekdayColumns,
-                    colors: breakdown.colors,
-                    isActive: isActive,
-                    spacing: 14,
-                    maxColumnWidth: 64,
-                    delay: chartsDelay + 0.1
-                )
-            }
-            .frame(minHeight: 112, maxHeight: 200)
-            .padding(.top, 22)
-            chartSection("Week by week", delay: chartsDelay + 0.7) {
-                WrappedStackedColumns(
-                    columns: breakdown.weekColumns,
-                    colors: breakdown.colors,
-                    isActive: isActive,
-                    spacing: 4,
-                    maxColumnWidth: 28,
-                    labelAlignment: .leading,
-                    delay: chartsDelay + 0.8,
-                    stagger: 0.03
-                )
-            }
-            .frame(minHeight: 80, maxHeight: 100)
-            .padding(.top, 18)
+            charts
+                .padding(.top, 22)
         }
         .padding(.horizontal, WrappedStyle.margin)
         .padding(.top, 20)
@@ -111,6 +92,42 @@ struct CafesPage: View {
             .padding(.top, 18)
             .wrappedReveal(isActive, delay: 0.5)
         }
+    }
+
+    /// Both charts, sharing the height left under the header: the weekday chart about three
+    /// fifths of it and the weekly strip the rest, each only as tall as still reads well.
+    private var charts: some View {
+        GeometryReader { proxy in
+            let height = max(0, proxy.size.height - Self.chartGap)
+            let weekdayHeight = min(Self.weekdayChartHeight, height * 0.62)
+            VStack(alignment: .leading, spacing: Self.chartGap) {
+                chartSection("By weekday", delay: chartsDelay) {
+                    WrappedStackedColumns(
+                        columns: breakdown.weekdayColumns,
+                        colors: breakdown.colors,
+                        isActive: isActive,
+                        spacing: 14,
+                        maxColumnWidth: 64,
+                        delay: chartsDelay + 0.1
+                    )
+                }
+                .frame(height: weekdayHeight)
+                chartSection("Week by week", delay: chartsDelay + 0.7) {
+                    WrappedStackedColumns(
+                        columns: breakdown.weekColumns,
+                        colors: breakdown.colors,
+                        isActive: isActive,
+                        spacing: 4,
+                        maxColumnWidth: 28,
+                        labelAlignment: .leading,
+                        delay: chartsDelay + 0.8,
+                        stagger: 0.03
+                    )
+                }
+                .frame(height: min(Self.weekChartHeight, height - weekdayHeight))
+            }
+        }
+        .frame(minHeight: 190)
     }
 
     /// A chart under its small uppercase title.

@@ -2,12 +2,12 @@ import SwiftUI
 import NoblesKit
 
 /// Every page of Cafe Wrapped in its finished state, phone-sized: the sample recap (with the sample
-/// streak standing, and the favorite under foil, three stages open and unwrapped), a recap whose
+/// streak standing, and the favorite under foil at every stage and unwrapped), a recap whose
 /// #1 is a branded item with a product photo and whose purchases fall in two parts of the day
-/// ("-branded"), a sparse recap with one part of the day and a one-purchase recap, the tallest
-/// pages on a small iPhone ("-compact"), the empty and stopped-early messages, the persona
-/// card face down, and the share poster. Rendered to `docs/widgets` by the `WidgetSnapshots`
-/// tests so layouts can be checked without a device.
+/// ("-branded"), a sparse recap with one part of the day and a one-purchase recap, a recap at four
+/// cafes ("-four-cafes"), the tallest pages on a small iPhone ("-compact"), the empty and
+/// stopped-early messages, the persona card face down, and the share poster. Rendered to
+/// `docs/widgets` by the `WidgetSnapshots` tests so layouts can be checked without a device.
 @MainActor
 enum WrappedGallery {
     static var entries: [WidgetGallery.Entry] {
@@ -29,9 +29,14 @@ enum WrappedGallery {
             }
         }
         if let single = Self.single {
-            entries += [WrappedPage.total, .records].map { page in
+            entries += [WrappedPage.total, .cafes, .records].map { page in
                 entry("wrapped-single-\(page.galleryName)", single, page)
             }
+        }
+        if let fourCafes = Self.fourCafes {
+            let page = WrappedPage.cafes
+            entries.append(entry("wrapped-four-cafes-\(page.galleryName)", fourCafes, page))
+            entries.append(entry("wrapped-compact-four-cafes-\(page.galleryName)", fourCafes, page, screen: .compact))
         }
         entries += [WrappedPage.total, .cafes, .topItems, .days, .records].map { page in
             entry("wrapped-compact-\(page.galleryName)", sample, page, streakStanding: .sample, screen: .compact)
@@ -63,14 +68,15 @@ enum WrappedGallery {
         return entries
     }
 
-    /// The favorite before a tap, three stages open, and unwrapped.
+    /// The favorite before a tap, after each tap that tears the foil, and unwrapped.
     private static func favoriteEntries(_ prefix: String, _ wrapped: CafeWrapped) -> [WidgetGallery.Entry] {
         let name = "\(prefix)-\(WrappedPage.favorite.galleryName)"
-        return [
-            entry("\(name)-covered", wrapped, .favorite),
-            entry("\(name)-stage-3", wrapped, .favorite, favoriteTaps: 3),
-            entry("\(name)-unwrapped", wrapped, .favorite, favoriteTaps: FavoritePage.tapsToUnwrap),
-        ]
+        let stages = (1..<FavoritePage.tapsToUnwrap).map { taps in
+            entry("\(name)-stage-\(taps)", wrapped, .favorite, favoriteTaps: taps)
+        }
+        return [entry("\(name)-covered", wrapped, .favorite)]
+            + stages
+            + [entry("\(name)-unwrapped", wrapped, .favorite, favoriteTaps: FavoritePage.tapsToUnwrap)]
     }
 
     /// A thin semester as of the gallery's day: one cafe, three items over three mornings in one
@@ -108,6 +114,24 @@ enum WrappedGallery {
                 // Mornings at Gleason, afternoons at Cafe 2000, as the cafes are open.
                 let hour = order.store == gleason ? 9 : 15
                 charges.append(charge(charges.count + 1, order.store, order.item, order.price, day: day, hour: hour, minute: 5 + charges.count))
+            }
+        }
+        return recap(of: charges)
+    }
+
+    /// A month at four cafes, so the cafes page draws three in full and counts the fourth. The
+    /// two smaller cafes are stand-ins.
+    private static var fourCafes: CafeWrapped? {
+        let orders: [(store: String, item: String, price: String, hour: Int, days: [Int])] = [
+            (gleason, "Jumbo Chocolate Chip Cookie", "2.00", 10, [5, 6, 7, 8, 13, 14, 20, 22, 26]),
+            (cafe2000, "Chicken Tenders", "6.00", 15, [6, 7, 14, 21, 22]),
+            ("Gleason Hall Snack Bar", "Goldfish", "2.00", 12, [8, 9, 15, 16, 23]),
+            ("Coffee Cart", "Nestle Hot Cocoa", "2.50", 8, [9, 16]),
+        ]
+        var charges: [StoreCharge] = []
+        for order in orders {
+            for day in order.days {
+                charges.append(charge(charges.count + 1, order.store, order.item, order.price, day: day, hour: order.hour, minute: 5 + charges.count))
             }
         }
         return recap(of: charges)

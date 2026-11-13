@@ -77,18 +77,22 @@ struct CafeBreakdown {
     // MARK: Charts
 
     /// Monday to Friday, plus Saturday or Sunday if anything was spent then, each with what was
-    /// spent at each part and the day's whole-dollar total over it.
+    /// spent at each part and the day's total over it: in whole dollars, unless no day reached
+    /// $20 and the cents matter.
     var weekdayColumns: [WrappedStackedColumns.Column] {
-        [2, 3, 4, 5, 6, 7, 1].compactMap { (weekday: Int) -> WrappedStackedColumns.Column? in
+        let days = [2, 3, 4, 5, 6, 7, 1].compactMap { (weekday: Int) -> (weekday: Int, spent: [Decimal], total: Decimal)? in
             let spent = parts.map { $0.weekdayTotals[weekday - 1] }
             let total = Self.drawn(spent)
             let isWeekend = weekday == 1 || weekday == 7
-            guard !isWeekend || total > 0 else { return nil }
-            return WrappedStackedColumns.Column(
-                id: weekday,
-                values: spent.map(WrappedFormat.double),
-                label: WrappedFormat.shortWeekday(weekday),
-                figure: total > 0 ? total.usd(showsCents: false) : nil
+            return isWeekend && total == 0 ? nil : (weekday, spent, total)
+        }
+        let showsCents = days.allSatisfy { $0.total < 20 }
+        return days.map { day in
+            WrappedStackedColumns.Column(
+                id: day.weekday,
+                values: day.spent.map(WrappedFormat.double),
+                label: WrappedFormat.shortWeekday(day.weekday),
+                figure: day.total > 0 ? day.total.usd(showsCents: showsCents) : nil
             )
         }
     }

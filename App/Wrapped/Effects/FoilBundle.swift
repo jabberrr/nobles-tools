@@ -9,7 +9,7 @@ struct FoilBundle: Sendable {
     /// out of it.
     static let cover: CGFloat = 10
 
-    /// The bundle's half width and half height, in radii of the stage.
+    /// The bundle's half width and half height, in `FoilGeometry.radius`.
     private static let extent = CGSize(width: 0.8, height: 0.77)
 
     let outline: Path
@@ -19,9 +19,9 @@ struct FoilBundle: Sendable {
         let corners = Self.lumps.map { lump in
             Self.point(lump.angle, reach: lump.reach, geometry: geometry)
         }
-        outline = Self.outline(through: corners)
+        outline = Self.curve(through: corners)
         creases = Path { path in
-            for crease in Self.creases {
+            for crease in Self.creaseLines {
                 path.addLines(crease.map { Self.point($0, geometry: geometry) })
             }
         }
@@ -29,7 +29,7 @@ struct FoilBundle: Sendable {
 
     /// A smooth curve through the midpoints between corners, bending toward each lump and coming
     /// to a sharp point at each pinch.
-    private static func outline(through corners: [CGPoint]) -> Path {
+    private static func curve(through corners: [CGPoint]) -> Path {
         guard let last = corners.last else { return Path() }
         var path = Path()
         path.move(to: midpoint(last, corners[0]))
@@ -86,7 +86,7 @@ extension FoilBundle {
 
     /// Two creases fanning in from each pinch, each with a slight kink, in the bundle's half
     /// widths and heights from its middle.
-    private static let creases: [[CGVector]] = {
+    private static let creaseLines: [[CGVector]] = {
         var random = SeededRandom(seed: 0xC2EA5E5)
         return lumps.filter(\.isPinch).flatMap { pinch in
             [-1.0, 1.0].map { side in
