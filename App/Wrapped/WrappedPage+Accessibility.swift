@@ -28,37 +28,39 @@ extension WrappedPage {
     }
 
     private static func cafesSummary(_ wrapped: CafeWrapped) -> String {
+        let breakdown = wrapped.cafeBreakdown
         var parts: [String]
         if let cafe = wrapped.cafes.first, wrapped.cafes.count == 1 {
             parts = [
                 "Your cafe was \(cafe.name).",
                 "You spent \(cafe.total.usd()) there on \(WrappedFormat.count(cafe.purchaseCount, "purchase")).",
             ]
+            if let day = breakdown.biggestWeekday {
+                parts.append("You spent the most on \(WrappedFormat.weekday(day.weekday))s, \(day.total.usd()).")
+            }
         } else {
             parts = ["Where you went."] + wrapped.cafes.map { cafe in
                 "\(cafe.name), \(WrappedFormat.percent(cafe.share)) of your spending, \(cafe.total.usd())."
             }
-            parts += favoredWeekdays(wrapped).map { cafe, weekdays in
-                "Most spent at \(cafe) on \(weekdays.map(WrappedFormat.weekday).formatted(.list(type: .and)))."
-            }
+            parts += favoredWeekdays(breakdown)
         }
-        if let week = CafeBreakdown(wrapped).biggestWeek {
+        if let week = breakdown.biggestWeek {
             parts.append("Your biggest week started \(WrappedFormat.day(week.start)), with \(week.total.usd()).")
         }
         return parts.joined(separator: " ")
     }
 
-    /// Each cafe that got the most on some weekday, in the recap's order, with those weekdays
-    /// from Monday on: what the page's weekday chart shows.
-    private static func favoredWeekdays(_ wrapped: CafeWrapped) -> [(cafe: String, weekdays: [Int])] {
-        var weekdays: [String: [Int]] = [:]
-        for weekday in [2, 3, 4, 5, 6, 7, 1] {
-            let spent = { (cafe: CafeWrapped.Cafe) in cafe.weekdayTotals[weekday - 1] }
-            if let top = wrapped.cafes.max(by: { spent($0) < spent($1) }), spent(top) > 0 {
-                weekdays[top.id, default: []].append(weekday)
-            }
+    /// For each group that spent the most on some weekday, those weekdays: what the page's
+    /// weekday chart shows.
+    private static func favoredWeekdays(_ breakdown: CafeWrapped.CafeBreakdown) -> [String] {
+        let groups = breakdown.groups
+        return groups.indices.compactMap { (index: Int) -> String? in
+            let weekdays = breakdown.weekdays.filter { $0.leader == index }.map { WrappedFormat.weekday($0.weekday) }
+            guard !weekdays.isEmpty else { return nil }
+            let names = groups[index].cafeNames
+            let place = names.count == 1 ? names[0] : "your other cafes"
+            return "Most spent at \(place) on \(weekdays.formatted(.list(type: .and)))."
         }
-        return wrapped.cafes.compactMap { cafe in weekdays[cafe.id].map { (cafe: cafe.name, weekdays: $0) } }
     }
 
     /// Keeps #1 hidden, as the page does, for the favorite page to reveal.

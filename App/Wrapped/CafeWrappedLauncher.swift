@@ -5,8 +5,8 @@ import NoblesKit
 /// its purchases load, with a friendly message (and the sample on offer) when there's no recap.
 /// A saved copy of the purchases, all there is when the sign-in has expired or Nobles can't be
 /// reached, is recapped only through the day it was saved, and says so first. The account's own
-/// recap shows at once, and its streak's standing among other students' fills in from
-/// `StreakBoard` when it arrives.
+/// recap shows at once. Unless Compare My Streak is off, its streak is shared and its standing
+/// among other students' fills in from `StreakBoard` when it arrives.
 struct CafeWrappedLauncher: View {
     /// Whose purchases to recap.
     enum Source: String, Identifiable {
@@ -32,6 +32,7 @@ struct CafeWrappedLauncher: View {
     @State private var showsPartialRecap = false
     /// Where the account's streak stands, once `StreakBoard` answers.
     @State private var streakStanding: StreakStanding?
+    @AppStorage(StreakSharing.isOnKey) private var comparesStreak = true
 
     private enum Phase {
         /// The account's own recap.
@@ -48,7 +49,8 @@ struct CafeWrappedLauncher: View {
             case .recap(let wrapped):
                 CafeWrappedView(wrapped: wrapped, streakStanding: streakStanding)
                     .task(id: wrapped.longestStreak) {
-                        guard let length = wrapped.longestStreak?.length else { return }
+                        guard comparesStreak, let length = wrapped.longestStreak?.length else { return }
+                        await StreakSharing.share(length, in: wrapped.period.name)
                         streakStanding = await StreakBoard.standing(of: length, in: wrapped.period.name)
                     }
             case .sample:

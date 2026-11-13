@@ -8,7 +8,7 @@ import NoblesKit
 struct CafesPage: View {
     private let wrapped: CafeWrapped
     private let isActive: Bool
-    private let breakdown: CafeBreakdown
+    private let breakdown: CafeWrapped.CafeBreakdown
 
     private static let chartGap: CGFloat = 18
     /// The tallest each chart gets, its title included.
@@ -18,16 +18,20 @@ struct CafesPage: View {
     init(wrapped: CafeWrapped, isActive: Bool) {
         self.wrapped = wrapped
         self.isActive = isActive
-        breakdown = CafeBreakdown(wrapped)
+        breakdown = wrapped.cafeBreakdown
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let cafe = onlyCafe {
-                singleHeader(cafe)
-            } else {
-                header
+            Group {
+                if let cafe = onlyCafe {
+                    singleHeader(cafe)
+                } else {
+                    header
+                }
             }
+            // The charts give way to the header, which is never squeezed.
+            .fixedSize(horizontal: false, vertical: true)
             charts
                 .padding(.top, 22)
         }
@@ -38,7 +42,7 @@ struct CafesPage: View {
     }
 
     /// The cafe, when there's only one.
-    private var onlyCafe: CafeBreakdown.Part? {
+    private var onlyCafe: CafeWrapped.CafeBreakdown.Group? {
         breakdown.cafes.count == 1 ? breakdown.cafes.first : nil
     }
 
@@ -53,7 +57,7 @@ struct CafesPage: View {
                 .minimumScaleFactor(0.6)
                 .padding(.top, 10)
                 .wrappedReveal(isActive, delay: 0.25)
-            CafeShareBar(parts: breakdown.parts, isActive: isActive, delay: 0.5)
+            CafeShareBar(breakdown: breakdown, isActive: isActive, delay: 0.5)
                 .padding(.top, 18)
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(breakdown.cafes.enumerated()), id: \.element.id) { position, cafe in
@@ -61,12 +65,17 @@ struct CafesPage: View {
                         if position > 0 {
                             WrappedRule()
                         }
-                        CafeShareRow(cafe: cafe, isActive: isActive, delay: rowDelay(position) + 0.1)
+                        CafeShareRow(
+                            cafe: cafe,
+                            color: CafeWrapped.CafeBreakdown.color(ofCafe: position),
+                            isActive: isActive,
+                            delay: rowDelay(position) + 0.1
+                        )
                     }
                     .wrappedReveal(isActive, delay: rowDelay(position))
                 }
-                if let rest = breakdown.rest {
-                    CafeRestRow(rest: rest)
+                if let others = breakdown.others {
+                    CafeOthersRow(others: others)
                         .wrappedReveal(isActive, delay: rowDelay(breakdown.cafes.count))
                 }
             }
@@ -75,11 +84,11 @@ struct CafesPage: View {
     }
 
     /// The one cafe's name as the headline, and what was spent there.
-    private func singleHeader(_ cafe: CafeBreakdown.Part) -> some View {
+    private func singleHeader(_ cafe: CafeWrapped.CafeBreakdown.Group) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             WrappedEyebrow("Your cafe", symbol: "cup.and.saucer.fill")
                 .wrappedReveal(isActive, delay: 0.1, style: .fade)
-            Text(cafe.name)
+            Text(cafe.title)
                 .font(WrappedStyle.title(34))
                 .lineLimit(2)
                 .minimumScaleFactor(0.6)
@@ -103,7 +112,7 @@ struct CafesPage: View {
             VStack(alignment: .leading, spacing: Self.chartGap) {
                 chartSection("By weekday", delay: chartsDelay) {
                     WrappedStackedColumns(
-                        columns: breakdown.weekdayColumns,
+                        columns: breakdown.weekdayChartColumns,
                         colors: breakdown.colors,
                         isActive: isActive,
                         spacing: 14,
@@ -114,7 +123,7 @@ struct CafesPage: View {
                 .frame(height: weekdayHeight)
                 chartSection("Week by week", delay: chartsDelay + 0.7) {
                     WrappedStackedColumns(
-                        columns: breakdown.weekColumns,
+                        columns: breakdown.weekChartColumns,
                         colors: breakdown.colors,
                         isActive: isActive,
                         spacing: 4,
@@ -127,7 +136,7 @@ struct CafesPage: View {
                 .frame(height: min(Self.weekChartHeight, height - weekdayHeight))
             }
         }
-        .frame(minHeight: 190)
+        .frame(minHeight: 150)
     }
 
     /// A chart under its small uppercase title.
@@ -145,14 +154,15 @@ struct CafesPage: View {
 
     /// The charts start once the cafes' figures are in.
     private var chartsDelay: Double {
-        onlyCafe == nil ? rowDelay(breakdown.parts.count) + 0.2 : 0.9
+        onlyCafe == nil ? rowDelay(breakdown.groups.count) + 0.2 : 0.9
     }
 }
 
 /// A cafe's share as a big figure in its color, which keys the cafe in the bar and the charts,
 /// beside its name and what was spent there.
 private struct CafeShareRow: View {
-    let cafe: CafeBreakdown.Part
+    let cafe: CafeWrapped.CafeBreakdown.Group
+    let color: Color
     let isActive: Bool
     let delay: Double
 
@@ -161,12 +171,12 @@ private struct CafeShareRow: View {
             CountingText(cafe.share, isActive: isActive, duration: 1, delay: delay, format: WrappedFormat.percent)
                 .font(WrappedStyle.number(34))
                 .monospacedDigit()
-                .foregroundStyle(cafe.color)
+                .foregroundStyle(color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 .frame(width: CafeShareRow.figureWidth, alignment: .leading)
             VStack(alignment: .leading, spacing: 2) {
-                Text(cafe.name)
+                Text(cafe.title)
                     .font(WrappedStyle.itemName)
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
@@ -184,22 +194,24 @@ private struct CafeShareRow: View {
     static let figureWidth: CGFloat = 96
 }
 
-/// The cafes past the third, together: a swatch of their color in the figures' column, how many
-/// there are, and what was spent at them.
-private struct CafeRestRow: View {
-    let rest: CafeBreakdown.Part
+/// The cafes past the third, together: a swatch of their color in the figures' column, the cafe's
+/// name (or how many there are), and what was spent at them.
+private struct CafeOthersRow: View {
+    let others: CafeWrapped.CafeBreakdown.Group
 
     var body: some View {
         VStack(spacing: 0) {
             WrappedRule()
             HStack(spacing: 12) {
                 RoundedRectangle(cornerRadius: 2.5, style: .continuous)
-                    .fill(rest.color)
+                    .fill(CafeWrapped.CafeBreakdown.othersColor)
                     .frame(width: 18, height: 10)
                     .frame(width: CafeShareRow.figureWidth, alignment: .leading)
-                Text(rest.name)
+                Text(others.title)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
-                Text(rest.total.usd())
+                Text(others.total.usd())
                     .foregroundStyle(WrappedStyle.secondary)
             }
             .font(WrappedStyle.strongCaption)

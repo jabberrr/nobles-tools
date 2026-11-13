@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var storeAccount = StoreAccount()
     @State private var isConnectingStore = false
     @State private var wrappedSource: CafeWrappedLauncher.Source?
+    @AppStorage(StreakSharing.isOnKey) private var comparesStreak = true
 
     var body: some View {
         NavigationStack {
@@ -35,10 +36,13 @@ struct SettingsView: View {
                     } label: {
                         Label("Open with Sample Data", systemImage: "sparkles")
                     }
+                    Toggle(isOn: $comparesStreak) {
+                        Label("Compare My Streak", systemImage: "flame")
+                    }
                 } header: {
                     Text("Cafe Wrapped")
                 } footer: {
-                    Text("These buttons are for testing. Connect your Nobles account above to see your own recap. At the end of each semester, it also shows at the top of your designs.")
+                    Text("These buttons are for testing. Connect your Nobles account above to see your own recap. At the end of each semester, it also shows at the top of your designs. Compare My Streak shares only your longest cafe streak, with no name attached, to rank it among other students. Turning it off removes your streak.")
                 }
 
                 Section {

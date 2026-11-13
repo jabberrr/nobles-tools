@@ -62,13 +62,15 @@ final class StoreAccount {
     }
 
     /// Forgets the saved sign-in, here and in the sign-in web view, and the account's cached
-    /// purchases, then refreshes the widget so it prompts to connect.
+    /// purchases, then refreshes the widget so it prompts to connect, and takes the account's cafe
+    /// streak off the board other students' are compared with.
     func disconnect() async {
         sessionStore.clear()
         await service.forgetCachedStatement()
         await Self.forgetWebSignIn()
         status = .disconnected
         reloadWidgets()
+        await StreakSharing.withdraw()
     }
 
     /// Clears the sign-in web view's cookies and storage, so the next Connect shows the Veracross

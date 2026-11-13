@@ -24,16 +24,17 @@ extension StreakStanding {
 
     /// Where a streak of `length` stands among `others`' longest streaks that semester.
     ///
-    /// Your rank is one more than the number of others with a strictly longer streak, so ties share
-    /// the better rank, and `topPercent` rounds the rank's share of everyone up. `nil` when it
-    /// shouldn't show: fewer than `minimumStudentCount` students in all, a streak under 2 days, or a
-    /// standing outside the top half.
+    /// `topPercent` is the share of students whose streak is at least as long as yours, you
+    /// included, rounded up. Streaks are short, so ties are common, and they count against you:
+    /// a 3-day streak is in the top 40% when 40% of students have 3 days or more. `nil` when it
+    /// shouldn't show: fewer than `minimumStudentCount` students in all, a streak under 2 days, or
+    /// a standing outside the top half.
     public init?(length: Int, among others: [Int]) {
         let others = others.filter(Self.plausibleLengths.contains)
         let studentCount = others.count + 1
         guard length >= 2, studentCount >= Self.minimumStudentCount else { return nil }
-        let rank = 1 + others.count(where: { $0 > length })
-        let topPercent = (100 * rank + studentCount - 1) / studentCount
+        let atLeastAsLong = 1 + others.count(where: { $0 >= length })
+        let topPercent = (100 * atLeastAsLong + studentCount - 1) / studentCount
         guard topPercent <= 50 else { return nil }
         self.init(studentCount: studentCount, topPercent: topPercent)
     }

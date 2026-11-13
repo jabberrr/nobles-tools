@@ -51,8 +51,8 @@ struct StoreAccountSection: View {
 
     private var footer: String {
         if account.isConnected {
-            return "If the widget asks you to sign in, tap Reconnect. Your spending stays on your device. Disconnecting removes the saved sign-in and spending."
+            return "If the widget asks you to sign in, tap Reconnect. Your spending stays on your device. With Compare My Streak on, only your longest cafe streak is shared, with no name attached. Disconnecting removes the saved sign-in, your spending and any shared streak."
         }
-        return "Sign in with Veracross to show your own cafe and store spending. Your login and data stay on your device."
+        return "Sign in with Veracross to show your own cafe and store spending. Your login and spending stay on your device. With Compare My Streak on under Cafe Wrapped, only your longest cafe streak is shared, with no name attached, to compare with other students."
     }
 }

@@ -62,10 +62,11 @@ private struct TopItemRow: View {
         HStack(spacing: 12) {
             RankNumeral(rank: rank)
             WrappedItemPicture(item: item, size: TopItemsLayout.pictureSize)
+            // The longest names on the menus take three lines on a small iPhone.
             Text(item.name)
                 .font(WrappedStyle.itemName)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
+                .lineLimit(3)
+                .minimumScaleFactor(0.7)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 2) {
@@ -90,7 +91,9 @@ private struct HiddenItemRow: View {
         HStack(spacing: 12) {
             RankNumeral(rank: 1)
             FoilSurface(cornerRadius: TopItemsLayout.pictureSize / 2) {
-                FoilStamp("?", size: TopItemsLayout.pictureSize * 0.55)
+                // A light wash calms the crinkles around the "?", as on the persona card.
+                Color.white.opacity(0.22)
+                FoilStamp("?", size: TopItemsLayout.pictureSize * 0.6)
             }
             .frame(width: TopItemsLayout.pictureSize, height: TopItemsLayout.pictureSize)
             .shadow(color: .black.opacity(0.3), radius: 4.5, y: 2)
