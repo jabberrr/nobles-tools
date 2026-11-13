@@ -86,8 +86,8 @@ private struct SwirlPainter: Sendable {
     private static let baseAngle = 0.9
     private static let baseSpeed = 0.05
 
-    /// A pool circling the swirl's middle. Its orbit's radius is a share of the frame's width
-    /// across and of its height down, so it sweeps a tall screen top to bottom.
+    /// A pool circling the swirl's middle. Its orbit reaches `orbit` of the frame's width across
+    /// and nearly as much of its height down, so it sweeps a tall screen top to bottom.
     private struct Pool: Sendable {
         enum Paint: Sendable {
             /// The palette color this many from the end.

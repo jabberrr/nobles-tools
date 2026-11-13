@@ -79,7 +79,7 @@ struct CafeBreakdown {
     /// Monday to Friday, plus Saturday or Sunday if anything was spent then, each with what was
     /// spent at each part and the day's whole-dollar total over it.
     var weekdayColumns: [WrappedStackedColumns.Column] {
-        [2, 3, 4, 5, 6, 7, 1].compactMap { weekday in
+        [2, 3, 4, 5, 6, 7, 1].compactMap { (weekday: Int) -> WrappedStackedColumns.Column? in
             let spent = parts.map { $0.weekdayTotals[weekday - 1] }
             let total = Self.drawn(spent)
             let isWeekend = weekday == 1 || weekday == 7
