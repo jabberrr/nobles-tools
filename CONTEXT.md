@@ -27,20 +27,21 @@ All kinds share a `Theme`: palette, font style and background style.
 
 **Cafe Wrapped** (an app feature, not a widget kind): a Spotify-Wrapped-style story recapping the semester's cafe purchases from the same charges as `spending`. Only cafes count (`CafeWrapped.isCafe`: whole-word cafe/snack/coffee/grill/deli/kitchen; anything "athletic" is out). Ten full-screen pages, tapped through (right ~65% forward, left back; nothing auto-advances):
 1. Intro.
-2. Total, with a month chart.
-3. Each cafe, with its top 3 items.
-4. Top 5 items.
-5. The #1 item wrapped in **foil shaped like it, which comes off in stages, one per tap** (5 taps, `FoilWrap`): it loosens, the top, left and right peel back, then it crumples away.
+2. Total, with a cumulative spending line that draws in.
+3. Where you went: one bar split across the cafes, each cafe's share and total, then spending by weekday and week by week, stacked by cafe (`CafeBreakdown`, `WrappedStackedColumns`, `CafeShareBar`). No items per cafe, at the user's request. One cafe gets its name as the title.
+4. Most ordered: the top 5 as ranked rows. #1 is a foil blank.
+5. The #1 item in a **lumpy foil bundle that only loosely follows its shape**, opened in stages, one per tap (4 taps, `FoilWrap`): a small torn hole, a larger hole with the foil folded back at its edge, a hole the item's size, then the rest crumples away. Then its name, times bought, spend, **share of all spending**, first bought and usual cafe.
 6. Busiest hours.
 7. Days.
-8. Records: streak, items tried, biggest buy, first buy.
-9. A persona card the user taps to reveal (charge-up, flip, light burst).
-10. A shareable poster.
+8. Personal bests: the streak (with "Top X% of Nobles students" when there's a standing, see Architecture), things tried, biggest day, biggest purchase, first purchase.
+9. A persona card the user taps to reveal (charge-up, flip, light burst). Its back is foil with a "?" stamped into it (`FoilStamp`).
+10. A shareable poster: the #1 picture as a graphic, one hero figure, the rest as label + value rows.
 
-Every stat reveals with an animation. The Total page has a cumulative spending line that draws in.
+Every stat reveals with an animation. Every page's backdrop is a slow swirl of its colors (`WrappedBackground`).
+- **No boxes** (the user's "less like typical Claude design language"): stats are set as type, a label over a big figure (`WrappedStat`), with hairlines between rows (`WrappedRule`), oversized rank numbers and charts in the page's colors. No frosted cards with a light stroke, no grids of identical tiles. Times still has its three time-of-day chips.
 - **Item pictures:** branded items show a product photo (`CafeItemArt.productImage(for:)` → asset `product-<slug>`); everything else shows an emoji (`CafeItemArt.emoji(for:)`).
-- **No spoilers:** nothing before the favorite page shows the #1 item. The top-items strip and the cafes page's row for it are foil "? ? ?" chips (`FoilSurface`), and the intro's floating emoji leave it out.
-- **Words:** plain, short sentences, at the user's request ("remove all typical claudisms"). No dashes or semicolons in sentences, no puns or cute sign-offs, no "Here's"/"That's…!". Keep to this in every new string.
+- **No spoilers:** nothing before the favorite page shows the #1 item. Most ordered draws its row as a foil disc with a stamped "?" and foil blanks for the name and count, and the intro's floating emoji leave it out.
+- **Words:** at the user's request ("remove all typical claudisms", then "less punctuated, more titular"): titles and labels rather than sentences ("Usual cafe", "First bought"). No sentence that restates a figure on the page, no periods on labels and captions, no "·" chains (stack two lines instead), no dashes or semicolons, no puns or cute sign-offs, no "Here's"/"That's…!". Persona taglines are short phrases. Only VoiceOver summaries stay full sentences. Keep to this in every new string.
 - **Type:** SF Pro only, never Rounded. SF Pro Expanded for headlines and big figures (the user liked the #1 item name's font), plain SF Pro elsewhere, and not too bold. Every font comes from a `WrappedStyle` token.
 - **Opening it:** Settings → Cafe Wrapped has the testing buttons the user asked for "for now" (own data, or sample data).
 - **Banner:** the design list shows one when `CafeWrapped.isReady`, from 6 days before a semester ends to 21 days after, and an account is connected.
@@ -82,9 +83,10 @@ NoblesKit/                  Swift package, Foundation-only (no SwiftUI). Builds 
     Store/                  Spending: StoreModels (charge/total/statement/session/config + StoreSessionStore in
                             the app group), StoreChargesResponse (get_charges.php JSON), StoreService (authed
                             fetch + auth/offline classification + cache), Money (Decimal.usd), preview data;
-                            Cafe Wrapped: CafeWrapped(+Types) (the semester recap's stats), CafePersona
-                            (time-of-day buckets + persona rules), CafeItemArt (item name → food emoji),
-                            CafeWrappedPreviewData (a seeded, deterministic sample semester)
+                            Cafe Wrapped: CafeWrapped(+Types) (the semester recap's stats, incl. per-cafe
+                            weekday and weekly totals), CafePersona (time-of-day buckets + persona rules),
+                            CafeItemArt (item name → food emoji), CafeWrappedPreviewData (a seeded,
+                            deterministic sample semester), StreakStanding ("Top X%" math)
   Tests/NoblesKitTests/     swift-testing tests. Fixtures/real-* are REAL captured responses; synthetic-* are hand-written.
 Shared/                     SwiftUI widget views, theme mapping and formatting, compiled into BOTH app and widget
 App/                        App target: DesignLibrary (state), design list, editor with live previews,
@@ -93,9 +95,12 @@ App/                        App target: DesignLibrary (state), design list, edit
                             the StoreAccount connection manager and its Settings section.
                             Wrapped/ is Cafe Wrapped: CafeWrappedView (story container), CafeWrappedLauncher
                             (loads the account's recap or the sample, with message screens), Pages/ (one per
-                            page), Effects/ (FoilWrap with FoilCover/FoilMasks/FoilFinish/FoilGeometry/FoilBall,
-                            FoilSurface, reveals, counting text, confetti, light burst, backdrops, shimmer, hint),
-                            WrappedStyle/WrappedPage/WrappedFormat (type, palettes, wording of figures).
+                            page), Effects/ (FoilWrap with FoilCover/FoilLayers/FoilBundle/FoilTear/FoilFinish/
+                            FoilMasks/FoilGeometry/FoilBall; FoilSurface and FoilStamp; reveals, counting text,
+                            confetti, light burst, the swirl backdrop, shimmer, hint),
+                            WrappedStyle/WrappedLayout/WrappedPage/WrappedFormat (type, rules and stats,
+                            palettes, wording of figures), CafeBreakdown/CafeShareBar/WrappedStackedColumns
+                            (Where you went), StreakBoard/StreakSync (the CloudKit streak standing).
                             Previews/DesignWidgetContent draws a design from given data (editor + gallery);
                             Previews/WidgetGallery is every widget × size from fixed sample data;
                             Previews/WrappedGallery is every Wrapped page in its finished state.
@@ -117,6 +122,7 @@ Identifiers:
 - Bundle IDs `app.dabora.noblestools` and `app.dabora.noblestools.widgets`.
 - Team `6W4ZKDHBVD`, set in `Config/Signing.xcconfig`.
 - App group `group.app.dabora.noblestools` (`AppGroup.identifier`).
+- iCloud container `iCloud.app.dabora.noblestools` (CloudKit public database, for the streak standing).
 - URL scheme `noblestools://design/<uuid>`, which opens that design's editor.
 
 ## Architecture
@@ -138,6 +144,11 @@ Identifiers:
 - **App previews:** `PreviewData` fetches each data source once and filters locally per design, so toggling settings never re-fetches. It falls back to sample data, labelled as such, when offline.
   - Spending previews show the connected account's own statement, or its cached copy badged as the widget would show it. They use the sample only when no account is connected.
   - `PreviewData.storeSession` is the account they show. Settings changes the account through its own `StoreAccount`, so `DesignListView` calls `refreshStoreSession()` when the Settings sheet closes. That drops the old account's spending and its load times, then every spending preview loads the new account (the request key carries the session). Anything else that ever connects or disconnects must call it too.
+- **Streak standing (CloudKit):** the only data the app sends anywhere but Nobles. `StreakSync` (on the design list, from `NoblesToolsApp`) uploads the current semester's longest streak whenever the app is active with an account connected: at launch, on return to the foreground and after Settings connects one. It uses the statement `PreviewData` loads, never the sample, and only when the semester or length changed or once a day (`UserDefaults` `cafeStreak.lastShared.v1`). Opening one's own recap uploads again, then compares.
+  - `StreakBoard` talks to container `iCloud.app.dabora.noblestools`, public database, record type `SemesterStreak` (`semester`: the period name, e.g. "Fall 2026"; `length`: Int64). One record per iCloud user per semester (`<semester>-<userRecordID>`), overwritten with `.allKeys`. Writes need an iCloud account; reads don't. Every error just means no standing line.
+  - `StreakStanding(length:among:)` (NoblesKit, tested) gives "Top X%": rank = 1 + others with a strictly longer streak, X = ceil(100 × rank / students). It's `nil` under 10 students, for a streak under 2, or past the top half. Others' lengths outside 1...200 are ignored as junk.
+  - Nothing in previews, the gallery or snapshots creates a `CKContainer`; the sample recap and the gallery pass `StreakStanding.sample`.
+  - The iCloud entitlements are in `project.yml` (App target only). **One-time setup the user must do** (not done as of 2026-11-13): register the container and enable iCloud/CloudKit for the App ID; in the CloudKit Console's Development environment create `SemesterStreak` with a QUERYABLE index on `semester` (and on `recordName` to browse); Deploy Schema Changes to Production (TestFlight uses Production); update the App Store privacy label (purchase history, app functionality, not tracking).
 - **Cafe Wrapped data:** `CafeWrappedLauncher` reads `PreviewData.spending` (the connected account's statement, or its cached copy), and the semester comes from `CafeWrapped.semester(in: library.calendar, on:)`. During the 21 days after a semester ends, the recap stays on that semester, even when the next one has started. A cached statement is recapped only up to the day it was fetched, and the launcher first says so ("Your recap stops at …"). All the stats math is in NoblesKit and tested; the app only draws it.
 - **Dates:** use `LocalDate` and `Calendar.school` (America/New_York) for anything that is a school day or a meal time. Never use the device time zone for school logic.
 
@@ -256,6 +267,7 @@ Identifiers:
   - **`accessibilityFocused` makes `ImageRenderer` draw nothing at all**, not even backgrounds. Every Wrapped page rendered blank until `CafeWrappedView` stopped applying it in static mode. A `.transition` or `.id` is fine.
   - **Inside a `Canvas`, `ImageRenderer` skips `GraphicsContext` filters (`.alphaThreshold`, `.blur`) and some blend modes.** The first item-shaped foil used the "metaball" blur-and-threshold trick. It rendered as a square with the item's silhouette painted on top. It's now plain SwiftUI: the silhouette stamped in a ring inside `.mask {}`, with holes cut by `.blendMode(.destinationOut)` in a `.compositingGroup()`, which renders. It hasn't been seen on a device yet.
   - An `alignmentGuide` set inside a view that `wrappedReveal` (or another modifier) wraps didn't take effect: the bar charts' figures landed inside their bars. Stack a label above its view instead, in a fixed-height slot so it can overhang.
+  - **A `Text` with `minimumScaleFactor` (e.g. `WrappedCardLabel`) can render scaled down even when it fits**, when its stack isn't stretched full width or it sits beside a `Spacer` in an `HStack`. "DAYS IN A ROW" and "FIRST BOUGHT" came out at 80%. Give the container `.frame(maxWidth: .infinity, alignment: .leading)`, or the label `.fixedSize()`.
   - **Check every render of a widget you change**, including the default design at each Lock Screen size and the `-compact` ones. The rectangular bug above was visible in its render, but only the limit variant was looked at.
 - **Animation under Swift 6:** don't conform a `View`/`ViewModifier` to `Animatable`, because its nonisolated `animatableData` clashes with main-actor isolation. Drive motion with `@State` + `withAnimation`, `TimelineView` (paused or throttled when idle), `PhaseAnimator`/`KeyframeAnimator`, or `Shape`s. Wrapped's particle effects draw in one `Canvas` each, not one view per particle. Every Wrapped effect honors Reduce Motion.
 - **Present sheets from a screen's `NavigationStack`, never from inside a `Form`/`List` row** (a `.sheet` on a `Section` lands on its rows). A row-attached sheet is dismissed as soon as the list refreshes that row: the spending sign-in sheet opened and closed at once this way. `SettingsView` owns `StoreAccount` and presents `StoreLoginView`; `StoreAccountSection` only asks to connect.
@@ -269,7 +281,8 @@ Identifiers:
 - Get the real 2026–27 calendar (quarter ends, breaks) and update `NoblesCalendar.swift`. Consider supporting an iCal URL import.
 - The athletics endpoints are unofficial. Ask Nobles Athletics (athletic_info@nobles.edu) for an official feed or blessing. For a longer upcoming window, consider parsing `calendar.php` games (skip `.is-practice`).
 - Confirm meal service end times with the dining hall.
-- Cafe Wrapped: on a device, check the foil's feel and performance, whether the charges endpoint covers the whole semester, and the share sheet. The Settings testing buttons are meant to go once it's trusted ("for now").
+- Cafe Wrapped: on a device, check the foil's feel and performance, the background swirl's performance, whether the charges endpoint covers the whole semester, and the share sheet. The Settings testing buttons are meant to go once it's trusted ("for now").
+- The streak standing needs the user's one-time CloudKit setup (see Architecture) before it works in TestFlight, and at least 10 students who've connected an account.
 
 ## Session log
 
