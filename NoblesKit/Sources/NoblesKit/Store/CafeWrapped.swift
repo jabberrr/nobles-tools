@@ -22,6 +22,10 @@ public struct CafeWrapped: Hashable, Sendable {
     public var distinctItemCount: Int
     /// Every cafe with a purchase, most spent first (ties: name).
     public var cafes: [Cafe]
+    /// The Monday starting each week of the recap, in order: from the week holding the semester's
+    /// first day through the week holding `period.through`, weeks with nothing bought included.
+    /// Each cafe's `weeklyTotals` line up with it.
+    public var weekStarts: [LocalDate]
     /// Up to 5 items, most units first (ties: more spent, then name).
     public var topItems: [Item]
     /// 24 entries: purchases by hour of day, school time (`Calendar.school`).
@@ -62,6 +66,7 @@ public struct CafeWrapped: Hashable, Sendable {
         let items = Item.ranked(purchases)
         let days = Day.all(in: charges)
         let purchaseDays = days.filter(\.hasPurchase)
+        let weekStarts = Self.weekStarts(from: span.start, through: through)
 
         period = Period(name: Self.periodName(for: span), span: span, through: through)
         total = charges.spent
@@ -70,7 +75,8 @@ public struct CafeWrapped: Hashable, Sendable {
         dayCount = purchaseDays.count
         self.days = days
         distinctItemCount = items.count
-        cafes = Cafe.all(in: charges, overallTotal: total)
+        cafes = Cafe.all(in: charges, overallTotal: total, weekStarts: weekStarts)
+        self.weekStarts = weekStarts
         topItems = Array(items.prefix(5))
         self.hourCounts = hourCounts
         self.weekdayCounts = weekdayCounts
@@ -167,6 +173,13 @@ extension CafeWrapped {
     public static func periodName(for span: DateSpan) -> String {
         "\(span.start.month >= 7 ? "Fall" : "Spring") \(span.start.year)"
     }
+
+    /// The Monday of each week from the one holding `start` through the one holding `end`, in
+    /// order; weeks run Monday to Sunday.
+    static func weekStarts(from start: LocalDate, through end: LocalDate) -> [LocalDate] {
+        let last = end.weekStart
+        return Array(sequence(first: start.weekStart) { $0.adding(days: 7) }.prefix { $0 <= last })
+    }
 }
 
 // MARK: - Helpers
@@ -194,6 +207,13 @@ extension CafeWrapped {
         static func < (lhs: Self, rhs: Self) -> Bool {
             (lhs.charge.madeAt, lhs.charge.id) < (rhs.charge.madeAt, rhs.charge.id)
         }
+    }
+}
+
+extension LocalDate {
+    /// The Monday on or before this day: the start of its Monday-to-Sunday week.
+    var weekStart: LocalDate {
+        adding(days: -((weekday + 5) % 7))
     }
 }
 

@@ -1,12 +1,14 @@
 import SwiftUI
 
 /// A hairline across the page: what separates rows now that pages set their stats as type
-/// rather than in boxes.
+/// rather than in boxes. A vertical one separates columns, as tall as the row it's in.
 struct WrappedRule: View {
+    var axis: Axis = .horizontal
+
     var body: some View {
         Rectangle()
             .fill(Color.white.opacity(0.3))
-            .frame(height: 1)
+            .frame(width: axis == .vertical ? 1 : nil, height: axis == .horizontal ? 1 : nil)
             .accessibilityHidden(true)
     }
 }

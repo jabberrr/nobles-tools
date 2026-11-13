@@ -107,7 +107,13 @@ struct CafeWrappedView: View {
             TopItemsPage(wrapped: wrapped, isActive: isActive)
         case .favorite:
             if let item = wrapped.favorite {
-                FavoritePage(item: item, isActive: isActive, initialTaps: initialFoilTaps, isUnwrapped: $isFavoriteUnwrapped)
+                FavoritePage(
+                    item: item,
+                    share: WrappedFormat.fraction(item.total, of: wrapped.total),
+                    isActive: isActive,
+                    initialTaps: initialFoilTaps,
+                    isUnwrapped: $isFavoriteUnwrapped
+                )
             }
         case .times:
             TimesPage(wrapped: wrapped, isActive: isActive)

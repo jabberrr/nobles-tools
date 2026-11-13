@@ -122,44 +122,61 @@ struct CafeWrappedTests {
         #expect(abs(cafes[0].share - 19.5 / 25.5) < 1e-9)
         #expect(abs(cafes[1].share - 6 / 25.5) < 1e-9)
         #expect(cafes.map(\.id) == cafes.map(\.name))
-
-        // Up to three each: Gleason's Apple ties the panini on units but cost less.
-        #expect(cafes[0].topItems.map(\.name) == ["Iced latte", "Everything Bagel", "Turkey Panini"])
-        #expect(cafes[0].topItems.map(\.count) == [3, 2, 1])
-        #expect(cafes[1].topItems.map(\.name) == ["Chocolate Chip Cookie", "Banana"])
-        #expect(cafes.map { $0.topItem?.name } == ["Iced latte", "Chocolate Chip Cookie"])
-        let cafe2000Top = try #require(cafes[1].topItem)
-        #expect(cafe2000Top.count == 2)
-        #expect(cafe2000Top.total == Self.money("4.50"))
-        #expect(cafe2000Top.cafeName == Self.cafe2000)
     }
 
-    @Test func ranksEachCafesItemsByItsOwnPurchases() throws {
-        let day = LocalDate(2026, 9, 8)
+    @Test func splitsEachCafeByWeekdayAndWeek() throws {
+        let wrapped = try mixed()
+
+        // From the week of Tue Sep 8 through the week of Sat Oct 31, Mondays to Sundays.
+        #expect(wrapped.weekStarts == [
+            LocalDate(2026, 9, 7), LocalDate(2026, 9, 14), LocalDate(2026, 9, 21), LocalDate(2026, 9, 28),
+            LocalDate(2026, 10, 5), LocalDate(2026, 10, 12), LocalDate(2026, 10, 19), LocalDate(2026, 10, 26),
+        ])
+
+        // Net of the panini refund on Tue Sep 15, which outweighs Gleason's Monday that week.
+        let gleason = wrapped.cafes[0]
+        #expect(gleason.weekdayTotals == ["0", "4.00", "0.53", "4.00", "0", "10.97", "0"].map(Self.money))
+        #expect(gleason.weeklyTotals == ["18.97", "-3.97", "0", "0", "3.00", "1.50", "0", "0"].map(Self.money))
+
+        // Cafe 2000's evening charges stay on their school-time day.
+        let cafe2000 = wrapped.cafes[1]
+        #expect(cafe2000.weekdayTotals == ["0", "0", "1.50", "4.50", "0", "0", "0"].map(Self.money))
+        #expect(cafe2000.weeklyTotals == ["4.50", "1.50", "0", "0", "0", "0", "0", "0"].map(Self.money))
+
+        for cafe in wrapped.cafes {
+            #expect(cafe.weekdayTotals.reduce(0, +) == cafe.total)
+            #expect(cafe.weeklyTotals.reduce(0, +) == cafe.total)
+        }
+    }
+
+    @Test func weeksRunMondayToSunday() {
+        func weeks(_ start: LocalDate, _ end: LocalDate) -> [LocalDate] {
+            CafeWrapped.weekStarts(from: start, through: end)
+        }
+
+        // Spring starts on a Monday.
+        #expect(weeks(LocalDate(2027, 1, 4), LocalDate(2027, 1, 4)) == [LocalDate(2027, 1, 4)])
+        // A Sunday ends its week; the Monday after starts the next.
+        #expect(weeks(LocalDate(2026, 9, 8), LocalDate(2026, 9, 13)) == [LocalDate(2026, 9, 7)])
+        #expect(weeks(LocalDate(2026, 9, 8), LocalDate(2026, 9, 14)) == [LocalDate(2026, 9, 7), LocalDate(2026, 9, 14)])
+        #expect(weeks(LocalDate(2026, 9, 13), LocalDate(2026, 9, 14)) == [LocalDate(2026, 9, 7), LocalDate(2026, 9, 14)])
+        // Across the end of daylight saving time (Sun Nov 1).
+        #expect(weeks(LocalDate(2026, 10, 30), LocalDate(2026, 11, 3)) == [LocalDate(2026, 10, 26), LocalDate(2026, 11, 2)])
+    }
+
+    @Test func weekendChargesCountInTheirWeek() throws {
         let charges = [
-            Self.charge(1, Self.gleason, "Cookie", "2.00", on: day, at: 10),
-            Self.charge(2, Self.gleason, "Cookie", "2.00", on: day, at: 11),
-            Self.charge(3, Self.cafe2000, "Cookie", "2.00", on: day, at: 19),
-            Self.charge(4, Self.cafe2000, "Latte", "4.00", on: day, at: 19),
-            Self.charge(5, Self.cafe2000, "Latte", "4.00", on: day, at: 20),
-            Self.charge(6, Self.cafe2000, "Muffin", "3.00", on: day, at: 20),
-            Self.charge(7, Self.cafe2000, "Banana", "1.00", on: day, at: 21),
+            Self.charge(1, Self.gleason, "Latte", "4.00", on: LocalDate(2026, 9, 12), at: 10), // Saturday
+            Self.charge(2, Self.gleason, "Latte", "4.00", on: LocalDate(2026, 9, 13), at: 10), // Sunday
+            Self.charge(3, Self.gleason, "Latte", "4.00", on: LocalDate(2026, 9, 14), at: 10), // Monday
         ]
-        let wrapped = try #require(CafeWrapped(statement: Self.statement(charges), semester: try fall(), calendar: calendar, asOf: day))
-        #expect(wrapped.favorite?.name == "Cookie")
-        #expect(wrapped.favorite?.count == 3)
+        let asOf = LocalDate(2026, 9, 14)
+        let wrapped = try #require(CafeWrapped(statement: Self.statement(charges), semester: try fall(), calendar: calendar, asOf: asOf))
+        let cafe = try #require(wrapped.cafes.first)
 
-        let cafes = Dictionary(uniqueKeysWithValues: wrapped.cafes.map { ($0.name, $0) })
-        let cafe2000 = try #require(cafes[Self.cafe2000])
-        #expect(cafe2000.topItems.map(\.name) == ["Latte", "Muffin", "Cookie"]) // Banana is fourth
-        #expect(cafe2000.topItems.map(\.count) == [2, 1, 1])
-        #expect(cafe2000.topItems.map(\.total) == ["8.00", "3.00", "2.00"].map(Self.money))
-        #expect(cafe2000.topItems.allSatisfy { $0.cafeName == Self.cafe2000 })
-        #expect(cafe2000.topItem == cafe2000.topItems.first)
-
-        let gleason = try #require(cafes[Self.gleason])
-        #expect(gleason.topItems.map(\.name) == ["Cookie"])
-        #expect(gleason.topItems.map(\.count) == [2])
+        #expect(wrapped.weekStarts == [LocalDate(2026, 9, 7), LocalDate(2026, 9, 14)])
+        #expect(cafe.weeklyTotals == ["8.00", "4.00"].map(Self.money))
+        #expect(cafe.weekdayTotals == ["4.00", "4.00", "0", "0", "0", "0", "4.00"].map(Self.money))
     }
 
     @Test func bucketsTimesInSchoolTime() throws {
@@ -573,10 +590,15 @@ struct CafeWrappedTests {
         #expect(wrapped.averagePerDay == Self.money("7.85"))
         #expect(wrapped.cafes.map(\.name) == [Self.gleason, Self.cafe2000])
         #expect(wrapped.cafes.map(\.total) == [Self.money("221.00"), Self.money("202.75")])
-        #expect(wrapped.cafes.map { $0.topItems.map(\.name) } == [
-            ["Jumbo Chocolate Chip Cookie", "Body Armor", "Doritos"],
-            ["Chicken Tenders", "Jumbo Chocolate Chip Cookie", "Body Armor"],
+        // Gleason on most weekdays, Cafe 2000 on Wednesdays and Thursdays.
+        #expect(wrapped.cafes.map(\.weekdayTotals) == [
+            ["0", "41.50", "55.00", "31.00", "56.25", "37.25", "0"].map(Self.money),
+            ["0", "28.00", "37.25", "54.50", "64.00", "19.00", "0"].map(Self.money),
         ])
+        // Fifteen weeks from Sep 7, Thanksgiving week (the twelfth) nearly empty.
+        #expect(wrapped.weekStarts.count == 15)
+        #expect(wrapped.weekStarts.last == LocalDate(2026, 12, 14))
+        #expect(wrapped.cafes.map { $0.weeklyTotals[11] } == [Self.money("2.00"), 0])
         #expect(wrapped.topItems.map(\.name) == [
             "Jumbo Chocolate Chip Cookie", "Body Armor", "Doritos", "Chicken Tenders", "Pepperoni Pizza",
         ])

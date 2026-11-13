@@ -8,6 +8,12 @@ enum WrappedFormat {
         NSDecimalNumber(decimal: value).doubleValue
     }
 
+    /// `part` over `whole`, kept to 0...1; 0 when `whole` isn't positive.
+    static func fraction(_ part: Decimal, of whole: Decimal) -> Double {
+        guard whole > 0 else { return 0 }
+        return min(max(double(part / whole), 0), 1)
+    }
+
     /// "$612.75", for a counting figure: as `Decimal.usd()` writes it, but with a format made once,
     /// since a count asks for it every frame.
     static func dollars(_ value: Double) -> String {
@@ -58,11 +64,9 @@ enum WrappedFormat {
         Calendar.school.monthSymbols[month - 1]
     }
 
-    /// "Oct 5 to Oct 16", noting when the run skipped days off: only a missed school day ends it.
+    /// "Oct 5 to Oct 16".
     static func streakDates(_ streak: CafeWrapped.Streak) -> String {
-        let span = "\(shortDay(streak.start)) to \(shortDay(streak.end))"
-        let days = streak.start.days(until: streak.end) + 1
-        return days > streak.length ? "\(span), school days only" : span
+        "\(shortDay(streak.start)) to \(shortDay(streak.end))"
     }
 
     /// "Tuesday", for a `Calendar` weekday 1...7.

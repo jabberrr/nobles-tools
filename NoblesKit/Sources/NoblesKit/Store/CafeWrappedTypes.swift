@@ -37,7 +37,7 @@ extension CafeWrapped {
         public var productImage: String? { CafeItemArt.productImage(for: name) }
     }
 
-    /// One cafe's share of the recap.
+    /// One cafe's share of the recap, and when it got it.
     public struct Cafe: Hashable, Sendable, Identifiable {
         public var name: String
         /// Net spending here, tax included.
@@ -47,12 +47,14 @@ extension CafeWrapped {
         public var dayCount: Int
         /// `total` over the recap's overall total, 0...1 (0 when that's not positive).
         public var share: Double
-        /// Up to 3 items bought here, ranked like the recap's `topItems`, with counts and totals
-        /// counting this cafe only.
-        public var topItems: [Item]
-
-        /// The item bought most here: `topItems.first`.
-        public var topItem: Item? { topItems.first }
+        /// 7 entries: net spending here by weekday, tax included, index 0 = Sunday … 6 = Saturday
+        /// (Calendar weekday − 1), by each charge's school-time day. They add up to `total`, so an
+        /// entry is negative when a refund outweighs that weekday's purchases.
+        public var weekdayTotals: [Decimal]
+        /// Net spending here in each week of the recap, lined up with `CafeWrapped.weekStarts`: 0
+        /// for a week with no charge here, negative when a refund outweighs that week's purchases.
+        /// They add up to `total`.
+        public var weeklyTotals: [Decimal]
 
         public var id: String { name }
     }
@@ -125,25 +127,31 @@ extension CafeWrapped.Item {
 }
 
 extension CafeWrapped.Cafe {
-    /// Every cafe with a purchase among `charges`, most spent first (ties: name).
-    static func all(in charges: [CafeWrapped.DatedCharge], overallTotal: Decimal) -> [Self] {
+    /// Every cafe with a purchase among `charges`, most spent first (ties: name), with weekly
+    /// totals lined up with `weekStarts`, which must hold the week of every charge.
+    static func all(in charges: [CafeWrapped.DatedCharge], overallTotal: Decimal, weekStarts: [LocalDate]) -> [Self] {
         Dictionary(grouping: charges) { $0.charge.storeName.matchKey }
-            .compactMap { Self(charges: $0.value, overallTotal: overallTotal) }
+            .compactMap { Self(charges: $0.value, overallTotal: overallTotal, weekStarts: weekStarts) }
             .sorted { $0.total != $1.total ? $0.total > $1.total : $0.name < $1.name }
     }
 
     /// The cafe of `charges` (all at one cafe, any order), named as most recently written; `nil`
     /// without a purchase.
-    private init?(charges: [CafeWrapped.DatedCharge], overallTotal: Decimal) {
+    private init?(charges: [CafeWrapped.DatedCharge], overallTotal: Decimal, weekStarts: [LocalDate]) {
         let purchases = charges.filter(\.isPurchase)
-        guard let latest = charges.max(), !purchases.isEmpty else { return nil }
+        guard let latest = charges.max(), let firstWeek = weekStarts.first, !purchases.isEmpty else { return nil }
         name = latest.charge.storeName
         total = charges.spent
         purchaseCount = purchases.count
         dayCount = Set(purchases.map(\.day)).count
         let fraction = overallTotal > 0 ? NSDecimalNumber(decimal: total / overallTotal).doubleValue : 0
         share = min(max(fraction, 0), 1)
-        topItems = Array(CafeWrapped.Item.ranked(purchases).prefix(3))
+        weekdayTotals = Array(repeating: 0, count: 7)
+        weeklyTotals = Array(repeating: 0, count: weekStarts.count)
+        for charge in charges {
+            weekdayTotals[charge.day.weekday - 1] += charge.charge.total
+            weeklyTotals[firstWeek.days(until: charge.day) / 7] += charge.charge.total
+        }
     }
 }
 

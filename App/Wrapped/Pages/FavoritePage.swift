@@ -2,15 +2,17 @@ import SwiftUI
 import UIKit
 import NoblesKit
 
-/// The reveal of #1: its picture in foil shaped like it, which comes off in stages, one per tap,
-/// then confetti, its name and its numbers. Taps on the foil open it; taps anywhere else still
-/// turn the page. VoiceOver finds the foil as a button and, once it's off, the item in one
-/// sentence.
+/// The reveal of #1: its picture under foil that opens in stages, one per tap, then confetti, its
+/// name and its numbers set as type between hairlines. Taps on the foil open it; taps anywhere
+/// else still turn the page. VoiceOver finds the foil as a button and, once it's off, the item in
+/// one sentence.
 struct FavoritePage: View {
     /// Taps it takes to get the foil off: one per stage.
-    static let tapsToUnwrap = 5
+    static let tapsToUnwrap = 4
 
     let item: CafeWrapped.Item
+    /// The item's share of the semester's spending, 0...1.
+    let share: Double
     let isActive: Bool
     @Binding var isUnwrapped: Bool
     private let initialTaps: Int
@@ -22,8 +24,9 @@ struct FavoritePage: View {
     @State private var beganWrapped: Bool
     @State private var confetti = 0
 
-    init(item: CafeWrapped.Item, isActive: Bool, initialTaps: Int, isUnwrapped: Binding<Bool>) {
+    init(item: CafeWrapped.Item, share: Double, isActive: Bool, initialTaps: Int, isUnwrapped: Binding<Bool>) {
         self.item = item
+        self.share = share
         self.isActive = isActive
         self.initialTaps = initialTaps
         _isUnwrapped = isUnwrapped
@@ -33,10 +36,11 @@ struct FavoritePage: View {
 
     var body: some View {
         ZStack {
-            VStack(spacing: 22) {
+            // Spaced to fit the details under the picture on a 375 × 667 pt iPhone.
+            VStack(spacing: 0) {
                 WrappedEyebrow("Your #1", symbol: "crown.fill")
                     .wrappedReveal(isActive, delay: 0.1, style: .fade)
-                Spacer(minLength: 0)
+                Spacer(minLength: 12)
                 picture
                     .wrappedReveal(isActive, delay: 0.3, style: .pop)
                 // Both stay laid out, so the picture doesn't move when one gives way to the other.
@@ -51,6 +55,7 @@ struct FavoritePage: View {
                         .accessibilityLabel(detailsDescription)
                         .accessibilityHidden(!isUnwrapped)
                 }
+                .padding(.top, 20)
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, WrappedStyle.margin)
@@ -80,7 +85,7 @@ struct FavoritePage: View {
 
     private var hint: some View {
         VStack(spacing: 14) {
-            Text("Tap the foil to take it off")
+            Text("Tap the foil to open it")
                 .font(WrappedStyle.lead)
             HStack(spacing: 8) {
                 ForEach(0..<Self.tapsToUnwrap, id: \.self) { dot in
@@ -98,10 +103,11 @@ struct FavoritePage: View {
         max(0, Self.tapsToUnwrap - taps)
     }
 
-    /// Hidden until the foil is off; then each part pops or rises in turn.
+    /// Hidden until the foil is off; then the name pops, the rules draw across and each figure
+    /// and fact rises in turn.
     private var details: some View {
         let isRevealed = isActive && isUnwrapped
-        return VStack(spacing: 14) {
+        return VStack(spacing: 16) {
             Text(item.name)
                 .font(WrappedStyle.hero(28))
                 .multilineTextAlignment(.center)
@@ -109,32 +115,83 @@ struct FavoritePage: View {
                 .minimumScaleFactor(0.6)
                 .fixedSize(horizontal: false, vertical: true)
                 .wrappedReveal(isRevealed, delay: 0.35, style: .pop)
-            HStack(spacing: 12) {
-                WrappedStatTile(caption: item.count == 1 ? "time" : "times") {
-                    CountingText(Double(item.count), isActive: isRevealed, duration: 1, delay: 0.8, format: WrappedFormat.whole)
-                }
-                .wrappedReveal(isRevealed, delay: 0.7)
-                WrappedStatTile(caption: "in all") {
-                    CountingText(WrappedFormat.double(item.total), isActive: isRevealed, duration: 1.2, delay: 1, format: WrappedFormat.dollars)
-                }
-                .wrappedReveal(isRevealed, delay: 0.9)
+            VStack(spacing: 0) {
+                WrappedRule()
+                    .wrappedReveal(isRevealed, delay: 0.6, style: .growRight)
+                figures(isRevealed: isRevealed)
+                WrappedRule()
+                    .wrappedReveal(isRevealed, delay: 1.2, style: .growRight)
+                fact("First bought", WrappedFormat.day(LocalDate(item.firstBought)))
+                    .wrappedReveal(isRevealed, delay: 1.3)
+                WrappedRule()
+                    .wrappedReveal(isRevealed, delay: 1.4, style: .growRight)
+                fact("Usual cafe", item.cafeName)
+                    .wrappedReveal(isRevealed, delay: 1.5)
             }
-            VStack(spacing: 2) {
-                Text("First bought on \(WrappedFormat.day(LocalDate(item.firstBought)))")
-                Text("Mostly from \(item.cafeName)")
-            }
-            .font(WrappedStyle.caption)
-            .foregroundStyle(WrappedStyle.secondary)
-            .multilineTextAlignment(.center)
-            .fixedSize(horizontal: false, vertical: true)
-            .wrappedReveal(isRevealed, delay: 1.3)
         }
+    }
+
+    /// Times bought, spent on it and its share of all spending, in columns split by hairlines.
+    private func figures(isRevealed: Bool) -> some View {
+        HStack(spacing: 0) {
+            column(item.count == 1 ? "Time" : "Times") {
+                CountingText(Double(item.count), isActive: isRevealed, duration: 1, delay: 0.8, format: WrappedFormat.whole)
+            }
+            .wrappedReveal(isRevealed, delay: 0.7)
+            WrappedRule(axis: .vertical)
+                .wrappedReveal(isRevealed, delay: 0.8, style: .fade)
+            column("Spent") {
+                CountingText(WrappedFormat.double(item.total), isActive: isRevealed, duration: 1.2, delay: 0.95, format: WrappedFormat.dollars)
+            }
+            .wrappedReveal(isRevealed, delay: 0.85)
+            if share > 0 {
+                WrappedRule(axis: .vertical)
+                    .wrappedReveal(isRevealed, delay: 0.95, style: .fade)
+                column("Of spending") {
+                    CountingText(share, isActive: isRevealed, duration: 1.2, delay: 1.1, format: WrappedFormat.percent)
+                }
+                .wrappedReveal(isRevealed, delay: 1)
+            }
+        }
+        // The vertical rules as tall as the figures.
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// A figure over its label, centered in its column.
+    private func column<Figure: View>(_ label: String, @ViewBuilder figure: () -> Figure) -> some View {
+        VStack(spacing: 2) {
+            figure()
+                .font(WrappedStyle.number(30))
+                .monospacedDigit()
+                .foregroundStyle(WrappedStyle.highlight)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+            WrappedCardLabel(label)
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+    }
+
+    /// A label on the left and its value on the right, on one row.
+    private func fact(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            WrappedCardLabel(label)
+            Spacer(minLength: 0)
+            Text(value)
+                .font(WrappedStyle.itemName)
+                .multilineTextAlignment(.trailing)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 10)
     }
 
     /// What VoiceOver reads for the details.
     private var detailsDescription: String {
         let first = WrappedFormat.day(LocalDate(item.firstBought))
-        return "\(item.name). You got it \(WrappedFormat.count(item.count, "time")), \(item.total.usd()) in all. First bought on \(first). Mostly from \(item.cafeName)."
+        let ofSpending = share > 0 ? ", \(WrappedFormat.percent(share)) of your spending" : ""
+        return "\(item.name). You got it \(WrappedFormat.count(item.count, "time")), \(item.total.usd()) in all\(ofSpending). First bought on \(first). Mostly from \(item.cafeName)."
     }
 
     private func unwrap() {
@@ -152,7 +209,7 @@ private struct FavoritePagePreview: View {
 
     var body: some View {
         if let item = CafeWrapped.sample.favorite {
-            FavoritePage(item: item, isActive: true, initialTaps: 0, isUnwrapped: $isUnwrapped)
+            FavoritePage(item: item, share: 0.15, isActive: true, initialTaps: 0, isUnwrapped: $isUnwrapped)
                 .foregroundStyle(.white)
                 .background(Color(hex: 0x2E1A87))
         }
