@@ -13,17 +13,20 @@ struct FoilTear: Sendable {
     let crest: [CGPoint]
     /// The free edge of the foil folded back, the same as `crest` until it folds.
     let freeEdge: [CGPoint]
+    /// Whether there's a hole yet.
+    let isTorn: Bool
 
     init(openness: Double, geometry: FoilGeometry) {
         let radius = Double(geometry.radius)
         let size = radius * Self.ramp(openness, 0, 0.22, 0.42, 0.6)
+        isTorn = size > 0
         let center = geometry.point(CGVector(
             dx: Self.ramp(openness, 0.15, 0.15, 0.06, 0.01),
             dy: Self.ramp(openness, -0.12, -0.12, -0.04, 0)
         ))
         let foldWidth = radius * Self.ramp(openness, 0, 0, 0.13, 0.09)
         let folded = min(max(Self.ramp(openness, 0, 0, 1, 1), 0), 1)
-        // Teeth come in as the hole grows, so it starts as a slit rather than a star.
+        // Teeth come in as the hole grows, so a hole just starting isn't a star.
         let teeth = radius > 0 ? 3.5 * Double(geometry.unit) * min(1, size / (0.35 * radius)) : 0
         var crest: [CGPoint] = []
         var freeEdge: [CGPoint] = []
@@ -40,12 +43,12 @@ struct FoilTear: Sendable {
 
     /// The hole, inside the crest.
     var hole: Path {
-        Self.polygon(crest)
+        isTorn ? Self.polygon(crest) : Path()
     }
 
     /// The hole and the foil folded back around it, out to the free edge.
     var fold: Path {
-        Self.polygon(freeEdge)
+        isTorn ? Self.polygon(freeEdge) : Path()
     }
 
     /// Wrinkles across the folded band, from just off the crest to just short of the free edge.

@@ -28,24 +28,45 @@ extension WrappedPage {
     }
 
     private static func cafesSummary(_ wrapped: CafeWrapped) -> String {
-        let favorite = wrapped.favorite?.id
-        let lines: [String] = wrapped.cafes.map { cafe in
-            let share = "You spent \(cafe.total.usd()) there, \(WrappedFormat.percent(cafe.share)) of your spending, on \(WrappedFormat.count(cafe.purchaseCount, "purchase"))."
-            let items = cafe.topItems.map { item in
-                item.id == favorite ? "Your number 1, still hidden." : "\(item.name), \(WrappedFormat.count(item.count, "time"))."
+        var parts: [String]
+        if let cafe = wrapped.cafes.first, wrapped.cafes.count == 1 {
+            parts = [
+                "Your cafe was \(cafe.name).",
+                "You spent \(cafe.total.usd()) there on \(WrappedFormat.count(cafe.purchaseCount, "purchase")).",
+            ]
+        } else {
+            parts = ["Where you went."] + wrapped.cafes.map { cafe in
+                "\(cafe.name), \(WrappedFormat.percent(cafe.share)) of your spending, \(cafe.total.usd())."
             }
-            let mostBought = items.isEmpty ? [] : ["Most bought there."] + items
-            return ([cafe.name + ".", share] + mostBought).joined(separator: " ")
+            parts += favoredWeekdays(wrapped).map { cafe, weekdays in
+                "Most spent at \(cafe) on \(weekdays.map(WrappedFormat.weekday).formatted(.list(type: .and)))."
+            }
         }
-        return (["Where you went."] + lines).joined(separator: " ")
+        if let week = CafeBreakdown(wrapped).biggestWeek {
+            parts.append("Your biggest week started \(WrappedFormat.day(week.start)), with \(week.total.usd()).")
+        }
+        return parts.joined(separator: " ")
+    }
+
+    /// Each cafe that got the most on some weekday, in the recap's order, with those weekdays
+    /// from Monday on: what the page's weekday chart shows.
+    private static func favoredWeekdays(_ wrapped: CafeWrapped) -> [(cafe: String, weekdays: [Int])] {
+        var weekdays: [String: [Int]] = [:]
+        for weekday in [2, 3, 4, 5, 6, 7, 1] {
+            let spent = { (cafe: CafeWrapped.Cafe) in cafe.weekdayTotals[weekday - 1] }
+            if let top = wrapped.cafes.max(by: { spent($0) < spent($1) }), spent(top) > 0 {
+                weekdays[top.id, default: []].append(weekday)
+            }
+        }
+        return wrapped.cafes.compactMap { cafe in weekdays[cafe.id].map { (cafe: cafe.name, weekdays: $0) } }
     }
 
     /// Keeps #1 hidden, as the page does, for the favorite page to reveal.
     private static func topItemsSummary(_ wrapped: CafeWrapped) -> String {
         let lines: [String] = wrapped.topItems.enumerated().dropFirst().map { rank, item in
-            "Number \(rank + 1) is \(item.name), \(WrappedFormat.count(item.count, "time"))."
+            "Number \(rank + 1), \(item.name), \(WrappedFormat.count(item.count, "time")), \(item.total.usd()) in all."
         }
-        return (["Your top \(wrapped.topItems.count)."] + lines + ["Your number 1 is on the next page."]).joined(separator: " ")
+        return (["Most ordered. Your top \(wrapped.topItems.count).", "Number 1 is still under foil."] + lines).joined(separator: " ")
     }
 
     private static func timesSummary(_ wrapped: CafeWrapped) -> String {
