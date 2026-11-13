@@ -1,10 +1,11 @@
+import Combine
 import SwiftUI
 
 /// The story's backdrop: a slow swirl of `colors` (2–4). A gradient of them turns under soft
 /// pools of the same colors and of shade, which circle the middle of the screen at their own
 /// speeds, so the colors keep flowing through each other. Changing `colors` cross-fades. Fills
-/// its frame; callers add `.ignoresSafeArea()`. One still frame in static mode and under Reduce
-/// Motion.
+/// its frame; callers add `.ignoresSafeArea()`. One still frame in static mode, under Reduce
+/// Motion and in Low Power Mode.
 ///
 /// It only ever draws `colors` and darker shades of them, so text that contrasts with every one
 /// of them stays readable.
@@ -13,6 +14,7 @@ struct WrappedBackground: View {
 
     @Environment(\.wrappedIsStatic) private var isStatic
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isLowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
     /// The palettes on screen, bottom first: the newest fades in over the ones it replaces.
     @State private var layers: [Layer]
 
@@ -23,15 +25,21 @@ struct WrappedBackground: View {
 
     var body: some View {
         Group {
-            if isStatic || reduceMotion {
+            if isStatic || reduceMotion || isLowPower {
                 field(at: 0)
             } else {
-                TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+                // The pools move slowly enough that 20 frames a second look smooth.
+                TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
                     field(at: timeline.date.timeIntervalSinceReferenceDate)
                 }
             }
         }
         .accessibilityHidden(true)
+        .onReceive(Self.powerStateChanges) { _ in
+            withAnimation(.easeInOut(duration: 0.8)) {
+                isLowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
+            }
+        }
         .onChange(of: colors) { _, newColors in
             let layer = Layer(id: (layers.last?.id ?? 0) + 1, colors: newColors)
             withAnimation(.easeInOut(duration: 0.8)) { layers.append(layer) }
@@ -45,6 +53,13 @@ struct WrappedBackground: View {
             }
             layers.removeFirst(layers.count - 1)
         }
+    }
+
+    /// Low Power Mode turning on or off, on the main queue (the system posts it on any thread).
+    private static var powerStateChanges: some Publisher<Notification, Never> {
+        NotificationCenter.default
+            .publisher(for: .NSProcessInfoPowerStateDidChange)
+            .receive(on: DispatchQueue.main)
     }
 
     private func field(at time: TimeInterval) -> some View {

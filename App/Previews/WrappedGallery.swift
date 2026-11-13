@@ -60,7 +60,7 @@ enum WrappedGallery {
         })
         entries.append(phone("wrapped-\(WrappedPage.persona.galleryName)-card-back", .large) {
             PersonaCardBack(isShimmering: false)
-                .frame(width: PersonaPage.cardSize.width, height: PersonaPage.cardSize.height)
+                .frame(width: PersonaCard.size.width, height: PersonaCard.size.height)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background { WrappedBackground(colors: WrappedPage.persona.colors).ignoresSafeArea() }
         })

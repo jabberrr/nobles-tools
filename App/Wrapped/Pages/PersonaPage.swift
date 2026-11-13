@@ -20,9 +20,6 @@ struct PersonaPage: View {
     /// on the card go back to turning the page.
     @State private var hasLanded: Bool
 
-    /// The card's size, on either face.
-    static let cardSize = CGSize(width: 290, height: 370)
-
     /// A visit that begins with the card already turned shows it face up, with no show.
     init(wrapped: CafeWrapped, isActive: Bool, isRevealed: Binding<Bool>) {
         self.wrapped = wrapped
@@ -87,10 +84,10 @@ struct PersonaPage: View {
                 .rotation3DEffect(.degrees(turns && !isFaceUp ? -180 : 0), axis: (x: 0, y: 1, z: 0), perspective: 0.45)
         }
         .animation(.easeInOut(duration: Show.flip).delay(Show.charge), value: isFaceUp)
-        .frame(width: Self.cardSize.width, height: Self.cardSize.height)
+        .frame(width: PersonaCard.size.width, height: PersonaCard.size.height)
         .modifier(ChargeUp(isTapped: isTapped, isEnabled: !isStatic && !reduceMotion))
-        .background { LightBurst(isLit: isLit, size: Self.cardSize) }
-        .contentShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
+        .background { LightBurst(isLit: isLit, size: PersonaCard.size) }
+        .contentShape(RoundedRectangle(cornerRadius: PersonaCard.cornerRadius, style: .continuous))
         // Until it has turned, the card takes taps; then they turn the page like anywhere else.
         .gesture(TapGesture().onEnded { reveal() }, including: isLit ? .subviews : .all)
     }
@@ -126,45 +123,6 @@ struct PersonaPage: View {
     }
 }
 
-/// The figure behind a persona and what it counts: "45%" over "After 5 PM".
-struct PersonaEvidence {
-    let figure: String
-    let label: String
-    /// Both, as VoiceOver reads them.
-    let spoken: String
-
-    /// `nil` for a superfan with no favorite, which the persona rules never pick.
-    init?(_ wrapped: CafeWrapped) {
-        switch wrapped.persona {
-        case .loyalist:
-            guard let favorite = wrapped.favorite else { return nil }
-            figure = "×\(favorite.count.formatted())"
-            label = favorite.name
-            spoken = "\(favorite.name), \(WrappedFormat.count(favorite.count, "time"))"
-        case .nightOwl:
-            figure = WrappedFormat.percent(wrapped.share(ofHours: 17...23))
-            label = "After 5 PM"
-            spoken = "\(figure) of purchases after 5 PM"
-        case .earlyBird:
-            figure = WrappedFormat.percent(wrapped.share(ofHours: 0...9))
-            label = "Before 10 AM"
-            spoken = "\(figure) of purchases before 10 AM"
-        case .regular:
-            figure = WrappedFormat.count(wrapped.dayCount, "day")
-            label = "At least every other school day"
-            spoken = "\(figure), at least every other school day"
-        case .explorer:
-            figure = wrapped.distinctItemCount.formatted()
-            label = "Different items"
-            spoken = "\(figure) different items"
-        case .dropIn:
-            figure = WrappedFormat.count(wrapped.purchaseCount, "time")
-            label = "No set routine"
-            spoken = "\(figure), no set routine"
-        }
-    }
-}
-
 /// The show's timing, in seconds from the tap.
 private enum Show {
     /// The card shakes and glows this long before it turns.
@@ -188,7 +146,7 @@ private struct ChargeUp: ViewModifier {
         if isEnabled {
             content
                 .background {
-                    RoundedRectangle(cornerRadius: cardCornerRadius + 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: PersonaCard.cornerRadius + 8, style: .continuous)
                         .fill(WrappedStyle.highlight)
                         .blur(radius: 24)
                         .keyframeAnimator(initialValue: 0.0, trigger: isTapped) { glow, opacity in
@@ -232,71 +190,6 @@ private struct Charge: Sendable {
     /// Degrees.
     var shake = 0.0
     var scale = 1.0
-}
-
-/// The persona card's corners.
-private let cardCornerRadius: CGFloat = 32
-
-/// The side you see first: foil with a "?" stamped into it, which the shimmer sweeps over. Its
-/// shimmer stops once it has turned away.
-struct PersonaCardBack: View {
-    let isShimmering: Bool
-
-    var body: some View {
-        FoilSurface(cornerRadius: cardCornerRadius, isShimmering: isShimmering) {
-            // A light wash calms the crinkles around the "?", so it reads at a glance.
-            Color.white.opacity(0.22)
-            FoilStamp("?", size: 220)
-        }
-    }
-}
-
-/// The revealed side: the persona's emoji, title and tagline on a dark card in a frame of foil,
-/// each coming in once the card has turned.
-private struct PersonaCardFront: View {
-    let persona: CafePersona
-    let isRevealed: Bool
-
-    var body: some View {
-        let shape = RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
-        VStack(spacing: 16) {
-            Text(persona.emoji)
-                .font(WrappedStyle.emoji(96))
-                .wrappedReveal(isRevealed, delay: 0.1, style: .pop)
-            Text(persona.title)
-                .font(WrappedStyle.title(28))
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.6)
-                .wrappedReveal(isRevealed, delay: 0.3)
-            Text(persona.tagline)
-                .font(WrappedStyle.body)
-                .foregroundStyle(WrappedStyle.secondary)
-                .multilineTextAlignment(.center)
-                .minimumScaleFactor(0.8)
-                .wrappedReveal(isRevealed, delay: 0.45)
-        }
-        .padding(28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // Opaque, so the light behind the card never shows through the text.
-        .background {
-            shape
-                .fill(WrappedStyle.ink)
-                .overlay {
-                    shape.fill(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.1), Color.white.opacity(0)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                }
-        }
-        .overlay {
-            FoilSurface(cornerRadius: cardCornerRadius)
-                .mask { shape.strokeBorder(lineWidth: 6) }
-        }
-    }
 }
 
 private struct PersonaPagePreview: View {
