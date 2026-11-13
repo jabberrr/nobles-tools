@@ -112,7 +112,7 @@ extension WrappedPage {
     }
 
     private static func personaSummary(_ wrapped: CafeWrapped) -> String {
-        let persona = "Your cafe personality is \(wrapped.persona.title). \(wrapped.persona.tagline)"
+        let persona = "Your cafe personality is \(wrapped.persona.title). \(wrapped.persona.tagline)."
         guard let evidence = PersonaEvidence(wrapped) else { return persona }
         return "\(persona) \(evidence.spoken)."
     }

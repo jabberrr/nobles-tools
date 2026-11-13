@@ -71,12 +71,12 @@ public enum CafePersona: String, CaseIterable, Sendable {
 
     public var tagline: String {
         switch self {
-        case .loyalist: "You found a favorite and kept buying it."
-        case .nightOwl: "Your cafe runs happen late in the day."
-        case .earlyBird: "You get to the cafe early."
-        case .regular: "You're at the cafe most days."
-        case .explorer: "You like trying new things."
-        case .dropIn: "You stop by now and then."
+        case .loyalist: "Found a favorite and stuck with it"
+        case .nightOwl: "Cafe runs late in the day"
+        case .earlyBird: "At the cafe early"
+        case .regular: "At the cafe most days"
+        case .explorer: "Always trying something new"
+        case .dropIn: "Stops by now and then"
         }
     }
 

@@ -395,7 +395,7 @@ struct CafeWrappedTests {
             #expect(!persona.title.isEmpty && !persona.tagline.isEmpty && !persona.emoji.isEmpty)
         }
         #expect(CafePersona.loyalist.title == "The Superfan")
-        #expect(CafePersona.regular.tagline == "You're at the cafe most days.")
+        #expect(CafePersona.regular.tagline == "At the cafe most days")
         #expect(CafeTimeOfDay.allCases.flatMap { Array($0.hours) } == Array(0...23))
         #expect(CafeTimeOfDay.allCases.map(\.displayName) == ["Morning", "Lunch", "Afternoon", "Evening"])
         #expect(CafeTimeOfDay.morning.title == "Morning person")

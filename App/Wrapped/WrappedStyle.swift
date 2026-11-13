@@ -138,15 +138,3 @@ struct WrappedButtonStyle: ButtonStyle {
             .animation(.spring(duration: 0.25, bounce: 0.4), value: configuration.isPressed)
     }
 }
-
-extension View {
-    /// Sets content on a frosted card: a translucent white panel with a fine edge.
-    func wrappedCard(padding: CGFloat = 16, cornerRadius: CGFloat = 22) -> some View {
-        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        return self
-            .padding(padding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(WrappedStyle.cardFill, in: shape)
-            .overlay { shape.strokeBorder(Color.white.opacity(0.2), lineWidth: 1) }
-    }
-}
