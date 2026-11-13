@@ -161,6 +161,8 @@ private struct StreakRecord: View {
                     .font(WrappedStyle.caption)
                     .foregroundStyle(WrappedStyle.secondary)
             }
+            // Full width, so the label isn't scaled down to the figure's width.
+            .frame(maxWidth: .infinity, alignment: .leading)
             .wrappedReveal(isActive, delay: delay, style: .slide(.leading))
             if let standing {
                 // Revealed on its own, so one that arrives late still rises in.
@@ -216,6 +218,7 @@ private struct StandingLine: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -239,10 +242,11 @@ private struct PurchaseRecord: View {
                 Text(WrappedFormat.moment(charge.madeAt))
                     .font(WrappedStyle.caption)
                     .foregroundStyle(WrappedStyle.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 4)
+            // Takes the row's spare width, so neither the label nor the time is squeezed.
+            .frame(maxWidth: .infinity, alignment: .leading)
             if showsPrice {
                 Text(charge.total.usd())
                     .font(WrappedStyle.number(24))

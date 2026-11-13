@@ -177,7 +177,9 @@ struct FavoritePage: View {
     /// A label on the left and its value on the right, on one row.
     private func fact(_ label: String, _ value: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 16) {
+            // At its full size: beside a short value, the row would otherwise scale it down.
             WrappedCardLabel(label)
+                .fixedSize()
             Spacer(minLength: 0)
             Text(value)
                 .font(WrappedStyle.itemName)
